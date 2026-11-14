@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './supabaseClient';
 
 // Paste your iCloud Shortcut Share Link here once you create it on your iPhone (Share -> Copy iCloud Link)
-const SHARED_ICLOUD_SHORTCUT_URL = '';
+const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/f02d3e75252249f1a8e3c3208960e156';
 
 const WALLET_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
