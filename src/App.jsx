@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './supabaseClient';
 
+// Paste your iCloud Shortcut Share Link here once you create it on your iPhone (Share -> Copy iCloud Link)
+const SHARED_ICLOUD_SHORTCUT_URL = '';
+
 const WALLET_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
 const CATEGORY_ICONS = ['🍔', '☕', '🛒', '⛽', '🎬', '🛍️', '💊', '📚', '🏠', '💰', '🎁', '✈️'];
@@ -52,6 +55,7 @@ function TapxMainApp() {
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState('');
   const [activeTab, setActiveTab] = useState('pad'); // 'pad' | 'wallets' | 'analytics' | 'shortcut'
+  const [shortcutMode, setShortcutMode] = useState('Menu'); // 'Menu' | 'Fast'
 
   // User Database State
   const [settings, setSettings] = useState({ currency: '₹', shortcut_token: '' });
@@ -141,7 +145,6 @@ function TapxMainApp() {
     setLoading(true);
     setDbError('');
     try {
-      // 1. Ensure user_settings row exists
       let { data: userSettings, error: settingsError } = await supabase
         .from('user_settings')
         .select('*')
@@ -172,7 +175,6 @@ function TapxMainApp() {
         });
       }
 
-      // 2. Fetch Wallets, Categories, and Recent Transactions in parallel
       const [walletsRes, categoriesRes, txRes] = await Promise.all([
         supabase.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
         supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
@@ -415,6 +417,21 @@ function TapxMainApp() {
     setTimeout(() => setCopiedField(''), 2000);
   };
 
+  // 1-Tap Tappy-Style Shortcut Launcher
+  const handleOneTapShortcut = () => {
+    const fastUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}&q=`;
+    navigator.clipboard.writeText(fastUrl);
+    showToast('Personal URL copied! Opening Shortcuts...');
+
+    setTimeout(() => {
+      if (SHARED_ICLOUD_SHORTCUT_URL) {
+        window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
+      } else {
+        window.location.href = 'shortcuts://create-shortcut';
+      }
+    }, 600);
+  };
+
   // Computed Totals
   const totalNetWorth = useMemo(
     () => wallets.reduce((acc, w) => acc + (Number(w?.balance) || 0), 0),
@@ -446,6 +463,8 @@ function TapxMainApp() {
   }, [transactions]);
 
   const currencySymbol = settings?.currency || '₹';
+  const personalFastUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}&q=`;
+  const personalMetaUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`;
 
   if (loading) {
     return (
@@ -1012,21 +1031,55 @@ function TapxMainApp() {
       {/* TAB 4: LOCK SCREEN BACK TAP SETUP */}
       {activeTab === 'shortcut' && (
         <div className="p-4 space-y-4">
-          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-3">
-            <h3 className="text-sm font-bold text-white">iOS Lock Screen Back Tap Bridge</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Your personal API token connects Apple Shortcuts directly to your TAPX wallets on the Lock Screen without unlocking your iPhone.
+          {/* Tappy-Style 1-Tap Launch Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600/20 to-zinc-900 border border-blue-500/40 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">⚡ 1-Tap iOS Shortcut Setup</h3>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-semibold">
+                Lock Screen Ready
+              </span>
+            </div>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              Tap below to automatically copy your personal logging URL and launch the Apple Shortcuts app.
             </p>
+            <button
+              onClick={handleOneTapShortcut}
+              className="w-full py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition"
+            >
+              <span>⚡ Copy Personal URL & Open Shortcuts</span>
+            </button>
+          </div>
 
-            {/* Personal Token Box */}
+          {/* Copyable Ready-Made URLs (No Headers or POST needed) */}
+          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-3">
             <div className="space-y-1">
-              <label className="text-[11px] text-zinc-500 font-semibold">Your Personal Shortcut Token</label>
+              <label className="text-[11px] text-zinc-400 font-semibold">
+                1-Line Instant Logging URL (No Headers / No JSON Needed)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={personalFastUrl}
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-300"
+                />
+                <button
+                  onClick={() => copyToClipboard(personalFastUrl, 'fastUrl')}
+                  className="px-3 py-2 rounded-xl bg-blue-600 text-xs font-semibold text-white shrink-0"
+                >
+                  {copiedField === 'fastUrl' ? 'Copied!' : 'Copy URL'}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] text-zinc-500 font-semibold">Your Personal Token</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   readOnly
                   value={settings?.shortcut_token || ''}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-300"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-400"
                 />
                 <button
                   onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
@@ -1043,55 +1096,79 @@ function TapxMainApp() {
                 </button>
               </div>
             </div>
-
-            {/* API Endpoint Box */}
-            <div className="space-y-1">
-              <label className="text-[11px] text-zinc-500 font-semibold">Your Shortcut API Endpoint</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${window.location.origin}/api/shortcut`}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-300"
-                />
-                <button
-                  onClick={() => copyToClipboard(`${window.location.origin}/api/shortcut`, 'url')}
-                  className="px-3 py-2 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-200"
-                >
-                  {copiedField === 'url' ? 'Copied' : 'Copy'}
-                </button>
-              </div>
-            </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2.5 text-xs text-zinc-300">
-            <h4 className="font-bold text-white">30-Second Apple Shortcut Setup (100% Dynamic)</h4>
-            <ol className="list-decimal list-inside space-y-2 text-zinc-400">
-              <li>
-                Open the <strong>Shortcuts</strong> app on your iPhone and create a new Shortcut named <strong>TAPX Lock Screen</strong>.
-              </li>
-              <li>
-                Add <strong>Get Contents of URL</strong>: set URL to <code className="text-blue-400">{window.location.origin}/api/shortcut?token={settings?.shortcut_token || ''}</code> (Method: <code className="text-zinc-200">GET</code>).
-              </li>
-              <li>
-                Add <strong>Get Dictionary Value</strong> → get <code className="text-zinc-200">wallets</code> from Contents of URL, then add <strong>Choose from List</strong> (Prompt: <em>"Select Wallet"</em>).
-              </li>
-              <li>
-                Add <strong>Get Dictionary Value</strong> → get <code className="text-zinc-200">categories</code> from Contents of URL, then add <strong>Choose from List</strong> (Prompt: <em>"Select Category"</em>).
-              </li>
-              <li>
-                Add <strong>Ask for Input</strong> (Type: <em>Number</em>, Prompt: <em>"Amount Spent?"</em>).
-              </li>
-              <li>
-                Add <strong>Get Contents of URL</strong>: set URL to <code className="text-blue-400">{window.location.origin}/api/shortcut</code>, Method: <code className="text-zinc-200">POST</code>, Header <code className="text-zinc-200">x-shortcut-token</code> = your token, and JSON body keys: <code className="text-zinc-200">amount</code>, <code className="text-zinc-200">wallet</code>, <code className="text-zinc-200">category</code>.
-              </li>
-              <li>
-                Add <strong>Get Dictionary Value</strong> → get <code className="text-zinc-200">message</code> and pass it to <strong>Show Notification</strong>.
-              </li>
-              <li>
-                In Shortcut Details (<strong>ⓘ</strong>) → Privacy, enable <strong>Allow Running When Locked</strong>, then bind it in <strong>Settings → Accessibility → Touch → Back Tap</strong>.
-              </li>
-            </ol>
+          {/* Mode Toggle: 3-Block Fast Shortcut vs Menu Picker Shortcut */}
+          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-3 text-xs text-zinc-300">
+            <div className="grid grid-cols-2 bg-zinc-950 p-1 rounded-xl">
+              <button
+                onClick={() => setShortcutMode('Fast')}
+                className={`py-1.5 rounded-lg text-xs font-semibold transition ${
+                  shortcutMode === 'Fast' ? 'bg-zinc-800 text-white' : 'text-zinc-500'
+                }`}
+              >
+                ⚡ 3-Block Setup (15s)
+              </button>
+              <button
+                onClick={() => setShortcutMode('Menu')}
+                className={`py-1.5 rounded-lg text-xs font-semibold transition ${
+                  shortcutMode === 'Menu' ? 'bg-zinc-800 text-white' : 'text-zinc-500'
+                }`}
+              >
+                📋 Menu Picker Setup
+              </button>
+            </div>
+
+            {shortcutMode === 'Fast' ? (
+              <div className="space-y-2">
+                <p className="text-zinc-400">
+                  Takes <strong>15 seconds</strong> to build once—no POST, no Headers, and no Dictionary blocks:
+                </p>
+                <ol className="list-decimal list-inside space-y-2 text-zinc-300">
+                  <li>
+                    Add <strong>Ask for Input</strong> (Prompt: <em>"Enter Amount (e.g. 150 or 150 fampay food)"</em>).
+                  </li>
+                  <li>
+                    Add <strong>Get Contents of URL</strong>: paste your <strong>1-Line Instant Logging URL</strong> above and tap <strong>Provided Input</strong> right at the end of the URL after <code className="text-blue-400">&amp;q=</code>.
+                  </li>
+                  <li>
+                    Add <strong>Show Notification</strong> and set its text to <strong>Contents of URL</strong>.
+                  </li>
+                  <li>
+                    Tap <strong>Share → Copy iCloud Link</strong> and paste that link into <code className="text-blue-400">SHARED_ICLOUD_SHORTCUT_URL</code> in <code className="text-zinc-200">App.jsx</code> so anyone can install it in 1 tap!
+                  </li>
+                </ol>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-zinc-400">
+                  Shows interactive Lock Screen pop-up menus for your Wallets and Categories (uses GET URLs only—no POST or Headers needed):
+                </p>
+                <ol className="list-decimal list-inside space-y-2 text-zinc-300">
+                  <li>
+                    Add <strong>Get Contents of URL</strong> set to <code className="text-blue-400 break-all">{personalMetaUrl}</code>
+                  </li>
+                  <li>
+                    Add <strong>Get Dictionary Value</strong> (<code className="text-zinc-200">wallets</code>) → <strong>Choose from List</strong>.
+                  </li>
+                  <li>
+                    Add <strong>Get Dictionary Value</strong> (<code className="text-zinc-200">categories</code> from first URL) → <strong>Choose from List</strong>.
+                  </li>
+                  <li>
+                    Add <strong>Ask for Input</strong> (Type: <em>Number</em>, Prompt: <em>"Amount?"</em>).
+                  </li>
+                  <li>
+                    Add <strong>Get Contents of URL</strong> set to:<br />
+                    <code className="text-blue-400 break-all">
+                      {personalMetaUrl}&amp;amount=[Provided Input]&amp;wallet=[Chosen Item 1]&amp;category=[Chosen Item 2]
+                    </code>
+                  </li>
+                  <li>
+                    Add <strong>Show Notification</strong> set directly to <strong>Contents of URL</strong>.
+                  </li>
+                </ol>
+              </div>
+            )}
           </div>
         </div>
       )}
