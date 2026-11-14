@@ -1,0 +1,9 @@
+{
+  "name": "TAPX",
+  "short_name": "TAPX",
+  "start_url": "/?quickAdd=true",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait"
+}
