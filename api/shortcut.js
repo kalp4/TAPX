@@ -4,19 +4,18 @@ import { createClient } from '@supabase/supabase-js';
 function normalizeTxType(rawType, rawQueryText = '') {
   const clean = String(rawType || '').trim().toLowerCase();
   if (
-    clean === 'income' ||
-    clean === 'earned' ||
-    clean === 'earn' ||
-    clean === 'credit' ||
+    clean.includes('income') ||
+    clean.includes('earn') ||
+    clean.includes('credit') ||
     clean === '+'
   ) {
     return 'income';
   }
   if (
-    clean === 'expense' ||
-    clean === 'spent' ||
-    clean === 'spend' ||
-    clean === 'debit' ||
+    clean.includes('expense') ||
+    clean.includes('spent') ||
+    clean.includes('spend') ||
+    clean.includes('debit') ||
     clean === '-'
   ) {
     return 'expense';
@@ -118,8 +117,74 @@ export default async function handler(req, res) {
 
   const cleanToken = String(token).trim();
 
-  // MODE 1: Smart 1-Line Quick Input via GET (?token=xxx&q=150 fampay food OR ?token=xxx&q=+500 cash allowance)
-  if (req.query?.q !== undefined) {
+  // MODE 1: POST Request from Interactive Menu Shortcut (Recommended)
+  if (req.method === 'POST') {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+
+    const { amount, wallet, category, type, note } = parsedBody || {};
+    const rawAmountStr = String(amount ?? '').replace(/[^0-9.]/g, '');
+    const numericAmount = Number(rawAmountStr);
+
+    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).send('⚠️ Enter a valid amount greater than 0');
+    }
+
+    const walletArg = wallet ? String(wallet).trim() : '';
+    const categoryArg = category ? String(category).trim() : '';
+    const typeArg = normalizeTxType(type);
+    const noteArg = note ? String(note).trim() : '';
+
+    const { data, error } = await supabase.rpc('shortcut_quick_log', {
+      p_token: cleanToken,
+      p_amount: numericAmount,
+      p_wallet_name: walletArg,
+      p_category_name: categoryArg,
+      p_type: typeArg,
+      p_note: noteArg
+    });
+
+    if (error) {
+      return res.status(500).send(`⚠️ ${error.message}`);
+    }
+
+    const bannerText = formatCleanBanner(data, numericAmount, walletArg, categoryArg, typeArg);
+    return res.status(200).send(bannerText);
+  }
+
+  // MODE 2: Menu-Picker Logging via GET URL Parameters (?token=xxx&amount=150&wallet=FamPay&category=Food&type=Expense)
+  if (req.method === 'GET' && req.query?.amount !== undefined && String(req.query.amount).trim() !== '') {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+
+    const rawAmountStr = String(req.query.amount).replace(/[^0-9.]/g, '');
+    const numericAmount = Number(rawAmountStr);
+    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).send('⚠️ Enter a valid amount greater than 0');
+    }
+
+    const walletArg = req.query.wallet ? String(req.query.wallet).trim() : '';
+    const categoryArg = req.query.category ? String(req.query.category).trim() : '';
+    const typeArg = normalizeTxType(req.query.type);
+    const noteArg = req.query.note ? String(req.query.note).trim() : '';
+
+    const { data, error } = await supabase.rpc('shortcut_quick_log', {
+      p_token: cleanToken,
+      p_amount: numericAmount,
+      p_wallet_name: walletArg,
+      p_category_name: categoryArg,
+      p_type: typeArg,
+      p_note: noteArg
+    });
+
+    if (error) {
+      return res.status(500).send(`⚠️ ${error.message}`);
+    }
+
+    const bannerText = formatCleanBanner(data, numericAmount, walletArg, categoryArg, typeArg);
+    return res.status(200).send(bannerText);
+  }
+
+  // MODE 3: Smart 1-Line Quick Input via GET (?token=xxx&q=150 fampay food)
+  if (req.method === 'GET' && req.query?.q !== undefined && String(req.query.q).trim() !== '') {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
     const rawQuery = String(req.query.q).trim();
@@ -138,7 +203,6 @@ export default async function handler(req, res) {
       .replace(/\b(spent|spend|expense|earned|earn|income)\b/gi, '')
       .trim();
 
-    // Fetch user's actual wallets and categories to auto-match words
     const { data: meta } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
@@ -210,39 +274,7 @@ export default async function handler(req, res) {
     return res.status(200).send(bannerText);
   }
 
-  // MODE 2: Menu-Picker Logging via Simple GET URL (?token=xxx&amount=150&wallet=FamPay&category=Food&type=Expense&note=Lunch)
-  if (req.method === 'GET' && req.query?.amount) {
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-
-    const rawAmountStr = String(req.query.amount).replace(/[^0-9.]/g, '');
-    const numericAmount = Number(rawAmountStr);
-    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) {
-      return res.status(400).send('⚠️ Enter a valid amount greater than 0');
-    }
-
-    const walletArg = req.query.wallet ? String(req.query.wallet).trim() : '';
-    const categoryArg = req.query.category ? String(req.query.category).trim() : '';
-    const typeArg = normalizeTxType(req.query.type);
-    const noteArg = req.query.note ? String(req.query.note).trim() : '';
-
-    const { data, error } = await supabase.rpc('shortcut_quick_log', {
-      p_token: cleanToken,
-      p_amount: numericAmount,
-      p_wallet_name: walletArg,
-      p_category_name: categoryArg,
-      p_type: typeArg,
-      p_note: noteArg
-    });
-
-    if (error) {
-      return res.status(500).send(`⚠️ ${error.message}`);
-    }
-
-    const bannerText = formatCleanBanner(data, numericAmount, walletArg, categoryArg, typeArg);
-    return res.status(200).send(bannerText);
-  }
-
-  // MODE 3: Fetch Live Wallets, Categories & Types for Menu Picker (?token=xxx)
+  // MODE 4: Fetch Live Wallets, Categories & Types Dictionary for Menu Picker (GET ?token=xxx)
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -254,54 +286,39 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: error.message });
     }
 
-    const walletsList = Array.isArray(data?.wallets) && data.wallets.length > 0
-      ? data.wallets
-      : ['Cash'];
-    const categoriesList = Array.isArray(data?.categories) && data.categories.length > 0
-      ? data.categories
-      : ['Food & Drinks', 'Transport', 'Shopping', 'Income & Allowance'];
+    const walletsList =
+      Array.isArray(data?.wallets) && data.wallets.length > 0
+        ? data.wallets
+        : ['Cash', 'UPI'];
+
+    const categoriesList =
+      Array.isArray(data?.categories) && data.categories.length > 0
+        ? data.categories
+        : [
+            'Food & Drinks',
+            'Groceries',
+            'Transport',
+            'Shopping',
+            'Entertainment',
+            'Bills & Recharge',
+            'Health & Fitness',
+            'Income & Allowance'
+          ];
+
+    const expenseCats = categoriesList.filter(
+      (c) => !/income|allowance|salary/i.test(String(c))
+    );
+    const incomeCats = categoriesList.filter((c) =>
+      /income|allowance|salary/i.test(String(c))
+    );
 
     return res.status(200).json({
       ...(typeof data === 'object' && data !== null ? data : {}),
       types: ['Expense', 'Income'],
       wallets: walletsList,
-      categories: categoriesList
-    });
-  }
-
-  // MODE 4: Traditional POST Request Support
-  if (req.method === 'POST') {
-    const { amount, wallet, category, type, note } = parsedBody || {};
-
-    const rawAmountStr = String(amount || '').replace(/[^0-9.]/g, '');
-    const numericAmount = Number(rawAmountStr);
-
-    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) {
-      return res.status(400).json({ error: 'Valid positive amount is required' });
-    }
-
-    const walletArg = wallet ? String(wallet).trim() : '';
-    const categoryArg = category ? String(category).trim() : '';
-    const typeArg = normalizeTxType(type);
-    const noteArg = note ? String(note).trim() : '';
-
-    const { data, error } = await supabase.rpc('shortcut_quick_log', {
-      p_token: cleanToken,
-      p_amount: numericAmount,
-      p_wallet_name: walletArg,
-      p_category_name: categoryArg,
-      p_type: typeArg,
-      p_note: noteArg
-    });
-
-    if (error) {
-      return res.status(500).json({ error: error.message });
-    }
-
-    const cleanMessage = formatCleanBanner(data, numericAmount, walletArg, categoryArg, typeArg);
-    return res.status(200).json({
-      ...(typeof data === 'object' && data !== null ? data : {}),
-      message: cleanMessage
+      categories: categoriesList,
+      Expense: expenseCats.length > 0 ? expenseCats : categoriesList,
+      Income: incomeCats.length > 0 ? incomeCats : ['Income & Allowance', ...categoriesList]
     });
   }
 

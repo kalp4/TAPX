@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
-// Paste your iCloud Shortcut Share Link here once you create it on your iPhone (Share -> Copy iCloud Link)
-const SHARED_ICLOUD_SHORTCUT_URL = '';
+// PASTE YOUR SHARED ICLOUD SHORTCUT LINK HERE (e.g. 'https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxx')
+const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/00588abc159b4c3993f9791020278c07';
 
 const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
 const CATEGORY_ICONS = ['🍔', '🛒', '⛽', '🛍️', '🎬', '⚡', '💊', '☕', '📚', '🏠', '💰', '✈️'];
 const CHART_COLORS = ['#2563eb', '#e11d48', '#d97706', '#059669', '#7c3aed', '#0891b2', '#db2777', '#4f46e5'];
+
+const DEFAULT_WALLETS_TEMPLATE = [
+  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#2563eb', icon: '⚡' },
+  { name: 'Cash', type: 'Cash', balance: 0, color: '#059669', icon: '💵' }
+];
 
 const DEFAULT_CATEGORIES_TEMPLATE = [
   { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#e11d48', monthly_budget: 3000 },
@@ -77,7 +82,7 @@ function NavIcon({ id, active }) {
   }
   return (
     <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107.1204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
   );
@@ -216,7 +221,6 @@ function TapxMainApp() {
   // Navigation & Animation Triggers
   const [activeTab, setActiveTab] = useState('pad');
   const [settingsSection, setSettingsSection] = useState('shortcut');
-  const [shortcutMode, setShortcutMode] = useState('Menu'); // Default to Interactive Menu Picker
   const [analyticsRange, setAnalyticsRange] = useState('month');
   const [popKey, setPopKey] = useState(0);
 
@@ -261,7 +265,6 @@ function TapxMainApp() {
 
   // Two-Tap Delete Confirmation State
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-
   const [copiedField, setCopiedField] = useState('');
 
   // Cache state automatically
@@ -367,27 +370,46 @@ function TapxMainApp() {
       if (categoriesRes.error) throw categoriesRes.error;
       if (txRes.error) throw txRes.error;
 
-      const fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
+      let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
       let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
       const fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
 
-      if (fetchedCategories.length < 7 && !seedingRef.current) {
+      if (!seedingRef.current) {
         seedingRef.current = true;
-        const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
-        const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
-          (item) => !existingNames.has(item.name.toLowerCase())
-        ).map((item) => ({
-          ...item,
-          user_id: userId
-        }));
 
-        if (missingDefaults.length > 0) {
-          const { data: seededCats } = await supabase
-            .from('categories')
-            .insert(missingDefaults)
+        // Auto-seed starter wallets for brand-new users so Back Tap works immediately
+        if (fetchedWallets.length === 0 && fetchedTx.length === 0) {
+          const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({
+            ...w,
+            user_id: userId
+          }));
+          const { data: seededWallets } = await supabase
+            .from('wallets')
+            .insert(starterWallets)
             .select();
-          if (Array.isArray(seededCats)) {
-            fetchedCategories = [...fetchedCategories, ...seededCats];
+          if (Array.isArray(seededWallets) && seededWallets.length > 0) {
+            fetchedWallets = seededWallets;
+          }
+        }
+
+        // Auto-seed default categories
+        if (fetchedCategories.length < 7) {
+          const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
+          const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
+            (item) => !existingNames.has(item.name.toLowerCase())
+          ).map((item) => ({
+            ...item,
+            user_id: userId
+          }));
+
+          if (missingDefaults.length > 0) {
+            const { data: seededCats } = await supabase
+              .from('categories')
+              .insert(missingDefaults)
+              .select();
+            if (Array.isArray(seededCats)) {
+              fetchedCategories = [...fetchedCategories, ...seededCats];
+            }
           }
         }
       }
@@ -785,14 +807,11 @@ function TapxMainApp() {
     setTimeout(() => setCopiedField(''), 2000);
   };
 
-  const handleOneTapShortcut = () => {
-    const urlToCopy =
-      shortcutMode === 'Menu'
-        ? `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`
-        : `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}&q=`;
+  const personalApiUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`;
 
-    navigator.clipboard.writeText(urlToCopy);
-    showToast('URL copied · Opening Shortcuts');
+  const handleOneTapShortcut = () => {
+    navigator.clipboard.writeText(personalApiUrl);
+    showToast('Personal URL copied · Opening Shortcuts');
 
     setTimeout(() => {
       if (SHARED_ICLOUD_SHORTCUT_URL) {
@@ -974,9 +993,6 @@ function TapxMainApp() {
   }, [transactions, categories, wallets, analyticsRange]);
 
   const currencySymbol = settings?.currency || '₹';
-  const personalMetaUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`;
-  const personalFastUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}&q=`;
-  const personalSaveMenuUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}&type=[Type]&wallet=[Wallet]&category=[Category]&amount=[Amount]&note=[Note]`;
 
   const primaryButtonClass =
     entryType === 'income'
@@ -1804,143 +1820,51 @@ function TapxMainApp() {
                 <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className={`text-xs font-semibold ${ui.textPrimary}`}>iOS Lock Screen Bridge</h3>
+                      <h3 className={`text-xs font-semibold ${ui.textPrimary}`}>1-Tap Back Tap Installer</h3>
                       <p className={`text-[10px] ${ui.textMuted}`}>
-                        Choose Interactive Menu to pick Spent/Earned, Wallet & Category
+                        Asks Spent/Earned, Account, Category & Amount on Lock Screen
                       </p>
                     </div>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${ui.cardSubtle} ${ui.textSecondary}`}>
-                      Back Tap
+                      iOS
                     </span>
                   </div>
 
-                  {/* Mode Selector */}
-                  <div className={`grid grid-cols-2 p-0.5 rounded-xl border ${ui.segmentedBg}`}>
-                    <button
-                      onClick={() => setShortcutMode('Menu')}
-                      className={`py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
-                        shortcutMode === 'Menu' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
-                      }`}
-                    >
-                      Interactive Menu (Recommended)
-                    </button>
-                    <button
-                      onClick={() => setShortcutMode('Fast')}
-                      className={`py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
-                        shortcutMode === 'Fast' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
-                      }`}
-                    >
-                      1-Line Text Input
-                    </button>
+                  <div className="space-y-1">
+                    <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
+                      Your Personal Shortcut URL
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        readOnly
+                        value={personalApiUrl}
+                        className={`flex-1 border rounded-xl px-2.5 py-2 text-[11px] font-mono ${ui.input}`}
+                      />
+                      <button
+                        onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold shrink-0 key-press ${ui.cardSubtle} ${ui.textPrimary} border`}
+                      >
+                        {copiedField === 'apiUrl' ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
                   </div>
-
-                  {shortcutMode === 'Menu' ? (
-                    <div className="space-y-2.5 text-[11px]">
-                      <p className={ui.textSecondary}>
-                        This setup makes Back Tap ask you: <strong>1. Expense or Income</strong>, <strong>2. Account (Wallet)</strong>, <strong>3. Category</strong>, and <strong>4. Amount</strong>.
-                      </p>
-
-                      {/* URL 1: Fetch Lists */}
-                      <div className="space-y-1">
-                        <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
-                          Step 1 URL (Fetch Wallets & Categories)
-                        </label>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            readOnly
-                            value={personalMetaUrl}
-                            className={`flex-1 border rounded-xl px-2.5 py-1.5 text-[11px] font-mono ${ui.input}`}
-                          />
-                          <button
-                            onClick={() => copyToClipboard(personalMetaUrl, 'metaUrl')}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 key-press ${ui.primaryBtnExpense}`}
-                          >
-                            {copiedField === 'metaUrl' ? 'Copied' : 'Copy'}
-                          </button>
-                        </div>
-                      </div>
-
-                      <ol className={`list-decimal list-inside space-y-1.5 leading-relaxed pt-1 ${ui.textSecondary}`}>
-                        <li>
-                          Add <strong>Get Contents of URL</strong> and paste the <strong>Step 1 URL</strong> above.
-                        </li>
-                        <li>
-                          Add <strong>Get Dictionary Value</strong> → Key: <code>types</code> → then add <strong>Choose from List</strong> (Prompt: <em>Spent or Earned?</em>). Rename output to <code>Type</code>.
-                        </li>
-                        <li>
-                          Add <strong>Get Dictionary Value</strong> (from Contents of URL) → Key: <code>wallets</code> → then add <strong>Choose from List</strong> (Prompt: <em>Which Account?</em>). Rename output to <code>Wallet</code>.
-                        </li>
-                        <li>
-                          Add <strong>Get Dictionary Value</strong> (from Contents of URL) → Key: <code>categories</code> → then add <strong>Choose from List</strong> (Prompt: <em>Which Category?</em>). Rename output to <code>Category</code>.
-                        </li>
-                        <li>
-                          Add <strong>Ask for Input</strong> (Number, Prompt: <em>Amount?</em>).
-                        </li>
-                        <li>
-                          Add a second <strong>Get Contents of URL</strong> using the Save URL below (replace the bracketed placeholders with your variables), followed by <strong>Show Notification</strong>.
-                        </li>
-                      </ol>
-
-                      {/* URL 2: Save Entry */}
-                      <div className="space-y-1 pt-1">
-                        <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
-                          Step 6 Save URL Template
-                        </label>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            readOnly
-                            value={personalSaveMenuUrl}
-                            className={`flex-1 border rounded-xl px-2.5 py-1.5 text-[11px] font-mono ${ui.input}`}
-                          />
-                          <button
-                            onClick={() => copyToClipboard(personalSaveMenuUrl, 'saveMenuUrl')}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 key-press ${ui.primaryBtnExpense}`}
-                          >
-                            {copiedField === 'saveMenuUrl' ? 'Copied' : 'Copy'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5 text-[11px]">
-                      <p className={ui.textSecondary}>
-                        Type everything in one line—like <code>150 fampay food</code> for an expense, or <code>+500 cash allowance</code> for income.
-                      </p>
-                      <div className="space-y-1">
-                        <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
-                          Instant 1-Line URL
-                        </label>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            readOnly
-                            value={personalFastUrl}
-                            className={`flex-1 border rounded-xl px-2.5 py-1.5 text-[11px] font-mono ${ui.input}`}
-                          />
-                          <button
-                            onClick={() => copyToClipboard(personalFastUrl, 'fastUrl')}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 key-press ${ui.primaryBtnExpense}`}
-                          >
-                            {copiedField === 'fastUrl' ? 'Copied' : 'Copy'}
-                          </button>
-                        </div>
-                      </div>
-                      <ol className={`list-decimal list-inside space-y-1.5 leading-relaxed ${ui.textSecondary}`}>
-                        <li>Add <strong>Ask for Input</strong> (Text, Prompt: <em>e.g. 150 fampay food or +500 cash</em>).</li>
-                        <li>Add <strong>Get Contents of URL</strong>: paste the URL above and put <strong>Provided Input</strong> right after <code>&amp;q=</code>.</li>
-                        <li>Add <strong>Show Notification</strong> set to <strong>Contents of URL</strong>.</li>
-                      </ol>
-                    </div>
-                  )}
 
                   <button
                     onClick={handleOneTapShortcut}
-                    className={`w-full py-2.5 px-4 rounded-xl font-semibold text-xs key-press ${ui.primaryBtnExpense}`}
+                    className={`w-full py-3 px-4 rounded-xl font-semibold text-xs key-press ${ui.primaryBtnExpense}`}
                   >
-                    Copy URL & Open Apple Shortcuts
+                    Copy Personal URL & Install Shortcut
                   </button>
+
+                  <div className={`pt-2 border-t space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
+                    <p className={`font-semibold ${ui.textPrimary}`}>Quick Setup (10 Seconds):</p>
+                    <ol className="list-decimal list-inside space-y-1 leading-relaxed">
+                      <li>Tap the button above (your Personal URL copies automatically).</li>
+                      <li>When Apple Shortcuts opens, tap <strong>Paste</strong> into the setup prompt and tap <strong>Add Shortcut</strong>.</li>
+                      <li>Go to iPhone <strong>Settings → Accessibility → Touch → Back Tap → Double Tap</strong> and select <strong>Log to TAPX</strong>.</li>
+                    </ol>
+                  </div>
                 </div>
 
                 {/* Token Box */}
