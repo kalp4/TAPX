@@ -8,9 +8,147 @@
     <meta name="apple-mobile-web-app-title" content="TAPX" />
     <meta name="theme-color" content="#09090b" id="theme-color-meta" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="apple-touch-icon" id="ios-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
     <title>TAPX</title>
+    <script>
+      // Synchronously generate a 512x512 PNG for iOS Home Screen (Safari requires PNG for apple-touch-icon)
+      (function () {
+        try {
+          var c = document.createElement('canvas');
+          c.width = 512;
+          c.height = 512;
+          var ctx = c.getContext('2d');
+
+          function roundRectPath(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+          }
+
+          // 1. Dark iOS App Icon Background (#09090b - no white box)
+          ctx.fillStyle = '#09090b';
+          ctx.fillRect(0, 0, 512, 512);
+
+          // Center the logo artwork nicely inside the 512x512 icon grid
+          ctx.save();
+          ctx.translate(-6, 4);
+
+          // 2. Rising Bar Chart (Emerald, Teal, Blue)
+          var g1 = ctx.createLinearGradient(0, 148, 0, 260);
+          g1.addColorStop(0, '#10b981');
+          g1.addColorStop(1, '#059669');
+          ctx.fillStyle = g1;
+          roundRectPath(172, 148, 54, 112, 6);
+          ctx.fill();
+
+          var g2 = ctx.createLinearGradient(0, 110, 0, 260);
+          g2.addColorStop(0, '#2dd4bf');
+          g2.addColorStop(1, '#0d9488');
+          ctx.fillStyle = g2;
+          roundRectPath(242, 110, 54, 150, 6);
+          ctx.fill();
+
+          var g3 = ctx.createLinearGradient(0, 70, 0, 260);
+          g3.addColorStop(0, '#38bdf8');
+          g3.addColorStop(1, '#2563eb');
+          ctx.fillStyle = g3;
+          roundRectPath(312, 70, 54, 190, 6);
+          ctx.fill();
+
+          // 3. Wallet Top-Left Lip
+          var navyGrad = ctx.createLinearGradient(100, 214, 416, 440);
+          navyGrad.addColorStop(0, '#163e7a');
+          navyGrad.addColorStop(1, '#0a2347');
+          ctx.fillStyle = navyGrad;
+          roundRectPath(100, 214, 78, 84, 38);
+          ctx.fill();
+
+          // 4. Wallet Main Body (Clipped for Internal Teal & Emerald Waves)
+          ctx.save();
+          roundRectPath(100, 256, 316, 184, 42);
+          ctx.clip();
+
+          ctx.fillStyle = navyGrad;
+          ctx.fillRect(100, 256, 316, 184);
+
+          // Mid Teal Wave
+          ctx.fillStyle = '#0e7c86';
+          ctx.beginPath();
+          ctx.moveTo(226, 256);
+          ctx.lineTo(416, 256);
+          ctx.lineTo(416, 440);
+          ctx.lineTo(314, 440);
+          ctx.bezierCurveTo(264, 410, 236, 344, 226, 256);
+          ctx.closePath();
+          ctx.fill();
+
+          // Right Emerald Wave
+          ctx.fillStyle = '#15a378';
+          ctx.beginPath();
+          ctx.moveTo(296, 256);
+          ctx.lineTo(416, 256);
+          ctx.lineTo(416, 440);
+          ctx.lineTo(338, 440);
+          ctx.bezierCurveTo(304, 408, 292, 336, 296, 256);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          // 5. Cutouts (Top Wallet Fold Slot & Center Arch Ring)
+          ctx.fillStyle = '#09090b';
+          roundRectPath(130, 236, 180, 22, 11);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(298, 258, 58, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 6. Center Emerald Arch Swoop
+          ctx.fillStyle = '#15a378';
+          ctx.beginPath();
+          ctx.arc(298, 258, 44, Math.PI, 0, false);
+          ctx.bezierCurveTo(342, 332, 326, 398, 338, 440);
+          ctx.lineTo(312, 440);
+          ctx.bezierCurveTo(274, 406, 254, 334, 254, 258);
+          ctx.closePath();
+          ctx.fill();
+
+          // Inner Arch Accent Curve
+          ctx.strokeStyle = '#0a5c4c';
+          ctx.lineWidth = 7;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.arc(298, 258, 28, Math.PI * 1.15, Math.PI * 1.85, false);
+          ctx.stroke();
+
+          // 7. Clasp Surround Cutout
+          ctx.fillStyle = '#09090b';
+          roundRectPath(312, 312, 124, 84, 42);
+          ctx.fill();
+
+          // 8. Navy Wallet Clasp & Button Dot
+          ctx.fillStyle = navyGrad;
+          roundRectPath(328, 328, 96, 52, 26);
+          ctx.fill();
+
+          ctx.fillStyle = '#09090b';
+          ctx.beginPath();
+          ctx.arc(358, 354, 12, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+
+          var pngDataUrl = c.toDataURL('image/png');
+          var iconLink = document.getElementById('ios-touch-icon');
+          if (iconLink) iconLink.setAttribute('href', pngDataUrl);
+        } catch (e) {}
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       * {
