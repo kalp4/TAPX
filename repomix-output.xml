@@ -47,6 +47,7 @@ api/
 public/
   favicon.svg
   icons.svg
+  logo.png
   manifest.json
 src/
   assets/
@@ -92,10 +93,6 @@ export default async function handler(req, res) {
 }
 </file>
 
-<file path="public/favicon.svg">
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" fill="none" viewBox="0 0 48 46"><path fill="#863bff" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" style="fill:#863bff;fill:color(display-p3 .5252 .23 1);fill-opacity:1"/><mask id="a" width="48" height="46" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M25.842 44.938c-.664.844-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.183c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.498 0-3.579-1.842-3.579H1.133c-.92 0-1.456-1.04-.92-1.787L9.91.473c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.578 1.842 3.578h11.377c.943 0 1.473 1.088.89 1.832L25.843 44.94z" style="fill:#000;fill-opacity:1"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#ede6ff" rx="5.508" ry="14.704" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -4.47 31.516)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#ede6ff" rx="10.399" ry="29.851" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -39.328 7.883)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#7e14ff" rx="5.508" ry="30.487" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -25.913 -14.639)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -32.644 -3.334)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -34.34 30.47)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#ede6ff" rx="14.072" ry="22.078" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="rotate(93.35 24.506 48.493)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx=".387" cy="8.972" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(39.51 .387 8.972)"/></g><g filter="url(#k)"><ellipse cx="47.523" cy="-6.092" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 47.523 -6.092)"/></g><g filter="url(#l)"><ellipse cx="41.412" cy="6.333" fill="#47bfff" rx="5.971" ry="9.665" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 41.412 6.333)"/></g><g filter="url(#m)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#n)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#o)"><ellipse cx="35.651" cy="29.907" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 35.651 29.907)"/></g><g filter="url(#p)"><ellipse cx="38.418" cy="32.4" fill="#47bfff" rx="5.971" ry="15.297" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 38.418 32.4)"/></g></g><defs><filter id="b" width="60.045" height="41.654" x="-19.77" y="16.149" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-54.613" y="-7.533" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-49.64" y="2.03" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-45.045" y="20.029" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-43.513" y="21.178" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="15.756" y="-17.901" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-27.636" y="-22.853" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="20.116" y="-38.415" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="24.641" y="-11.323" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="8.244" y="-2.416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="18.713" y="10.588" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter></defs></svg>
-</file>
-
 <file path="public/icons.svg">
 <svg xmlns="http://www.w3.org/2000/svg">
   <symbol id="bluesky-icon" viewBox="0 0 16 17">
@@ -121,18 +118,6 @@ export default async function handler(req, res) {
     <path fill="#08060d" fill-rule="evenodd" d="M1.893 1.98c.052.072 1.245 1.769 2.653 3.77l2.892 4.114c.183.261.333.48.333.486s-.068.089-.152.183l-.522.593-.765.867-3.597 4.087c-.375.426-.734.834-.798.905a1 1 0 0 0-.118.148c0 .01.236.017.664.017h.663l.729-.83c.4-.457.796-.906.879-.999a692 692 0 0 0 1.794-2.038c.034-.037.301-.34.594-.675l.551-.624.345-.392a7 7 0 0 1 .34-.374c.006 0 .93 1.306 2.052 2.903l2.084 2.965.045.063h2.275c1.87 0 2.273-.003 2.266-.021-.008-.02-1.098-1.572-3.894-5.547-2.013-2.862-2.28-3.246-2.273-3.266.008-.019.282-.332 2.085-2.38l2-2.274 1.567-1.782c.022-.028-.016-.03-.65-.03h-.674l-.3.342a871 871 0 0 1-1.782 2.025c-.067.075-.405.458-.75.852a100 100 0 0 1-.803.91c-.148.172-.299.344-.99 1.127-.304.343-.32.358-.345.327-.015-.019-.904-1.282-1.976-2.808L6.365 1.85H1.8zm1.782.91 8.078 11.294c.772 1.08 1.413 1.973 1.425 1.984.016.017.241.02 1.05.017l1.03-.004-2.694-3.766L7.796 5.75 5.722 2.852l-1.039-.004-1.039-.004z" clip-rule="evenodd"/>
   </symbol>
 </svg>
-</file>
-
-<file path="public/manifest.json">
-{
-  "name": "TAPX",
-  "short_name": "TAPX",
-  "start_url": "/?quickAdd=true",
-  "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
-  "orientation": "portrait"
-}
 </file>
 
 <file path="src/assets/react.svg">
@@ -431,6 +416,32 @@ If you are developing a production application, we recommend using TypeScript wi
 }
 </file>
 
+<file path="public/manifest.json">
+{
+  "name": "TAPX",
+  "short_name": "TAPX",
+  "start_url": "/?quickAdd=true",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
+</file>
+
 <file path="vite.config.js">
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -438,6 +449,69 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
 });
+</file>
+
+<file path="public/favicon.svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bar1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="bar2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2dd4bf" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+    <linearGradient id="bar3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="navyBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f3166" />
+      <stop offset="100%" stop-color="#071d3d" />
+    </linearGradient>
+
+    <!-- True Transparency Mask for Wallet Cutouts -->
+    <mask id="walletCutouts">
+      <rect width="512" height="512" fill="white" />
+      <!-- Top wallet fold slot cutout -->
+      <path d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z" fill="black" />
+      <!-- Center arch outer ring cutout -->
+      <circle cx="298" cy="260" r="60" fill="black" />
+      <!-- Clasp outer surround cutout -->
+      <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
+    </mask>
+
+    <mask id="claspDotCutout">
+      <rect width="512" height="512" fill="white" />
+      <circle cx="358" cy="354" r="12" fill="black" />
+    </mask>
+  </defs>
+
+  <g mask="url(#walletCutouts)">
+    <!-- 3 Rising Bars -->
+    <rect x="172" y="152" width="54" height="106" rx="6" fill="url(#bar1)" />
+    <rect x="242" y="114" width="54" height="144" rx="6" fill="url(#bar2)" />
+    <rect x="312" y="74" width="54" height="184" rx="6" fill="url(#bar3)" />
+
+    <!-- Wallet Base (Deep Navy) -->
+    <path d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z" fill="url(#navyBody)" />
+
+    <!-- Mid Teal Wave -->
+    <path d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z" fill="#0e7c86" />
+
+    <!-- Right Emerald Wave -->
+    <path d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z" fill="#15a378" />
+  </g>
+
+  <!-- Center Emerald Arch Swoop (sits inside the masked ring) -->
+  <path d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z" fill="#15a378" />
+  <!-- Inner Arch Accent Line -->
+  <path d="M 272 246 A 28 28 0 0 1 324 246" fill="none" stroke="#0c6e5c" stroke-width="7" stroke-linecap="round" />
+
+  <!-- Wallet Clasp with Transparent Button Cutout -->
+  <rect x="328" y="328" width="96" height="52" rx="26" fill="url(#navyBody)" mask="url(#claspDotCutout)" />
+</svg>
 </file>
 
 <file path="package.json">
@@ -989,8 +1063,148 @@ export default async function handler(req, res) {
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="TAPX" />
     <meta name="theme-color" content="#09090b" id="theme-color-meta" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" id="ios-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
     <title>TAPX</title>
+    <script>
+      // Synchronously generate a 512x512 PNG for iOS Home Screen (Safari requires PNG for apple-touch-icon)
+      (function () {
+        try {
+          var c = document.createElement('canvas');
+          c.width = 512;
+          c.height = 512;
+          var ctx = c.getContext('2d');
+
+          function roundRectPath(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+          }
+
+          // 1. Dark iOS App Icon Background (#09090b - no white box)
+          ctx.fillStyle = '#09090b';
+          ctx.fillRect(0, 0, 512, 512);
+
+          // Center the logo artwork nicely inside the 512x512 icon grid
+          ctx.save();
+          ctx.translate(-6, 4);
+
+          // 2. Rising Bar Chart (Emerald, Teal, Blue)
+          var g1 = ctx.createLinearGradient(0, 148, 0, 260);
+          g1.addColorStop(0, '#10b981');
+          g1.addColorStop(1, '#059669');
+          ctx.fillStyle = g1;
+          roundRectPath(172, 148, 54, 112, 6);
+          ctx.fill();
+
+          var g2 = ctx.createLinearGradient(0, 110, 0, 260);
+          g2.addColorStop(0, '#2dd4bf');
+          g2.addColorStop(1, '#0d9488');
+          ctx.fillStyle = g2;
+          roundRectPath(242, 110, 54, 150, 6);
+          ctx.fill();
+
+          var g3 = ctx.createLinearGradient(0, 70, 0, 260);
+          g3.addColorStop(0, '#38bdf8');
+          g3.addColorStop(1, '#2563eb');
+          ctx.fillStyle = g3;
+          roundRectPath(312, 70, 54, 190, 6);
+          ctx.fill();
+
+          // 3. Wallet Top-Left Lip
+          var navyGrad = ctx.createLinearGradient(100, 214, 416, 440);
+          navyGrad.addColorStop(0, '#163e7a');
+          navyGrad.addColorStop(1, '#0a2347');
+          ctx.fillStyle = navyGrad;
+          roundRectPath(100, 214, 78, 84, 38);
+          ctx.fill();
+
+          // 4. Wallet Main Body (Clipped for Internal Teal & Emerald Waves)
+          ctx.save();
+          roundRectPath(100, 256, 316, 184, 42);
+          ctx.clip();
+
+          ctx.fillStyle = navyGrad;
+          ctx.fillRect(100, 256, 316, 184);
+
+          // Mid Teal Wave
+          ctx.fillStyle = '#0e7c86';
+          ctx.beginPath();
+          ctx.moveTo(226, 256);
+          ctx.lineTo(416, 256);
+          ctx.lineTo(416, 440);
+          ctx.lineTo(314, 440);
+          ctx.bezierCurveTo(264, 410, 236, 344, 226, 256);
+          ctx.closePath();
+          ctx.fill();
+
+          // Right Emerald Wave
+          ctx.fillStyle = '#15a378';
+          ctx.beginPath();
+          ctx.moveTo(296, 256);
+          ctx.lineTo(416, 256);
+          ctx.lineTo(416, 440);
+          ctx.lineTo(338, 440);
+          ctx.bezierCurveTo(304, 408, 292, 336, 296, 256);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          // 5. Cutouts (Top Wallet Fold Slot & Center Arch Ring)
+          ctx.fillStyle = '#09090b';
+          roundRectPath(130, 236, 180, 22, 11);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(298, 258, 58, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 6. Center Emerald Arch Swoop
+          ctx.fillStyle = '#15a378';
+          ctx.beginPath();
+          ctx.arc(298, 258, 44, Math.PI, 0, false);
+          ctx.bezierCurveTo(342, 332, 326, 398, 338, 440);
+          ctx.lineTo(312, 440);
+          ctx.bezierCurveTo(274, 406, 254, 334, 254, 258);
+          ctx.closePath();
+          ctx.fill();
+
+          // Inner Arch Accent Curve
+          ctx.strokeStyle = '#0a5c4c';
+          ctx.lineWidth = 7;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.arc(298, 258, 28, Math.PI * 1.15, Math.PI * 1.85, false);
+          ctx.stroke();
+
+          // 7. Clasp Surround Cutout
+          ctx.fillStyle = '#09090b';
+          roundRectPath(312, 312, 124, 84, 42);
+          ctx.fill();
+
+          // 8. Navy Wallet Clasp & Button Dot
+          ctx.fillStyle = navyGrad;
+          roundRectPath(328, 328, 96, 52, 26);
+          ctx.fill();
+
+          ctx.fillStyle = '#09090b';
+          ctx.beginPath();
+          ctx.arc(358, 354, 12, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+
+          var pngDataUrl = c.toDataURL('image/png');
+          var iconLink = document.getElementById('ios-touch-icon');
+          if (iconLink) iconLink.setAttribute('href', pngDataUrl);
+        } catch (e) {}
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       * {
@@ -1253,6 +1467,108 @@ const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 
+// Frameless, 100% Transparent-Cutout Vector Logo (No Border, No Background Box)
+function TapxLogo({ className = 'w-16 h-16' }) {
+  const uid = React.useId().replace(/:/g, '');
+  const walletMaskId = `wallet-cut-${uid}`;
+  const claspMaskId = `clasp-cut-${uid}`;
+  const bar1Id = `b1-${uid}`;
+  const bar2Id = `b2-${uid}`;
+  const bar3Id = `b3-${uid}`;
+  const navyId = `nv-${uid}`;
+
+  return (
+    <svg
+      viewBox="85 60 345 395"
+      className={`${className} shrink-0 select-none`}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id={bar1Id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <linearGradient id={bar2Id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2dd4bf" />
+          <stop offset="100%" stopColor="#0d9488" />
+        </linearGradient>
+        <linearGradient id={bar3Id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#2563eb" />
+        </linearGradient>
+        <linearGradient id={navyId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#163e7a" />
+          <stop offset="100%" stopColor="#0a2347" />
+        </linearGradient>
+
+        <mask id={walletMaskId}>
+          <rect x="0" y="0" width="512" height="512" fill="white" />
+          <path
+            d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z"
+            fill="black"
+          />
+          <circle cx="298" cy="260" r="60" fill="black" />
+          <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
+        </mask>
+
+        <mask id={claspMaskId}>
+          <rect x="0" y="0" width="512" height="512" fill="white" />
+          <circle cx="358" cy="354" r="12" fill="black" />
+        </mask>
+      </defs>
+
+      <g mask={`url(#${walletMaskId})`}>
+        {/* 3 Rising Bars */}
+        <rect x="172" y="152" width="54" height="106" rx="6" fill={`url(#${bar1Id})`} />
+        <rect x="242" y="114" width="54" height="144" rx="6" fill={`url(#${bar2Id})`} />
+        <rect x="312" y="74" width="54" height="184" rx="6" fill={`url(#${bar3Id})`} />
+
+        {/* Wallet Base */}
+        <path
+          d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z"
+          fill={`url(#${navyId})`}
+        />
+
+        {/* Mid Teal Wave */}
+        <path
+          d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z"
+          fill="#0e7c86"
+        />
+
+        {/* Right Emerald Wave */}
+        <path
+          d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z"
+          fill="#15a378"
+        />
+      </g>
+
+      {/* Center Emerald Arch Swoop */}
+      <path
+        d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z"
+        fill="#15a378"
+      />
+      <path
+        d="M 272 246 A 28 28 0 0 1 324 246"
+        fill="none"
+        stroke="#0a5c4c"
+        strokeWidth="7"
+        strokeLinecap="round"
+      />
+
+      {/* Clasp with Transparent Button Dot */}
+      <rect
+        x="328"
+        y="328"
+        width="96"
+        height="52"
+        rx="26"
+        fill={`url(#${navyId})`}
+        mask={`url(#${claspMaskId})`}
+      />
+    </svg>
+  );
+}
+
 function formatRelativeDateTime(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -1286,7 +1602,6 @@ function formatRelativeDateTime(isoString) {
 function NavIcon({ id, active }) {
   const sizeClass = 'w-[22px] h-[22px]';
 
-  // Authentic iPhone Phone App 10-Dot Keypad Grid Icon (circle.grid.3x3.fill)
   if (id === 'pad') {
     const r = active ? '2.2' : '1.75';
     return (
@@ -1305,7 +1620,6 @@ function NavIcon({ id, active }) {
     );
   }
 
-  // SF Symbol: creditcard.fill / creditcard
   if (id === 'wallets') {
     if (active) {
       return (
@@ -1327,7 +1641,6 @@ function NavIcon({ id, active }) {
     );
   }
 
-  // SF Symbol: chart.bar.fill / chart.bar
   if (id === 'analytics') {
     if (active) {
       return (
@@ -1347,7 +1660,6 @@ function NavIcon({ id, active }) {
     );
   }
 
-  // SF Symbol: gearshape.fill / gearshape
   return (
     <svg
       className={sizeClass}
@@ -1564,7 +1876,7 @@ function TapxMainApp() {
 
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     setLensBulge(true);
-    setScrubProgress(null); // Keep null on initial touch so the lens smoothly animates to the tapped tab
+    setScrubProgress(null);
 
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -1582,7 +1894,6 @@ function TapxMainApp() {
   const handleNavPointerMove = (e) => {
     if (!isPointerDownOnNavRef.current) return;
 
-    // Only enter continuous drag-scrubbing mode if finger moves horizontally past 14px
     if (!isScrubbingRef.current && Math.abs(e.clientX - pointerStartXRef.current) > 14) {
       isScrubbingRef.current = true;
     }
@@ -2515,28 +2826,36 @@ function TapxMainApp() {
 
   if (initialBoot) {
     return (
-      <div className={`h-full w-full ${ui.bg} flex items-center justify-center p-6 overflow-hidden`}>
-        <div className="w-7 h-7 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+      <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
+        <TapxLogo className="w-16 h-16 animate-pulse" />
+        <div className="w-5 h-5 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  // SIGN-IN SCREEN
+  // ULTRA-CLEAN MINIMAL LOGIN SCREEN (No Clutter, Frameless Logo)
   if (!session) {
     return (
-      <div className={`h-full w-full ${ui.bg} flex flex-col justify-between p-7 max-w-md mx-auto overflow-hidden`}>
-        <div className="mt-16 space-y-3">
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${ui.card}`}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>iOS Lock Screen Expense Tracker</span>
-          </div>
-          <h1 className={`text-4xl font-bold tracking-tight ${ui.textPrimary}`}>TAPX</h1>
-          <p className={`text-sm leading-relaxed ${ui.textSecondary}`}>
-            Minimal multi-wallet balance tracking with instant Back Tap lock screen logging.
+      <div
+        className={`h-full w-full ${ui.bg} flex flex-col justify-between px-7 max-w-md mx-auto overflow-hidden select-none`}
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top), 24px)',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 28px)'
+        }}
+      >
+        <div />
+
+        <div className="flex flex-col items-center text-center space-y-3">
+          <TapxLogo className="w-24 h-24 mb-1" />
+          <h1 className={`text-3xl font-bold tracking-tight ${ui.textPrimary}`}>
+            TAPX
+          </h1>
+          <p className={`text-sm max-w-[240px] leading-relaxed ${ui.textSecondary}`}>
+            Instant multi-wallet expense tracking with iPhone Back Tap.
           </p>
         </div>
 
-        <div className="space-y-4 mb-10">
+        <div className="space-y-3">
           <button
             onClick={handleGoogleLogin}
             className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 key-press ${
@@ -2563,7 +2882,8 @@ function TapxMainApp() {
             </svg>
             Continue with Google
           </button>
-          <p className={`text-xs text-center ${ui.textMuted}`}>
+
+          <p className={`text-[11px] text-center ${ui.textMuted}`}>
             Share → Add to Home Screen for full-screen iOS mode
           </p>
         </div>
@@ -2596,7 +2916,7 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Crisp Top Header */}
+      {/* Crisp Top Header (Logo Removed from Home Screen) */}
       <header className="px-5 pt-2 pb-3 flex items-center justify-between shrink-0">
         <div>
           <div className="flex items-center gap-1.5">

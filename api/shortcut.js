@@ -98,23 +98,38 @@ function extractAmount(payload) {
 
 // Normalize user/Shortcut type input ('Expense', 'Spent', 'Income', 'Earned', '+', '-')
 function normalizeTxType(rawType, rawQueryText = '') {
-  const clean = String(rawType || '').trim().toLowerCase();
-  if (
-    clean.includes('income') ||
-    clean.includes('earn') ||
-    clean.includes('credit') ||
-    clean === '+'
-  ) {
-    return 'income';
+  if (Array.isArray(rawType)) {
+    return 'expense';
   }
+
+  const clean = String(rawType || '').trim().toLowerCase();
+
+  if (clean.includes('expense') && clean.includes('income')) {
+    return 'expense';
+  }
+
   if (
-    clean.includes('expense') ||
-    clean.includes('spent') ||
-    clean.includes('spend') ||
-    clean.includes('debit') ||
-    clean === '-'
+    clean === 'expense' ||
+    clean === 'spent' ||
+    clean === 'spend' ||
+    clean === 'debit' ||
+    clean === '-' ||
+    clean.startsWith('expense') ||
+    clean.startsWith('spent')
   ) {
     return 'expense';
+  }
+
+  if (
+    clean === 'income' ||
+    clean === 'earned' ||
+    clean === 'earn' ||
+    clean === 'credit' ||
+    clean === '+' ||
+    clean.startsWith('income') ||
+    clean.startsWith('earn')
+  ) {
+    return 'income';
   }
 
   const qLower = String(rawQueryText || '').trim().toLowerCase();
@@ -135,13 +150,11 @@ function cleanForCompare(str) {
     .toLowerCase();
 }
 
-// Match single chosen item against DB list without matching multi-line arrays
 function findItemInDbList(preferredValue, allPayloadValues, dbList) {
   if (!Array.isArray(dbList) || dbList.length === 0) {
     return String(preferredValue || '').trim();
   }
 
-  // If preferredValue is a single string (not an array or newline-separated list)
   if (
     preferredValue &&
     !Array.isArray(preferredValue) &&
@@ -149,11 +162,9 @@ function findItemInDbList(preferredValue, allPayloadValues, dbList) {
   ) {
     const cleanPref = cleanForCompare(preferredValue);
     if (cleanPref) {
-      // 1. Exact match first
       const exact = dbList.find((item) => cleanForCompare(item) === cleanPref);
       if (exact) return exact;
 
-      // 2. Partial match where DB item contains the chosen word
       const partial = dbList.find(
         (item) =>
           cleanForCompare(item).includes(cleanPref) ||
@@ -163,7 +174,6 @@ function findItemInDbList(preferredValue, allPayloadValues, dbList) {
     }
   }
 
-  // Scan all other single-value fields in the payload in case two variables were swapped in Step 10
   for (const val of allPayloadValues) {
     if (Array.isArray(val) || String(val).includes('\n')) continue;
     const cleanVal = cleanForCompare(val);
@@ -179,7 +189,6 @@ function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Helper to build a clean, UTF-8 safe iOS Notification Banner string
 function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategory, type = 'expense') {
   let payload = data;
   if (typeof payload === 'string') {
@@ -209,7 +218,7 @@ function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategor
   ).trim();
   const newBalance = payload?.new_balance ?? payload?.balance;
 
-  const isIncome = normalizeTxType(type) === 'income';
+  const isIncome = normalizeTxType(payload?.type || type) === 'income';
   const actionSign = isIncome ? '+' : '-';
   const statusIcon = isIncome ? '💰' : '✅';
   const catLabel = categoryName ? ` • ${categoryName}` : '';
@@ -275,15 +284,6 @@ export default async function handler(req, res) {
       return res.status(400).send('⚠️ Enter a valid amount greater than 0');
     }
 
-    // Warn clearly if the user linked Dictionary Value (whole list) instead of Chosen Item in Step 10
-    if (Array.isArray(rawWalletArg) || String(rawWalletArg).includes('\n')) {
-      return res
-        .status(400)
-        .send(
-          '⚠️ In Shortcut Step 10, set "wallet" to Chosen Item (below the 2nd Choose from List), not Dictionary Value!'
-        );
-    }
-
     const { data: meta } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
@@ -305,10 +305,14 @@ export default async function handler(req, res) {
 
     let resolvedType = normalizeTxType(rawTypeArg);
     if (!rawTypeArg) {
-      const foundIncomeWord = allValues.some((v) =>
-        /^(income|earned|earn|\+)$/i.test(String(v).trim())
+      const singleExpense = allValues.some(
+        (v) => !Array.isArray(v) && /^(expense|spent|spend|-)$/i.test(String(v).trim())
       );
-      if (foundIncomeWord) resolvedType = 'income';
+      const singleIncome = allValues.some(
+        (v) => !Array.isArray(v) && /^(income|earned|earn|\+)$/i.test(String(v).trim())
+      );
+      if (singleExpense) resolvedType = 'expense';
+      else if (singleIncome) resolvedType = 'income';
     }
 
     const { data, error } = await supabase.rpc('shortcut_quick_log', {
@@ -463,13 +467,25 @@ export default async function handler(req, res) {
       /income|allowance|salary/i.test(String(c))
     );
 
+    const resolvedExpenseCats = expenseCats.length > 0 ? expenseCats : categoriesList;
+    const resolvedIncomeCats =
+      incomeCats.length > 0 ? incomeCats : ['Income & Allowance', ...categoriesList];
+
+    // Return all casing variations so Apple Shortcuts Get Dictionary Value never misses
     return res.status(200).json({
       ...(typeof data === 'object' && data !== null ? data : {}),
       types: ['Expense', 'Income'],
+      Types: ['Expense', 'Income'],
       wallets: walletsList,
+      Wallets: walletsList,
       categories: categoriesList,
-      Expense: expenseCats.length > 0 ? expenseCats : categoriesList,
-      Income: incomeCats.length > 0 ? incomeCats : ['Income & Allowance', ...categoriesList]
+      Categories: categoriesList,
+      category: categoriesList,
+      Category: categoriesList,
+      Expense: resolvedExpenseCats,
+      expense: resolvedExpenseCats,
+      Income: resolvedIncomeCats,
+      income: resolvedIncomeCats
     });
   }
 
