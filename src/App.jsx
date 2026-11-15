@@ -1453,8 +1453,21 @@ function TapxMainApp() {
             Continue with Google
           </button>
 
-          <p className={`text-[11px] text-center ${ui.textMuted}`}>
-            Share → Add to Home Screen for full-screen iOS mode
+          <p className={`text-[11px] text-center leading-relaxed ${ui.textMuted}`}>
+            TAPX uses Google Sign-In solely to sync your private account across devices. Read our{' '}
+            <a
+              href="/privacy.html"
+              className={`underline font-medium ${ui.textSecondary}`}
+            >
+              Privacy Policy
+            </a>
+            {' · '}
+            <a
+              href="mailto:kalppatel132008@gmail.com"
+              className={`underline font-medium ${ui.textSecondary}`}
+            >
+              Support
+            </a>
           </p>
         </div>
       </div>
@@ -2226,7 +2239,7 @@ function TapxMainApp() {
                     <div>
                       <h3 className={`text-xs font-semibold ${ui.textPrimary}`}>1-Tap Back Tap Installer</h3>
                       <p className={`text-[10px] ${ui.textMuted}`}>
-                        Asks Spent/Earned, Account, Category & Amount on Lock Screen
+                        Asks Spent/Earned, Account, Category &amp; Amount on Lock Screen
                       </p>
                     </div>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${ui.cardSubtle} ${ui.textSecondary}`}>
@@ -2258,7 +2271,7 @@ function TapxMainApp() {
                     onClick={handleOneTapShortcut}
                     className={`w-full py-3 px-4 rounded-xl font-semibold text-xs key-press ${ui.primaryBtnExpense}`}
                   >
-                    Copy Personal URL & Install Shortcut
+                    Copy Personal URL &amp; Install Shortcut
                   </button>
 
                   <div className={`pt-2 border-t space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
