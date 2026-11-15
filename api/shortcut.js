@@ -1,5 +1,101 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Read raw request body stream in case Vercel does not auto-parse Apple Shortcuts payload
+async function getRawBody(req) {
+  if (req.body !== undefined && req.body !== null && req.body !== '') {
+    if (Buffer.isBuffer(req.body)) {
+      return req.body.toString('utf-8');
+    }
+    return req.body;
+  }
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', (chunk) => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      resolve(data);
+    });
+    req.on('error', () => {
+      resolve('');
+    });
+  });
+}
+
+// Parse JSON or URL-encoded form body into a normalized lowercase-key object
+function parseAndNormalizePayload(rawBody, queryObj = {}) {
+  let obj = {};
+
+  if (typeof rawBody === 'object' && rawBody !== null && !Buffer.isBuffer(rawBody)) {
+    obj = { ...rawBody };
+  } else if (typeof rawBody === 'string') {
+    const trimmed = rawBody.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        obj = JSON.parse(trimmed);
+      } catch {
+        obj = {};
+      }
+    } else if (trimmed.includes('=')) {
+      try {
+        const params = new URLSearchParams(trimmed);
+        for (const [k, v] of params.entries()) {
+          obj[k] = v;
+        }
+      } catch {
+        obj = {};
+      }
+    } else if (/^\d+(\.\d+)?$/.test(trimmed)) {
+      obj = { amount: trimmed };
+    }
+  }
+
+  const normalized = {};
+  for (const [key, val] of Object.entries({ ...queryObj, ...obj })) {
+    const cleanKey = String(key).trim().toLowerCase();
+    normalized[cleanKey] = val;
+  }
+
+  return normalized;
+}
+
+// Extract positive numeric amount from any possible Shortcut field name
+function extractAmount(payload) {
+  const candidateKeys = [
+    'amount',
+    'amt',
+    'price',
+    'value',
+    'input',
+    'provided input',
+    'providedinput',
+    'number'
+  ];
+
+  for (const key of candidateKeys) {
+    if (payload[key] !== undefined && payload[key] !== null && String(payload[key]).trim() !== '') {
+      const cleaned = String(payload[key]).replace(/[^0-9.]/g, '');
+      const num = Number(cleaned);
+      if (!isNaN(num) && num > 0) {
+        return num;
+      }
+    }
+  }
+
+  for (const [key, val] of Object.entries(payload)) {
+    if (key === 'token' || key === 'q') continue;
+    const strVal = String(val ?? '').trim();
+    if (/^[₹$€£]?\s*\d+(\.\d+)?$/.test(strVal)) {
+      const num = Number(strVal.replace(/[^0-9.]/g, ''));
+      if (!isNaN(num) && num > 0) {
+        return num;
+      }
+    }
+  }
+
+  return 0;
+}
+
 // Normalize user/Shortcut type input ('Expense', 'Spent', 'Income', 'Earned', '+', '-')
 function normalizeTxType(rawType, rawQueryText = '') {
   const clean = String(rawType || '').trim().toLowerCase();
@@ -21,7 +117,6 @@ function normalizeTxType(rawType, rawQueryText = '') {
     return 'expense';
   }
 
-  // Auto-detect from query text if prefix '+' or keywords 'earned'/'income' are present
   const qLower = String(rawQueryText || '').trim().toLowerCase();
   if (
     qLower.startsWith('+') ||
@@ -31,6 +126,50 @@ function normalizeTxType(rawType, rawQueryText = '') {
   }
 
   return 'expense';
+}
+
+// Strip emojis and extra whitespace for fuzzy comparison while returning the exact DB string
+function cleanForCompare(str) {
+  return String(str || '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+    .trim()
+    .toLowerCase();
+}
+
+// Match an incoming string (or any string in payload) against the exact DB array from shortcut_get_meta
+function resolveExactDbMatch(preferredValue, allPayloadValues, dbList) {
+  if (!Array.isArray(dbList) || dbList.length === 0) {
+    return String(preferredValue || '').trim();
+  }
+
+  const cleanPreferred = cleanForCompare(preferredValue);
+
+  // 1. Exact or trimmed/case-insensitive match on preferred field
+  if (cleanPreferred) {
+    const directMatch = dbList.find(
+      (item) =>
+        String(item).toLowerCase() === String(preferredValue).toLowerCase() ||
+        cleanForCompare(item) === cleanPreferred ||
+        cleanForCompare(item).includes(cleanPreferred) ||
+        cleanPreferred.includes(cleanForCompare(item))
+    );
+    if (directMatch) return directMatch; // Return exact DB string (preserves any trailing spaces in DB)
+  }
+
+  // 2. Scan all other values sent in the Shortcut payload (in case variables were swapped or key was capitalized/renamed)
+  for (const val of allPayloadValues) {
+    const cleanVal = cleanForCompare(val);
+    if (!cleanVal) continue;
+    const found = dbList.find(
+      (item) =>
+        String(item).toLowerCase() === String(val).toLowerCase() ||
+        cleanForCompare(item) === cleanVal
+    );
+    if (found) return found;
+  }
+
+  // 3. Fallback to the user's first item in DB so shortcut_quick_log never fails with "No wallet found"
+  return dbList[0];
 }
 
 // Escape regex special chars when stripping matched wallet/category names from note
@@ -60,8 +199,12 @@ function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategor
     maximumFractionDigits: 2
   });
 
-  const walletName = payload?.wallet_name || payload?.wallet || fallbackWallet || 'Wallet';
-  const categoryName = payload?.category_name || payload?.category || fallbackCategory || '';
+  const walletName = String(
+    payload?.wallet_name || payload?.wallet || fallbackWallet || 'Wallet'
+  ).trim();
+  const categoryName = String(
+    payload?.category_name || payload?.category || fallbackCategory || ''
+  ).trim();
   const newBalance = payload?.new_balance ?? payload?.balance;
 
   const isIncome = normalizeTxType(type) === 'income';
@@ -95,20 +238,12 @@ export default async function handler(req, res) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // Parse body safely if sent as a JSON string from Apple Shortcuts
-  let parsedBody = req.body;
-  if (typeof parsedBody === 'string') {
-    try {
-      parsedBody = JSON.parse(parsedBody);
-    } catch {
-      parsedBody = {};
-    }
-  }
+  const rawBody = await getRawBody(req);
+  const payload = parseAndNormalizePayload(rawBody, req.query || {});
 
   const token =
     req.headers['x-shortcut-token'] ||
-    req.query?.token ||
-    parsedBody?.token;
+    payload.token;
 
   if (!token) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -117,29 +252,56 @@ export default async function handler(req, res) {
 
   const cleanToken = String(token).trim();
 
-  // MODE 1: POST Request from Interactive Menu Shortcut (Recommended)
-  if (req.method === 'POST') {
+  const extractedAmount = extractAmount(payload);
+  const rawWalletArg =
+    payload.wallet || payload.selectedwallet || payload.account || payload.wallets || '';
+  const rawCategoryArg =
+    payload.category || payload.selectedcategory || payload.cat || payload.categories || '';
+  const rawTypeArg =
+    payload.type || payload.selectedtype || payload.kind || payload.types || '';
+  const noteArg = String(payload.note || '').trim();
+
+  // Collect all non-token values in case Shortcut keys were named differently or variables were swapped
+  const allValues = Object.entries(payload)
+    .filter(([k]) => k !== 'token' && k !== 'q')
+    .map(([, v]) => String(v ?? ''));
+
+  // MODE 1: POST Request OR GET Request with Amount (Interactive Menu Shortcut)
+  if (req.method === 'POST' || extractedAmount > 0) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
-    const { amount, wallet, category, type, note } = parsedBody || {};
-    const rawAmountStr = String(amount ?? '').replace(/[^0-9.]/g, '');
-    const numericAmount = Number(rawAmountStr);
-
-    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) {
-      return res.status(400).send('⚠️ Enter a valid amount greater than 0');
+    if (!extractedAmount || extractedAmount <= 0) {
+      return res
+        .status(400)
+        .send('⚠️ Enter a valid amount greater than 0');
     }
 
-    const walletArg = wallet ? String(wallet).trim() : '';
-    const categoryArg = category ? String(category).trim() : '';
-    const typeArg = normalizeTxType(type);
-    const noteArg = note ? String(note).trim() : '';
+    // Fetch user's exact wallet and category names from DB so spelling/spaces always match 100%
+    const { data: meta } = await supabase.rpc('shortcut_get_meta', {
+      p_token: cleanToken
+    });
+
+    const dbWallets = Array.isArray(meta?.wallets) ? meta.wallets : [];
+    const dbCategories = Array.isArray(meta?.categories) ? meta.categories : [];
+
+    const matchedWallet = resolveExactDbMatch(rawWalletArg, allValues, dbWallets);
+    const matchedCategory = resolveExactDbMatch(rawCategoryArg, allValues, dbCategories);
+
+    // Detect type from either the type field or any value containing 'income'/'expense'
+    let resolvedType = normalizeTxType(rawTypeArg);
+    if (!rawTypeArg) {
+      const foundIncomeWord = allValues.some((v) =>
+        /^(income|earned|earn|\+)$/i.test(String(v).trim())
+      );
+      if (foundIncomeWord) resolvedType = 'income';
+    }
 
     const { data, error } = await supabase.rpc('shortcut_quick_log', {
       p_token: cleanToken,
-      p_amount: numericAmount,
-      p_wallet_name: walletArg,
-      p_category_name: categoryArg,
-      p_type: typeArg,
+      p_amount: extractedAmount,
+      p_wallet_name: matchedWallet,
+      p_category_name: matchedCategory,
+      p_type: resolvedType,
       p_note: noteArg
     });
 
@@ -147,47 +309,21 @@ export default async function handler(req, res) {
       return res.status(500).send(`⚠️ ${error.message}`);
     }
 
-    const bannerText = formatCleanBanner(data, numericAmount, walletArg, categoryArg, typeArg);
+    const bannerText = formatCleanBanner(
+      data,
+      extractedAmount,
+      matchedWallet,
+      matchedCategory,
+      resolvedType
+    );
     return res.status(200).send(bannerText);
   }
 
-  // MODE 2: Menu-Picker Logging via GET URL Parameters (?token=xxx&amount=150&wallet=FamPay&category=Food&type=Expense)
-  if (req.method === 'GET' && req.query?.amount !== undefined && String(req.query.amount).trim() !== '') {
+  // MODE 2: Smart 1-Line Quick Input via GET (?token=xxx&q=150 fampay food)
+  if (req.method === 'GET' && payload.q !== undefined && String(payload.q).trim() !== '') {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
-    const rawAmountStr = String(req.query.amount).replace(/[^0-9.]/g, '');
-    const numericAmount = Number(rawAmountStr);
-    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) {
-      return res.status(400).send('⚠️ Enter a valid amount greater than 0');
-    }
-
-    const walletArg = req.query.wallet ? String(req.query.wallet).trim() : '';
-    const categoryArg = req.query.category ? String(req.query.category).trim() : '';
-    const typeArg = normalizeTxType(req.query.type);
-    const noteArg = req.query.note ? String(req.query.note).trim() : '';
-
-    const { data, error } = await supabase.rpc('shortcut_quick_log', {
-      p_token: cleanToken,
-      p_amount: numericAmount,
-      p_wallet_name: walletArg,
-      p_category_name: categoryArg,
-      p_type: typeArg,
-      p_note: noteArg
-    });
-
-    if (error) {
-      return res.status(500).send(`⚠️ ${error.message}`);
-    }
-
-    const bannerText = formatCleanBanner(data, numericAmount, walletArg, categoryArg, typeArg);
-    return res.status(200).send(bannerText);
-  }
-
-  // MODE 3: Smart 1-Line Quick Input via GET (?token=xxx&q=150 fampay food)
-  if (req.method === 'GET' && req.query?.q !== undefined && String(req.query.q).trim() !== '') {
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-
-    const rawQuery = String(req.query.q).trim();
+    const rawQuery = String(payload.q).trim();
     const amountMatch = rawQuery.match(/(\d+(\.\d+)?)/);
 
     if (!amountMatch) {
@@ -195,7 +331,7 @@ export default async function handler(req, res) {
     }
 
     const numericAmount = Number(amountMatch[1]);
-    const resolvedType = normalizeTxType(req.query.type, rawQuery);
+    const resolvedType = normalizeTxType(rawTypeArg, rawQuery);
 
     let remainingText = rawQuery
       .replace(amountMatch[0], '')
@@ -207,20 +343,20 @@ export default async function handler(req, res) {
       p_token: cleanToken
     });
 
-    let matchedWallet = req.query.wallet ? String(req.query.wallet).trim() : '';
-    let matchedCategory = req.query.category ? String(req.query.category).trim() : '';
+    let matchedWallet = String(rawWalletArg).trim();
+    let matchedCategory = String(rawCategoryArg).trim();
 
     const lowerRemaining = remainingText.toLowerCase();
 
     if (!matchedWallet && meta && Array.isArray(meta.wallets) && meta.wallets.length > 0) {
       const sortedWallets = [...meta.wallets].sort((a, b) => String(b).length - String(a).length);
       const foundWallet = sortedWallets.find((w) =>
-        lowerRemaining.includes(String(w).toLowerCase())
+        lowerRemaining.includes(String(w).trim().toLowerCase())
       );
       if (foundWallet) {
         matchedWallet = foundWallet;
         remainingText = remainingText
-          .replace(new RegExp(escapeRegex(foundWallet), 'ig'), '')
+          .replace(new RegExp(escapeRegex(String(foundWallet).trim()), 'ig'), '')
           .trim();
       } else {
         matchedWallet = meta.wallets[0];
@@ -230,7 +366,7 @@ export default async function handler(req, res) {
     if (!matchedCategory && meta && Array.isArray(meta.categories) && meta.categories.length > 0) {
       const sortedCats = [...meta.categories].sort((a, b) => String(b).length - String(a).length);
       const foundCategory = sortedCats.find((c) => {
-        const fullCat = String(c).toLowerCase();
+        const fullCat = String(c).trim().toLowerCase();
         const firstWord = fullCat.split(/[\s&/]+/)[0];
         return (
           lowerRemaining.includes(fullCat) ||
@@ -239,9 +375,9 @@ export default async function handler(req, res) {
       });
       if (foundCategory) {
         matchedCategory = foundCategory;
-        const firstWord = String(foundCategory).split(/[\s&/]+/)[0];
+        const firstWord = String(foundCategory).trim().split(/[\s&/]+/)[0];
         remainingText = remainingText
-          .replace(new RegExp(escapeRegex(foundCategory), 'ig'), '')
+          .replace(new RegExp(escapeRegex(String(foundCategory).trim()), 'ig'), '')
           .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'ig'), '')
           .trim();
       } else {
@@ -274,7 +410,7 @@ export default async function handler(req, res) {
     return res.status(200).send(bannerText);
   }
 
-  // MODE 4: Fetch Live Wallets, Categories & Types Dictionary for Menu Picker (GET ?token=xxx)
+  // MODE 3: Fetch Live Wallets, Categories & Types Dictionary for Menu Picker (GET ?token=xxx)
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -289,7 +425,7 @@ export default async function handler(req, res) {
     const walletsList =
       Array.isArray(data?.wallets) && data.wallets.length > 0
         ? data.wallets
-        : ['Cash', 'UPI'];
+        : ['UPI', 'Cash'];
 
     const categoriesList =
       Array.isArray(data?.categories) && data.categories.length > 0
