@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { supabase } from './supabaseClient';
 
 // PASTE YOUR SHARED ICLOUD SHORTCUT LINK HERE (e.g. 'https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxx')
-const SHARED_ICLOUD_SHORTCUT_URL = '';
+const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/ab752c99877049a3bb53981115357de3';
 
 const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
@@ -66,15 +66,13 @@ function formatRelativeDateTime(isoString) {
   return `${dayMonth}, ${timeStr}`;
 }
 
-// Authentic iOS Phone App SF Symbols Icon Set (Filled when active, crisp outline/dots when idle)
+// Authentic iOS Phone App SF Symbols Icon Set
 function NavIcon({ id, active }) {
-  const sizeClass = `w-[22px] h-[22px] transition-transform duration-300 ios-spring ${
-    active ? 'scale-110' : 'scale-100'
-  }`;
+  const sizeClass = 'w-[22px] h-[22px]';
 
   // Authentic iPhone Phone App 10-Dot Keypad Grid Icon (circle.grid.3x3.fill)
   if (id === 'pad') {
-    const r = active ? '2.15' : '1.75';
+    const r = active ? '2.2' : '1.75';
     return (
       <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
         <circle cx="6.5" cy="4.5" r={r} />
@@ -235,7 +233,7 @@ function TapxMainApp() {
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Refined Apple-Grade Palette + iOS 27 Phone App Liquid Glass Island
+  // Refined Apple-Grade Palette + iOS Phone App Magnifying Liquid Glass
   const ui = useMemo(() => {
     if (isDark) {
       return {
@@ -253,9 +251,9 @@ function TapxMainApp() {
         textSecondary: 'text-zinc-400',
         textMuted: 'text-zinc-500',
         islandBar: 'ios-glass-bar-dark',
-        islandLens: 'ios-glass-lens-dark',
-        islandTextActive: 'text-white',
-        islandTextIdle: 'text-zinc-400/90',
+        islandLens: 'ios-magnifying-lens-dark',
+        islandTextActive: 'text-white drop-shadow-[0_1px_6px_rgba(255,255,255,0.35)]',
+        islandTextIdle: 'text-zinc-400/80',
         primaryBtnExpense: 'bg-zinc-100 text-zinc-950',
         primaryBtnIncome: 'bg-emerald-500 text-zinc-950',
         primaryBtnTransfer: 'bg-blue-500 text-white',
@@ -277,9 +275,9 @@ function TapxMainApp() {
       textSecondary: 'text-zinc-500',
       textMuted: 'text-zinc-400',
       islandBar: 'ios-glass-bar-light',
-      islandLens: 'ios-glass-lens-light',
-      islandTextActive: 'text-[#007AFF]',
-      islandTextIdle: 'text-zinc-500',
+      islandLens: 'ios-magnifying-lens-light',
+      islandTextActive: 'text-[#007AFF] drop-shadow-[0_1px_4px_rgba(0,122,255,0.2)]',
+      islandTextIdle: 'text-zinc-500/85',
       primaryBtnExpense: 'bg-zinc-900 text-white',
       primaryBtnIncome: 'bg-emerald-600 text-white',
       primaryBtnTransfer: 'bg-blue-600 text-white',
@@ -293,25 +291,103 @@ function TapxMainApp() {
   const [dbError, setDbError] = useState('');
   const seedingRef = useRef(false);
 
-  // Navigation & Directional Animation State
+  // Navigation, Magnifying Lens & Scrubbing State
   const [activeTab, setActiveTab] = useState('pad');
   const [tabDirection, setTabDirection] = useState('right');
+  const [lensBulge, setLensBulge] = useState(false);
+  const [scrubProgress, setScrubProgress] = useState(null); // 0..3 continuous index when dragging finger
+  const navBarRef = useRef(null);
+  const lensTimerRef = useRef(null);
+  const isPointerDownOnNavRef = useRef(false);
+
   const [settingsSection, setSettingsSection] = useState('shortcut');
   const [analyticsRange, setAnalyticsRange] = useState('month');
   const [popKey, setPopKey] = useState(0);
 
-  const handleSelectTab = (nextTabId) => {
-    if (nextTabId === activeTab) return;
-    const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
-    const nextIdx = NAV_TABS.findIndex((t) => t.id === nextTabId);
-    setTabDirection(nextIdx >= prevIdx ? 'right' : 'left');
-    setActiveTab(nextTabId);
+  const triggerLensMagnification = useCallback((duration = 380) => {
+    setLensBulge(true);
+    if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
+    lensTimerRef.current = setTimeout(() => {
+      if (!isPointerDownOnNavRef.current) {
+        setLensBulge(false);
+      }
+    }, duration);
+  }, []);
+
+  const handleSelectTab = useCallback(
+    (nextTabId) => {
+      triggerLensMagnification(400);
+      setActiveTab((prevTab) => {
+        if (nextTabId === prevTab) return prevTab;
+        const prevIdx = NAV_TABS.findIndex((t) => t.id === prevTab);
+        const nextIdx = NAV_TABS.findIndex((t) => t.id === nextTabId);
+        setTabDirection(nextIdx >= prevIdx ? 'right' : 'left');
+        return nextTabId;
+      });
+    },
+    [triggerLensMagnification]
+  );
+
+  // Compute continuous tab position from finger X coordinate (allows sliding finger across tabs like iPhone Phone app)
+  const updateNavFromClientX = useCallback(
+    (clientX, isCommit = false) => {
+      if (!navBarRef.current) return;
+      const rect = navBarRef.current.getBoundingClientRect();
+      const pad = 5;
+      const innerWidth = rect.width - pad * 2;
+      const slotWidth = innerWidth / 4;
+      const rawIndex = (clientX - rect.left - pad - slotWidth / 2) / slotWidth;
+      const clampedIndex = Math.max(0, Math.min(3, rawIndex));
+      const nearestIdx = Math.round(clampedIndex);
+      const targetTab = NAV_TABS[nearestIdx]?.id;
+
+      if (!isCommit) {
+        setScrubProgress(clampedIndex);
+      } else {
+        setScrubProgress(null);
+      }
+
+      if (targetTab && targetTab !== activeTab) {
+        const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
+        setTabDirection(nearestIdx >= prevIdx ? 'right' : 'left');
+        setActiveTab(targetTab);
+      }
+    },
+    [activeTab]
+  );
+
+  const handleNavPointerDown = (e) => {
+    isPointerDownOnNavRef.current = true;
+    if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
+    setLensBulge(true);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore capture errors on non-capturable targets
+    }
+    updateNavFromClientX(e.clientX, false);
+  };
+
+  const handleNavPointerMove = (e) => {
+    if (!isPointerDownOnNavRef.current) return;
+    updateNavFromClientX(e.clientX, false);
+  };
+
+  const handleNavPointerUpOrCancel = (e) => {
+    if (!isPointerDownOnNavRef.current) return;
+    isPointerDownOnNavRef.current = false;
+    updateNavFromClientX(e.clientX, true);
+    if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
+    lensTimerRef.current = setTimeout(() => {
+      setLensBulge(false);
+    }, 260);
   };
 
   const activeTabIndex = Math.max(
     0,
     NAV_TABS.findIndex((t) => t.id === activeTab)
   );
+  const visualLensIndex = scrubProgress !== null ? scrubProgress : activeTabIndex;
   const tabAnimClass =
     tabDirection === 'right' ? 'animate-tab-right' : 'animate-tab-left';
 
@@ -1315,7 +1391,7 @@ function TapxMainApp() {
       <main
         className="flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 86px)'
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 88px)'
         }}
       >
         {/* TAB 1: KEYPAD */}
@@ -2264,43 +2340,78 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* iOS PHONE APP LIQUID GLASS FLOATING TAB BAR */}
+      {/* iOS PHONE APP LIQUID GLASS TAB BAR WITH OPTICAL MAGNIFYING LENS & THUMB SCRUBBING */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
-          bottom: 'max(env(safe-area-inset-bottom), 12px)'
+          bottom: 'max(env(safe-area-inset-bottom), 14px)'
         }}
       >
         <nav
-          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[66px] p-[5px] rounded-full transition-colors duration-300 ${ui.islandBar}`}
+          ref={navBarRef}
+          onPointerDown={handleNavPointerDown}
+          onPointerMove={handleNavPointerMove}
+          onPointerUp={handleNavPointerUpOrCancel}
+          onPointerCancel={handleNavPointerUpOrCancel}
+          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[66px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
+            lensBulge ? 'scale-[1.015]' : 'scale-100'
+          } ${ui.islandBar}`}
         >
-          {/* Morphing Liquid Glass Active Lens */}
+          {/* Convex Magnifying Glass Bubble Lens */}
           <div
-            className={`absolute top-[5px] bottom-[5px] left-[5px] w-[calc(25%-2.5px)] rounded-full ios-liquid-spring ${ui.islandLens}`}
+            className={`absolute top-[5px] bottom-[5px] left-[5px] w-[calc(25%-2.5px)] rounded-full pointer-events-none z-20 ${ui.islandLens}`}
             style={{
-              transform: `translate3d(${activeTabIndex * 100}%, 0, 0)`
+              transition:
+                scrubProgress !== null
+                  ? 'transform 45ms linear'
+                  : 'transform 460ms cubic-bezier(0.24, 1.22, 0.36, 1)',
+              transform: `translate3d(${visualLensIndex * 100}%, 0, 0) scale3d(${
+                lensBulge ? 1.22 : 1.04
+              }, ${lensBulge ? 1.3 : 1.06}, 1)`
             }}
-          />
+          >
+            <div className="ios-lens-glare" />
+          </div>
 
-          {NAV_TABS.map((item) => {
+          {NAV_TABS.map((item, idx) => {
             const active = activeTab === item.id;
+            // Calculate proximity to the magnifying lens for smooth continuous optical zoom
+            const distance = Math.abs(visualLensIndex - idx);
+            const proximity = Math.max(0, 1 - distance);
+            const baseScale = 0.9 + proximity * 0.22;
+            const activeBoost = active && lensBulge ? 0.12 : 0;
+            const totalScale = baseScale + activeBoost;
+
             return (
               <button
                 key={item.id}
                 type="button"
-                onPointerDown={() => handleSelectTab(item.id)}
-                className={`relative z-10 h-full flex flex-col items-center justify-center gap-[3px] rounded-full transition-colors duration-200 key-press ${
-                  active ? ui.islandTextActive : `${ui.islandTextIdle} hover:opacity-85`
+                onClick={() => handleSelectTab(item.id)}
+                className={`relative z-30 h-full flex flex-col items-center justify-center gap-[3px] rounded-full transition-colors duration-150 ${
+                  active ? ui.islandTextActive : ui.islandTextIdle
                 }`}
               >
-                <NavIcon id={item.id} active={active} />
-                <span
-                  className={`text-[10.5px] leading-none tracking-[-0.01em] ${
-                    active ? 'font-semibold' : 'font-medium'
-                  }`}
+                <div
+                  className="flex flex-col items-center justify-center gap-[3px]"
+                  style={{
+                    transition:
+                      scrubProgress !== null
+                        ? 'transform 50ms linear'
+                        : 'transform 380ms cubic-bezier(0.24, 1.26, 0.36, 1)',
+                    transform: `scale3d(${totalScale.toFixed(3)}, ${totalScale.toFixed(
+                      3
+                    )}, 1) translate3d(0, ${active ? '-1px' : '0px'}, 0)`
+                  }}
                 >
-                  {item.label}
-                </span>
+                  <NavIcon id={item.id} active={active} />
+                  <span
+                    className={`text-[10.5px] leading-none tracking-[-0.015em] ${
+                      active ? 'font-bold' : 'font-medium'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </div>
               </button>
             );
           })}
