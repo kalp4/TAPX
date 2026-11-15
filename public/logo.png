@@ -1,27 +1,60 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <rect width="512" height="512" rx="115" fill="#ffffff" />
-  
-  <!-- Rising Bar Chart (Emerald, Teal, Blue) -->
-  <rect x="172" y="158" width="54" height="90" rx="4" fill="#08996f" />
-  <rect x="242" y="122" width="54" height="126" rx="4" fill="#179c99" />
-  <rect x="312" y="84" width="54" height="164" rx="4" fill="#1077e6" />
+  <defs>
+    <linearGradient id="bar1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="bar2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2dd4bf" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+    <linearGradient id="bar3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="navyBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f3166" />
+      <stop offset="100%" stop-color="#071d3d" />
+    </linearGradient>
 
-  <!-- Wallet Base (Deep Navy) -->
-  <path d="M118 214 h36 v18 h-22 a8 8 0 0 0 0 16 h234 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-218 a38 38 0 0 1 -38 -38 v-150 a38 38 0 0 1 38 -38 Z" fill="#072144" />
+    <!-- True Transparency Mask for Wallet Cutouts -->
+    <mask id="walletCutouts">
+      <rect width="512" height="512" fill="white" />
+      <!-- Top wallet fold slot cutout -->
+      <path d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z" fill="black" />
+      <!-- Center arch outer ring cutout -->
+      <circle cx="298" cy="260" r="60" fill="black" />
+      <!-- Clasp outer surround cutout -->
+      <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
+    </mask>
 
-  <!-- Teal Mid Wave -->
-  <path d="M236 248 h130 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-32 c-52 -24 -88 -94 -98 -202 Z" fill="#0e747d" />
+    <mask id="claspDotCutout">
+      <rect width="512" height="512" fill="white" />
+      <circle cx="358" cy="354" r="12" fill="black" />
+    </mask>
+  </defs>
 
-  <!-- Center Arch & Emerald Right Wave -->
-  <path d="M262 248 a42 42 0 0 1 84 0 h20 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-24 c-38 -32 -66 -102 -80 -202 Z" fill="#149a72" />
+  <g mask="url(#walletCutouts)">
+    <!-- 3 Rising Bars -->
+    <rect x="172" y="152" width="54" height="106" rx="6" fill="url(#bar1)" />
+    <rect x="242" y="114" width="54" height="144" rx="6" fill="url(#bar2)" />
+    <rect x="312" y="74" width="54" height="184" rx="6" fill="url(#bar3)" />
 
-  <!-- Inner Arch Highlight -->
-  <path d="M276 232 a28 28 0 0 1 52 0" fill="none" stroke="#0c6e5c" stroke-width="6" stroke-linecap="round" />
+    <!-- Wallet Base (Deep Navy) -->
+    <path d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z" fill="url(#navyBody)" />
 
-  <!-- White Cutout Around Clasp -->
-  <rect x="316" y="310" width="106" height="72" rx="36" fill="#ffffff" />
+    <!-- Mid Teal Wave -->
+    <path d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z" fill="#0e7c86" />
 
-  <!-- Navy Wallet Clasp & Button -->
-  <rect x="330" y="322" width="90" height="48" rx="24" fill="#072144" />
-  <circle cx="358" cy="346" r="11" fill="#ffffff" />
+    <!-- Right Emerald Wave -->
+    <path d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z" fill="#15a378" />
+  </g>
+
+  <!-- Center Emerald Arch Swoop (sits inside the masked ring) -->
+  <path d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z" fill="#15a378" />
+  <!-- Inner Arch Accent Line -->
+  <path d="M 272 246 A 28 28 0 0 1 324 246" fill="none" stroke="#0c6e5c" stroke-width="7" stroke-linecap="round" />
+
+  <!-- Wallet Clasp with Transparent Button Cutout -->
+  <rect x="328" y="328" width="96" height="52" rx="26" fill="url(#navyBody)" mask="url(#claspDotCutout)" />
 </svg>

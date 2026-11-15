@@ -37,8 +37,8 @@ const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 
-// Frameless, 100% Transparent-Cutout Vector Logo (No White Background Box)
-function TapxLogo({ className = 'w-9 h-9' }) {
+// Frameless, 100% Transparent-Cutout Vector Logo (No Border, No Background Box)
+function TapxLogo({ className = 'w-16 h-16' }) {
   const uid = React.useId().replace(/:/g, '');
   const walletMaskId = `wallet-cut-${uid}`;
   const claspMaskId = `clasp-cut-${uid}`;
@@ -339,7 +339,6 @@ function TapxMainApp() {
         card: 'bg-[#131316] border-[#232329]',
         cardElevated: 'bg-[#18181c] border-[#292930]',
         cardSubtle: 'bg-[#1c1c21] border-[#27272e]',
-        logoBadge: 'bg-white/[0.04] border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]',
         input: 'bg-[#131316] border-[#27272e] text-zinc-100 placeholder-zinc-500',
         pillIdle: 'bg-[#141418] border-[#24242b] text-zinc-400',
         pillActive: 'bg-zinc-100 border-zinc-100 text-zinc-950 shadow-sm',
@@ -364,7 +363,6 @@ function TapxMainApp() {
       card: 'bg-white border-zinc-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]',
       cardElevated: 'bg-white border-zinc-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.04)]',
       cardSubtle: 'bg-zinc-100 border-zinc-200/70',
-      logoBadge: 'bg-white/90 border-zinc-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)]',
       input: 'bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400',
       pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
       pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-sm',
@@ -1399,121 +1397,39 @@ function TapxMainApp() {
   if (initialBoot) {
     return (
       <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
-        <div className={`w-16 h-16 rounded-[22px] border flex items-center justify-center ${ui.logoBadge}`}>
-          <TapxLogo className="w-11 h-11 animate-pulse" />
-        </div>
+        <TapxLogo className="w-16 h-16 animate-pulse" />
         <div className="w-5 h-5 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  // REDESIGNED FLAGSHIP LOGIN SCREEN
+  // ULTRA-CLEAN MINIMAL LOGIN SCREEN (No Clutter, Frameless Logo)
   if (!session) {
     return (
       <div
-        className={`h-full w-full ${ui.bg} flex flex-col justify-between px-6 max-w-md mx-auto overflow-hidden relative select-none`}
+        className={`h-full w-full ${ui.bg} flex flex-col justify-between px-7 max-w-md mx-auto overflow-hidden select-none`}
         style={{
           paddingTop: 'max(env(safe-area-inset-top), 24px)',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 24px)'
+          paddingBottom: 'max(env(safe-area-inset-bottom), 28px)'
         }}
       >
-        {/* Ambient Aurora Glow Matching Logo Palette */}
-        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-gradient-to-tr from-emerald-500/20 via-teal-500/15 to-blue-500/20 blur-3xl" />
+        <div />
 
-        {/* Top Status Pill */}
-        <div className="relative z-10 flex items-center justify-center pt-2">
-          <div
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-semibold tracking-tight backdrop-blur-xl ${ui.card}`}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className={ui.textSecondary}>iOS Back Tap Expense Tracker</span>
-          </div>
+        <div className="flex flex-col items-center text-center space-y-3">
+          <TapxLogo className="w-24 h-24 mb-1" />
+          <h1 className={`text-3xl font-bold tracking-tight ${ui.textPrimary}`}>
+            TAPX
+          </h1>
+          <p className={`text-sm max-w-[240px] leading-relaxed ${ui.textSecondary}`}>
+            Instant multi-wallet expense tracking with iPhone Back Tap.
+          </p>
         </div>
 
-        {/* Center Hero + Live iOS Notification Showcase */}
-        <div className="relative z-10 my-auto flex flex-col items-center text-center space-y-5">
-          {/* Frosted Glass Squircle Pedestal with Transparent Logo */}
-          <div className="relative">
-            <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-b from-blue-500/20 via-teal-500/15 to-emerald-500/20 blur-xl opacity-80" />
-            <div
-              className={`relative w-20 h-20 rounded-[26px] border flex items-center justify-center backdrop-blur-2xl ${ui.logoBadge}`}
-            >
-              <TapxLogo className="w-14 h-14" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <h1 className={`text-4xl font-extrabold tracking-tight ${ui.textPrimary}`}>
-              TAPX
-            </h1>
-            <p className={`text-xs max-w-[265px] mx-auto leading-relaxed ${ui.textSecondary}`}>
-              Log expenses in 2 seconds straight from your iPhone Lock Screen without opening an app.
-            </p>
-          </div>
-
-          {/* Simulated iOS Lock Screen Notification Banner Preview */}
-          <div
-            className={`w-full p-3.5 rounded-[22px] border text-left backdrop-blur-2xl space-y-2.5 ${ui.cardElevated}`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-lg border flex items-center justify-center ${ui.logoBadge}`}>
-                  <TapxLogo className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className={`text-[11px] font-bold leading-none ${ui.textPrimary}`}>
-                    TAPX · Back Tap
-                  </p>
-                  <p className={`text-[10px] mt-0.5 ${ui.textMuted}`}>now</p>
-                </div>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
-                Synced
-              </span>
-            </div>
-
-            <div className={`pt-2 border-t flex items-center justify-between text-xs ${ui.divider}`}>
-              <div className="space-y-0.5">
-                <p className={`font-semibold ${ui.textPrimary}`}>
-                  ✅ -₹150 • Food & Drinks
-                </p>
-                <p className={`text-[11px] tabular-nums ${ui.textSecondary}`}>
-                  💳 UPI Balance: ₹4,850.00
-                </p>
-              </div>
-              <span className="text-xs font-bold tabular-nums text-emerald-500">
-                2.1s
-              </span>
-            </div>
-          </div>
-
-          {/* 3-Pillar Feature Row */}
-          <div className="grid grid-cols-3 gap-2 w-full">
-            {[
-              { icon: '⚡', title: 'Back Tap', sub: 'Lock Screen' },
-              { icon: '💳', title: 'Multi-Wallet', sub: 'Live Balances' },
-              { icon: '📊', title: 'Insights', sub: 'Zero Clutter' }
-            ].map((feat) => (
-              <div
-                key={feat.title}
-                className={`p-2.5 rounded-2xl border text-center space-y-0.5 ${ui.card}`}
-              >
-                <div className="text-sm">{feat.icon}</div>
-                <p className={`text-[11px] font-semibold ${ui.textPrimary}`}>{feat.title}</p>
-                <p className={`text-[9.5px] ${ui.textMuted}`}>{feat.sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom CTA Action Dock */}
-        <div className="relative z-10 space-y-3 pb-1">
+        <div className="space-y-3">
           <button
             onClick={handleGoogleLogin}
-            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 shadow-lg key-press ${
-              isDark
-                ? 'bg-white text-zinc-950 shadow-white/5'
-                : 'bg-zinc-900 text-white shadow-zinc-900/15'
+            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 key-press ${
+              isDark ? 'bg-white text-zinc-950' : 'bg-zinc-900 text-white'
             }`}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -1538,7 +1454,7 @@ function TapxMainApp() {
           </button>
 
           <p className={`text-[11px] text-center ${ui.textMuted}`}>
-            Tip: Tap <strong>Share → Add to Home Screen</strong> for full-screen iOS mode
+            Share → Add to Home Screen for full-screen iOS mode
           </p>
         </div>
       </div>
@@ -1570,30 +1486,23 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Crisp Top Header with Transparent-Cutout Brand Logo */}
+      {/* Crisp Top Header (Logo Removed from Home Screen) */}
       <header className="px-5 pt-2 pb-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-10 h-10 rounded-[14px] border flex items-center justify-center shrink-0 ${ui.logoBadge}`}
-          >
-            <TapxLogo className="w-7 h-7" />
+        <div>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
+              Total Balance
+            </span>
+            <span
+              className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                isSyncingBg ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+              }`}
+            />
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
-                Total Balance
-              </span>
-              <span
-                className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                  isSyncingBg ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
-                }`}
-              />
-            </div>
-            <h2 className={`text-[25px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
-              {currencySymbol}
-              {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </h2>
-          </div>
+          <h2 className={`text-[26px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+            {currencySymbol}
+            {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </h2>
         </div>
 
         <button
