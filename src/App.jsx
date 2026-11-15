@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { supabase } from './supabaseClient';
 
 // Shared iCloud Shortcut Link for 1-Tap Setup
-const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/ab752c99877049a3bb53981115357de3';
+const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/e2b04fe336ae49af8df883fccb1370f2';
 
 const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
