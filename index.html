@@ -44,7 +44,7 @@
 
       /* Native iOS Spring Physics */
       .ios-spring {
-        transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
       }
       .key-press {
         transition: transform 110ms cubic-bezier(0.2, 0, 0, 1), background-color 110ms ease;
@@ -54,24 +54,58 @@
         transform: scale(0.92);
       }
 
-      @keyframes tabFadeSlide {
+      /* Directional Tab Transitions */
+      @keyframes tabSlideRight {
         0% {
           opacity: 0;
-          transform: translateY(8px) scale(0.99);
+          transform: translate3d(22px, 0, 0) scale(0.985);
         }
         100% {
           opacity: 1;
-          transform: translateY(0) scale(1);
+          transform: translate3d(0, 0, 0) scale(1);
         }
       }
+
+      @keyframes tabSlideLeft {
+        0% {
+          opacity: 0;
+          transform: translate3d(-22px, 0, 0) scale(0.985);
+        }
+        100% {
+          opacity: 1;
+          transform: translate3d(0, 0, 0) scale(1);
+        }
+      }
+
+      @keyframes tabFadeUp {
+        0% {
+          opacity: 0;
+          transform: translate3d(0, 10px, 0) scale(0.99);
+        }
+        100% {
+          opacity: 1;
+          transform: translate3d(0, 0, 0) scale(1);
+        }
+      }
+
+      .animate-tab-right {
+        animation: tabSlideRight 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        will-change: transform, opacity;
+      }
+
+      .animate-tab-left {
+        animation: tabSlideLeft 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        will-change: transform, opacity;
+      }
+
       .animate-tab {
-        animation: tabFadeSlide 240ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        animation: tabFadeUp 260ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
         will-change: transform, opacity;
       }
 
       @keyframes amountPop {
         0% {
-          transform: scale(0.96);
+          transform: scale(0.95);
         }
         60% {
           transform: scale(1.02);
@@ -81,7 +115,7 @@
         }
       }
       .animate-pop {
-        animation: amountPop 160ms cubic-bezier(0.32, 0.72, 0, 1);
+        animation: amountPop 160ms cubic-bezier(0.22, 1, 0.36, 1);
       }
     </style>
   </head>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { supabase } from './supabaseClient';
 
 // PASTE YOUR SHARED ICLOUD SHORTCUT LINK HERE (e.g. 'https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxx')
-const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/ab752c99877049a3bb53981115357de3';
+const SHARED_ICLOUD_SHORTCUT_URL = '';
 
 const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
@@ -14,19 +14,28 @@ const DEFAULT_WALLETS_TEMPLATE = [
   { name: 'Cash', type: 'Cash', balance: 0, color: '#059669', icon: '💵' }
 ];
 
+// All default monthly_budget values are null (no pre-set budgets)
 const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#e11d48', monthly_budget: 3000 },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#059669', monthly_budget: 2500 },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#d97706', monthly_budget: 1500 },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#7c3aed', monthly_budget: 2500 },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#db2777', monthly_budget: 1000 },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#0891b2', monthly_budget: 1500 },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#2563eb', monthly_budget: 1000 },
+  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#e11d48', monthly_budget: null },
+  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#059669', monthly_budget: null },
+  { name: 'Transport', type: 'expense', icon: '⛽', color: '#d97706', monthly_budget: null },
+  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#7c3aed', monthly_budget: null },
+  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#db2777', monthly_budget: null },
+  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#0891b2', monthly_budget: null },
+  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#2563eb', monthly_budget: null },
   { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#059669', monthly_budget: null }
+];
+
+const NAV_TABS = [
+  { id: 'pad', label: 'Keypad' },
+  { id: 'wallets', label: 'Accounts' },
+  { id: 'analytics', label: 'Insights' },
+  { id: 'settings', label: 'Settings' }
 ];
 
 const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
+const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 
 function formatRelativeDateTime(isoString) {
   if (!isoString) return '';
@@ -58,30 +67,34 @@ function formatRelativeDateTime(isoString) {
 }
 
 function NavIcon({ id, active }) {
-  const strokeWidth = active ? '2.25' : '1.75';
+  const strokeWidth = active ? '2.3' : '1.8';
+  const sizeClass = `w-[21px] h-[21px] transition-transform duration-300 ios-spring ${
+    active ? 'scale-105' : 'scale-100'
+  }`;
+
   if (id === 'pad') {
     return (
-      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
     );
   }
   if (id === 'wallets') {
     return (
-      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
       </svg>
     );
   }
   if (id === 'analytics') {
     return (
-      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
       </svg>
     );
   }
   return (
-    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+    <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
@@ -181,8 +194,10 @@ function TapxMainApp() {
         textPrimary: 'text-zinc-50',
         textSecondary: 'text-zinc-400',
         textMuted: 'text-zinc-500',
-        island: 'bg-[#16161a]/95 border-white/[0.11] text-zinc-400 shadow-[0_14px_38px_rgba(0,0,0,0.85)]',
-        islandActive: 'bg-zinc-100 text-zinc-950 shadow-sm',
+        island: 'bg-[#151519]/95 border-white/[0.12] text-zinc-400 shadow-[0_18px_42px_rgba(0,0,0,0.9)]',
+        islandThumb: 'bg-zinc-100 shadow-[0_2px_10px_rgba(255,255,255,0.12)]',
+        islandTextActive: 'text-zinc-950',
+        islandTextIdle: 'text-zinc-400',
         primaryBtnExpense: 'bg-zinc-100 text-zinc-950',
         primaryBtnIncome: 'bg-emerald-500 text-zinc-950',
         primaryBtnTransfer: 'bg-blue-500 text-white',
@@ -203,8 +218,10 @@ function TapxMainApp() {
       textPrimary: 'text-zinc-900',
       textSecondary: 'text-zinc-500',
       textMuted: 'text-zinc-400',
-      island: 'bg-white/95 border-zinc-200/90 text-zinc-500 shadow-[0_12px_32px_rgba(0,0,0,0.12)]',
-      islandActive: 'bg-zinc-900 text-white shadow-sm',
+      island: 'bg-white/95 border-zinc-200/90 text-zinc-500 shadow-[0_14px_36px_rgba(0,0,0,0.14)]',
+      islandThumb: 'bg-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.18)]',
+      islandTextActive: 'text-white',
+      islandTextIdle: 'text-zinc-500',
       primaryBtnExpense: 'bg-zinc-900 text-white',
       primaryBtnIncome: 'bg-emerald-600 text-white',
       primaryBtnTransfer: 'bg-blue-600 text-white',
@@ -218,11 +235,27 @@ function TapxMainApp() {
   const [dbError, setDbError] = useState('');
   const seedingRef = useRef(false);
 
-  // Navigation & Animation Triggers
+  // Navigation & Directional Animation State
   const [activeTab, setActiveTab] = useState('pad');
+  const [tabDirection, setTabDirection] = useState('right');
   const [settingsSection, setSettingsSection] = useState('shortcut');
   const [analyticsRange, setAnalyticsRange] = useState('month');
   const [popKey, setPopKey] = useState(0);
+
+  const handleSelectTab = (nextTabId) => {
+    if (nextTabId === activeTab) return;
+    const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
+    const nextIdx = NAV_TABS.findIndex((t) => t.id === nextTabId);
+    setTabDirection(nextIdx >= prevIdx ? 'right' : 'left');
+    setActiveTab(nextTabId);
+  };
+
+  const activeTabIndex = Math.max(
+    0,
+    NAV_TABS.findIndex((t) => t.id === activeTab)
+  );
+  const tabAnimClass =
+    tabDirection === 'right' ? 'animate-tab-right' : 'animate-tab-left';
 
   // User Database State
   const [settings, setSettings] = useState(
@@ -335,6 +368,19 @@ function TapxMainApp() {
       let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
       let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
       const fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
+
+      // One-time auto-cleanup to remove previously seeded default budgets from Supabase
+      const alreadyCleanedBudgets = localStorage.getItem(BUDGET_CLEANUP_KEY);
+      if (!alreadyCleanedBudgets && fetchedCategories.some((c) => c.monthly_budget !== null)) {
+        await supabase
+          .from('categories')
+          .update({ monthly_budget: null })
+          .eq('user_id', userId);
+        fetchedCategories = fetchedCategories.map((c) => ({ ...c, monthly_budget: null }));
+        localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
+      } else if (!alreadyCleanedBudgets) {
+        localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
+      }
 
       if (!seedingRef.current) {
         seedingRef.current = true;
@@ -510,7 +556,7 @@ function TapxMainApp() {
     }
     if (!selectedWalletId) {
       showToast('Add a wallet first');
-      setActiveTab('wallets');
+      handleSelectTab('wallets');
       setShowWalletModal(true);
       return;
     }
@@ -590,7 +636,6 @@ function TapxMainApp() {
       return;
     }
 
-    // Check if DB trigger already updated wallet balance; if not, persist it directly
     const { data: checkFromWallet } = await supabase
       .from('wallets')
       .select('balance')
@@ -809,7 +854,7 @@ function TapxMainApp() {
     const nameVal = newCatName.trim();
     const typeVal = newCatType;
     const iconVal = newCatIcon;
-    const budgetVal = newCatBudget ? parseFloat(newCatBudget) : null;
+    const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? parseFloat(newCatBudget) : null;
     const targetEditId = editingCatId;
 
     resetCategoryModal();
@@ -1092,6 +1137,7 @@ function TapxMainApp() {
       : ui.primaryBtnExpense;
 
   const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
+  const settingsSubIndex = settingsSection === 'shortcut' ? 0 : 1;
 
   if (initialBoot) {
     return (
@@ -1198,7 +1244,7 @@ function TapxMainApp() {
         <button
           onClick={() => {
             resetWalletModal();
-            setActiveTab('wallets');
+            handleSelectTab('wallets');
             setShowWalletModal(true);
           }}
           className={`px-3.5 py-2 rounded-full border text-xs font-semibold key-press ${ui.cardElevated} ${ui.textPrimary}`}
@@ -1211,17 +1257,17 @@ function TapxMainApp() {
       <main
         className="flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 72px)'
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 86px)'
         }}
       >
         {/* TAB 1: KEYPAD */}
         {activeTab === 'pad' && (
-          <div key="tab-pad" className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden animate-tab">
+          <div key="tab-pad" className={`flex-1 min-h-0 flex flex-col justify-between overflow-hidden ${tabAnimClass}`}>
             {/* Hardware-Accelerated Sliding Segmented Control */}
             <div className={`relative grid grid-cols-3 p-1 rounded-2xl border shrink-0 ${ui.segmentedBg}`}>
               <div
                 className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
-                style={{ transform: `translateX(${entryIndex * 100}%)` }}
+                style={{ transform: `translate3d(${entryIndex * 100}%, 0, 0)` }}
               />
               {[
                 { id: 'expense', label: 'Expense' },
@@ -1329,7 +1375,7 @@ function TapxMainApp() {
                     <button
                       onClick={() => {
                         resetWalletModal();
-                        setActiveTab('wallets');
+                        handleSelectTab('wallets');
                         setShowWalletModal(true);
                       }}
                       className={`px-3.5 py-2 rounded-full text-xs font-medium border shrink-0 key-press ${ui.pillIdle}`}
@@ -1435,7 +1481,7 @@ function TapxMainApp() {
 
         {/* TAB 2: WALLETS & ACTIVITY */}
         {activeTab === 'wallets' && (
-          <div key="tab-wallets" className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden animate-tab">
+          <div key="tab-wallets" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
             <div className="flex items-center justify-between shrink-0">
               <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
                 Accounts ({wallets.length})
@@ -1671,7 +1717,7 @@ function TapxMainApp() {
 
         {/* TAB 3: ANALYTICS */}
         {activeTab === 'analytics' && (
-          <div key="tab-analytics" className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden animate-tab">
+          <div key="tab-analytics" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
             <div className="flex items-center justify-between shrink-0">
               <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
                 Overview
@@ -1856,9 +1902,9 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 4: SETTINGS (Appearance + Back Tap + Budgets) */}
+        {/* TAB 4: SETTINGS (Appearance + Back Tap + Categories) */}
         {activeTab === 'settings' && (
-          <div key="tab-settings" className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden animate-tab">
+          <div key="tab-settings" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
             {/* Appearance Mode Selector */}
             <div className={`p-3 rounded-2xl border flex items-center justify-between shrink-0 ${ui.card}`}>
               <div>
@@ -1884,29 +1930,33 @@ function TapxMainApp() {
               </div>
             </div>
 
-            {/* Sub-Section Switcher */}
-            <div className={`grid grid-cols-2 p-1 rounded-xl border shrink-0 ${ui.segmentedBg}`}>
+            {/* Animated Sliding Sub-Section Switcher */}
+            <div className={`relative grid grid-cols-2 p-1 rounded-2xl border shrink-0 ${ui.segmentedBg}`}>
+              <div
+                className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
+                style={{ transform: `translate3d(${settingsSubIndex * 100}%, 0, 0)` }}
+              />
               <button
                 onClick={() => setSettingsSection('shortcut')}
-                className={`py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                  settingsSection === 'shortcut' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
+                className={`relative z-10 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-200 ${
+                  settingsSection === 'shortcut' ? ui.textPrimary : ui.textSecondary
                 }`}
               >
                 Back Tap Setup
               </button>
               <button
                 onClick={() => setSettingsSection('budgets')}
-                className={`py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                  settingsSection === 'budgets' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
+                className={`relative z-10 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-200 ${
+                  settingsSection === 'budgets' ? ui.textPrimary : ui.textSecondary
                 }`}
               >
-                Budgets & Categories
+                Categories
               </button>
             </div>
 
             {/* SUB-VIEW 1: BACK TAP SHORTCUT */}
             {settingsSection === 'shortcut' && (
-              <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 animate-tab">
+              <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 animate-tab-left">
                 <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                   <div className="flex items-center justify-between">
                     <div>
@@ -1987,9 +2037,9 @@ function TapxMainApp() {
               </div>
             )}
 
-            {/* SUB-VIEW 2: BUDGETS & CATEGORIES */}
+            {/* SUB-VIEW 2: CATEGORIES */}
             {settingsSection === 'budgets' && (
-              <div key="sub-budgets" className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden animate-tab">
+              <div key="sub-budgets" className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden animate-tab-right">
                 <div className="flex items-center justify-between shrink-0">
                   <span className={`text-[11px] font-medium ${ui.textMuted}`}>
                     {categories.length} Categories
@@ -2015,7 +2065,7 @@ function TapxMainApp() {
                     className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 animate-tab ${ui.cardElevated}`}
                   >
                     <span className={`text-[11px] font-semibold ${ui.textSecondary}`}>
-                      {editingCatId ? 'Edit Category & Monthly Limit' : 'New Category'}
+                      {editingCatId ? 'Edit Category' : 'New Category'}
                     </span>
                     <input
                       type="text"
@@ -2082,7 +2132,7 @@ function TapxMainApp() {
                             <div className="min-w-0">
                               <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>{c.name}</p>
                               <p className={`text-[10px] capitalize ${ui.textMuted}`}>
-                                {c.type} {budget > 0 ? `· ${pct}% used` : ''}
+                                {c.type} {budget > 0 ? `· ${pct}% of limit` : ''}
                               </p>
                             </div>
                           </div>
@@ -2156,33 +2206,39 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* FLOATING iOS ISLAND NAVIGATION BAR */}
+      {/* LARGER FLOATING iOS ISLAND NAVIGATION BAR WITH SLIDING PILL THUMB */}
       <div
-        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-5"
+        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
-          bottom: 'max(env(safe-area-inset-bottom), 14px)'
+          bottom: 'max(env(safe-area-inset-bottom), 12px)'
         }}
       >
         <nav
-          className={`pointer-events-auto flex items-center gap-1 p-1.5 rounded-full border backdrop-blur-2xl transition-colors duration-300 ${ui.island}`}
+          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[390px] h-[64px] p-1.5 rounded-[32px] border backdrop-blur-2xl transition-colors duration-300 ${ui.island}`}
         >
-          {[
-            { id: 'pad', label: 'Keypad' },
-            { id: 'wallets', label: 'Accounts' },
-            { id: 'analytics', label: 'Insights' },
-            { id: 'settings', label: 'Settings' }
-          ].map((item) => {
+          {/* Animated Sliding Pill Indicator */}
+          <div
+            className={`absolute top-1.5 bottom-1.5 left-1.5 w-[calc(25%-3px)] rounded-[26px] transition-transform duration-500 ios-spring ${ui.islandThumb}`}
+            style={{
+              transform: `translate3d(${activeTabIndex * 100}%, 0, 0)`
+            }}
+          />
+
+          {NAV_TABS.map((item) => {
             const active = activeTab === item.id;
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold transition-all duration-300 ios-spring key-press ${
-                  active ? ui.islandActive : 'hover:opacity-80'
+                type="button"
+                onClick={() => handleSelectTab(item.id)}
+                className={`relative z-10 h-full flex flex-col items-center justify-center gap-1 rounded-[26px] transition-colors duration-300 key-press ${
+                  active ? ui.islandTextActive : `${ui.islandTextIdle} hover:opacity-80`
                 }`}
               >
                 <NavIcon id={item.id} active={active} />
-                {active && <span>{item.label}</span>}
+                <span className="text-[11px] font-semibold leading-none tracking-tight">
+                  {item.label}
+                </span>
               </button>
             );
           })}
