@@ -299,12 +299,14 @@ function TapxMainApp() {
   const navBarRef = useRef(null);
   const lensTimerRef = useRef(null);
   const isPointerDownOnNavRef = useRef(false);
+  const pointerStartXRef = useRef(0);
+  const isScrubbingRef = useRef(false);
 
   const [settingsSection, setSettingsSection] = useState('shortcut');
   const [analyticsRange, setAnalyticsRange] = useState('month');
   const [popKey, setPopKey] = useState(0);
 
-  const triggerLensMagnification = useCallback((duration = 380) => {
+  const triggerLensMagnification = useCallback((duration = 440) => {
     setLensBulge(true);
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     lensTimerRef.current = setTimeout(() => {
@@ -316,7 +318,7 @@ function TapxMainApp() {
 
   const handleSelectTab = useCallback(
     (nextTabId) => {
-      triggerLensMagnification(400);
+      triggerLensMagnification(440);
       setActiveTab((prevTab) => {
         if (nextTabId === prevTab) return prevTab;
         const prevIdx = NAV_TABS.findIndex((t) => t.id === prevTab);
@@ -328,59 +330,81 @@ function TapxMainApp() {
     [triggerLensMagnification]
   );
 
-  // Compute continuous tab position from finger X coordinate
-  const updateNavFromClientX = useCallback(
-    (clientX, isCommit = false) => {
-      if (!navBarRef.current) return;
-      const rect = navBarRef.current.getBoundingClientRect();
-      const pad = 5;
-      const innerWidth = rect.width - pad * 2;
-      const slotWidth = innerWidth / 4;
-      const rawIndex = (clientX - rect.left - pad - slotWidth / 2) / slotWidth;
-      const clampedIndex = Math.max(0, Math.min(3, rawIndex));
-      const nearestIdx = Math.round(clampedIndex);
-      const targetTab = NAV_TABS[nearestIdx]?.id;
-
-      if (!isCommit) {
-        setScrubProgress(clampedIndex);
-      } else {
-        setScrubProgress(null);
-      }
-
-      if (targetTab && targetTab !== activeTab) {
-        const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
-        setTabDirection(nearestIdx >= prevIdx ? 'right' : 'left');
-        setActiveTab(targetTab);
-      }
-    },
-    [activeTab]
-  );
+  // Helper to get continuous 0..3 index from finger X position
+  const getClampedIndexFromClientX = useCallback((clientX) => {
+    if (!navBarRef.current) return 0;
+    const rect = navBarRef.current.getBoundingClientRect();
+    const pad = 5;
+    const innerWidth = rect.width - pad * 2;
+    const slotWidth = innerWidth / 4;
+    const rawIndex = (clientX - rect.left - pad - slotWidth / 2) / slotWidth;
+    return Math.max(0, Math.min(3, rawIndex));
+  }, []);
 
   const handleNavPointerDown = (e) => {
     isPointerDownOnNavRef.current = true;
+    isScrubbingRef.current = false;
+    pointerStartXRef.current = e.clientX;
+
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     setLensBulge(true);
+    setScrubProgress(null); // Keep null on initial touch so the lens smoothly animates to the tapped tab
+
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
       // Ignore capture errors
     }
-    updateNavFromClientX(e.clientX, false);
+
+    const nearestIdx = Math.round(getClampedIndexFromClientX(e.clientX));
+    const targetTab = NAV_TABS[nearestIdx]?.id;
+    if (targetTab) {
+      handleSelectTab(targetTab);
+    }
   };
 
   const handleNavPointerMove = (e) => {
     if (!isPointerDownOnNavRef.current) return;
-    updateNavFromClientX(e.clientX, false);
+
+    // Only enter continuous drag-scrubbing mode if finger moves horizontally past 14px
+    if (!isScrubbingRef.current && Math.abs(e.clientX - pointerStartXRef.current) > 14) {
+      isScrubbingRef.current = true;
+    }
+
+    if (isScrubbingRef.current) {
+      const clampedIndex = getClampedIndexFromClientX(e.clientX);
+      setScrubProgress(clampedIndex);
+
+      const nearestIdx = Math.round(clampedIndex);
+      const targetTab = NAV_TABS[nearestIdx]?.id;
+      if (targetTab && targetTab !== activeTab) {
+        const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
+        setTabDirection(nearestIdx >= prevIdx ? 'right' : 'left');
+        setActiveTab(targetTab);
+      }
+    }
   };
 
   const handleNavPointerUpOrCancel = (e) => {
     if (!isPointerDownOnNavRef.current) return;
     isPointerDownOnNavRef.current = false;
-    updateNavFromClientX(e.clientX, true);
+
+    if (isScrubbingRef.current) {
+      const clampedIndex = getClampedIndexFromClientX(e.clientX);
+      const nearestIdx = Math.round(clampedIndex);
+      const targetTab = NAV_TABS[nearestIdx]?.id;
+      if (targetTab) {
+        handleSelectTab(targetTab);
+      }
+      isScrubbingRef.current = false;
+    }
+
+    setScrubProgress(null);
+
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     lensTimerRef.current = setTimeout(() => {
       setLensBulge(false);
-    }, 260);
+    }, 300);
   };
 
   const activeTabIndex = Math.max(
@@ -2340,7 +2364,7 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* iOS PHONE APP LIQUID GLASS TAB BAR WITH OPTICAL CRYSTAL LENS & THUMB SCRUBBING */}
+      {/* iOS PHONE APP LIQUID GLASS TAB BAR WITH SMOOTH GLIDE & OPTICAL MAGNIFICATION */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
@@ -2363,8 +2387,8 @@ function TapxMainApp() {
             style={{
               transition:
                 scrubProgress !== null
-                  ? 'transform 45ms linear'
-                  : 'transform 460ms cubic-bezier(0.24, 1.22, 0.36, 1)',
+                  ? 'transform 260ms cubic-bezier(0.22, 1, 0.36, 1)'
+                  : 'transform 480ms cubic-bezier(0.22, 1.18, 0.36, 1)',
               transform: `translate3d(${visualLensIndex * 100}%, 0, 0) scale3d(${
                 lensBulge ? 1.22 : 1.03
               }, ${lensBulge ? 1.28 : 1.04}, 1)`
@@ -2384,7 +2408,7 @@ function TapxMainApp() {
                 key={item.id}
                 type="button"
                 onClick={() => handleSelectTab(item.id)}
-                className={`relative z-30 h-full flex flex-col items-center justify-center gap-[3px] rounded-full transition-colors duration-150 ${
+                className={`relative z-30 h-full flex flex-col items-center justify-center gap-[3px] rounded-full transition-colors duration-200 ${
                   active ? ui.islandTextActive : ui.islandTextIdle
                 }`}
               >
@@ -2393,8 +2417,8 @@ function TapxMainApp() {
                   style={{
                     transition:
                       scrubProgress !== null
-                        ? 'transform 50ms linear'
-                        : 'transform 380ms cubic-bezier(0.24, 1.26, 0.36, 1)',
+                        ? 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)'
+                        : 'transform 440ms cubic-bezier(0.22, 1.18, 0.36, 1)',
                     transform: `scale3d(${totalScale.toFixed(3)}, ${totalScale.toFixed(
                       3
                     )}, 1) translate3d(0, ${active ? '-1px' : '0px'}, 0)`
