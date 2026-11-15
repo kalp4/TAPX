@@ -37,6 +37,57 @@ const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 
+// Custom TAPX Wallet + Rising Bar Chart Logo Component (loads /logo.png if present, or crisp inline SVG)
+function TapxLogo({ className = 'w-9 h-9 rounded-xl' }) {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  if (!imgFailed) {
+    return (
+      <img
+        src="/logo.png"
+        alt="TAPX Logo"
+        onError={() => setImgFailed(true)}
+        className={`${className} object-cover bg-white shadow-sm shrink-0`}
+      />
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      className={`${className} shadow-sm shrink-0`}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width="512" height="512" rx="115" fill="#ffffff" />
+      <rect x="172" y="158" width="54" height="90" rx="4" fill="#08996f" />
+      <rect x="242" y="122" width="54" height="126" rx="4" fill="#179c99" />
+      <rect x="312" y="84" width="54" height="164" rx="4" fill="#1077e6" />
+      <path
+        d="M118 214 h36 v18 h-22 a8 8 0 0 0 0 16 h234 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-218 a38 38 0 0 1 -38 -38 v-150 a38 38 0 0 1 38 -38 Z"
+        fill="#072144"
+      />
+      <path
+        d="M236 248 h130 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-32 c-52 -24 -88 -94 -98 -202 Z"
+        fill="#0e747d"
+      />
+      <path
+        d="M262 248 a42 42 0 0 1 84 0 h20 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-24 c-38 -32 -66 -102 -80 -202 Z"
+        fill="#149a72"
+      />
+      <path
+        d="M276 232 a28 28 0 0 1 52 0"
+        fill="none"
+        stroke="#0c6e5c"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+      <rect x="316" y="310" width="106" height="72" rx="36" fill="#ffffff" />
+      <rect x="330" y="322" width="90" height="48" rx="24" fill="#072144" />
+      <circle cx="358" cy="346" r="11" fill="#ffffff" />
+    </svg>
+  );
+}
+
 function formatRelativeDateTime(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -348,7 +399,7 @@ function TapxMainApp() {
 
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     setLensBulge(true);
-    setScrubProgress(null); // Keep null on initial touch so the lens smoothly animates to the tapped tab
+    setScrubProgress(null);
 
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -366,7 +417,6 @@ function TapxMainApp() {
   const handleNavPointerMove = (e) => {
     if (!isPointerDownOnNavRef.current) return;
 
-    // Only enter continuous drag-scrubbing mode if finger moves horizontally past 14px
     if (!isScrubbingRef.current && Math.abs(e.clientX - pointerStartXRef.current) > 14) {
       isScrubbingRef.current = true;
     }
@@ -1299,8 +1349,9 @@ function TapxMainApp() {
 
   if (initialBoot) {
     return (
-      <div className={`h-full w-full ${ui.bg} flex items-center justify-center p-6 overflow-hidden`}>
-        <div className="w-7 h-7 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+      <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
+        <TapxLogo className="w-16 h-16 rounded-3xl animate-pulse" />
+        <div className="w-6 h-6 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -1309,7 +1360,8 @@ function TapxMainApp() {
   if (!session) {
     return (
       <div className={`h-full w-full ${ui.bg} flex flex-col justify-between p-7 max-w-md mx-auto overflow-hidden`}>
-        <div className="mt-16 space-y-3">
+        <div className="mt-14 space-y-4">
+          <TapxLogo className="w-16 h-16 rounded-[20px]" />
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${ui.card}`}>
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span>iOS Lock Screen Expense Tracker</span>
@@ -1380,23 +1432,26 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Crisp Top Header */}
+      {/* Crisp Top Header with Brand Logo */}
       <header className="px-5 pt-2 pb-3 flex items-center justify-between shrink-0">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
-              Total Balance
-            </span>
-            <span
-              className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                isSyncingBg ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
-              }`}
-            />
+        <div className="flex items-center gap-3">
+          <TapxLogo className="w-10 h-10 rounded-[13px]" />
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
+                Total Balance
+              </span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                  isSyncingBg ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+                }`}
+              />
+            </div>
+            <h2 className={`text-[25px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+              {currencySymbol}
+              {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </h2>
           </div>
-          <h2 className={`text-[26px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
-            {currencySymbol}
-            {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </h2>
         </div>
 
         <button
