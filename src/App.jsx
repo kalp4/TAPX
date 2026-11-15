@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { supabase } from './supabaseClient';
 
-// PASTE YOUR SHARED ICLOUD SHORTCUT LINK HERE (e.g. 'https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxx')
+// Shared iCloud Shortcut Link for 1-Tap Setup
 const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/ab752c99877049a3bb53981115357de3';
 
 const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
@@ -233,7 +233,7 @@ function TapxMainApp() {
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Refined Apple-Grade Palette + iOS Phone App Magnifying Liquid Glass
+  // Refined Apple-Grade Palette + Optical Crystal Liquid Glass
   const ui = useMemo(() => {
     if (isDark) {
       return {
@@ -252,7 +252,7 @@ function TapxMainApp() {
         textMuted: 'text-zinc-500',
         islandBar: 'ios-glass-bar-dark',
         islandLens: 'ios-magnifying-lens-dark',
-        islandTextActive: 'text-white drop-shadow-[0_1px_6px_rgba(255,255,255,0.35)]',
+        islandTextActive: 'text-white drop-shadow-[0_1px_8px_rgba(255,255,255,0.28)]',
         islandTextIdle: 'text-zinc-400/80',
         primaryBtnExpense: 'bg-zinc-100 text-zinc-950',
         primaryBtnIncome: 'bg-emerald-500 text-zinc-950',
@@ -276,7 +276,7 @@ function TapxMainApp() {
       textMuted: 'text-zinc-400',
       islandBar: 'ios-glass-bar-light',
       islandLens: 'ios-magnifying-lens-light',
-      islandTextActive: 'text-[#007AFF] drop-shadow-[0_1px_4px_rgba(0,122,255,0.2)]',
+      islandTextActive: 'text-[#007AFF] drop-shadow-[0_1px_4px_rgba(0,122,255,0.18)]',
       islandTextIdle: 'text-zinc-500/85',
       primaryBtnExpense: 'bg-zinc-900 text-white',
       primaryBtnIncome: 'bg-emerald-600 text-white',
@@ -295,7 +295,7 @@ function TapxMainApp() {
   const [activeTab, setActiveTab] = useState('pad');
   const [tabDirection, setTabDirection] = useState('right');
   const [lensBulge, setLensBulge] = useState(false);
-  const [scrubProgress, setScrubProgress] = useState(null); // 0..3 continuous index when dragging finger
+  const [scrubProgress, setScrubProgress] = useState(null);
   const navBarRef = useRef(null);
   const lensTimerRef = useRef(null);
   const isPointerDownOnNavRef = useRef(false);
@@ -328,7 +328,7 @@ function TapxMainApp() {
     [triggerLensMagnification]
   );
 
-  // Compute continuous tab position from finger X coordinate (allows sliding finger across tabs like iPhone Phone app)
+  // Compute continuous tab position from finger X coordinate
   const updateNavFromClientX = useCallback(
     (clientX, isCommit = false) => {
       if (!navBarRef.current) return;
@@ -363,7 +363,7 @@ function TapxMainApp() {
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
-      // Ignore capture errors on non-capturable targets
+      // Ignore capture errors
     }
     updateNavFromClientX(e.clientX, false);
   };
@@ -2340,7 +2340,7 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* iOS PHONE APP LIQUID GLASS TAB BAR WITH OPTICAL MAGNIFYING LENS & THUMB SCRUBBING */}
+      {/* iOS PHONE APP LIQUID GLASS TAB BAR WITH OPTICAL CRYSTAL LENS & THUMB SCRUBBING */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
@@ -2357,7 +2357,7 @@ function TapxMainApp() {
             lensBulge ? 'scale-[1.015]' : 'scale-100'
           } ${ui.islandBar}`}
         >
-          {/* Convex Magnifying Glass Bubble Lens */}
+          {/* Optical Crystal Magnifying Bubble Lens */}
           <div
             className={`absolute top-[5px] bottom-[5px] left-[5px] w-[calc(25%-2.5px)] rounded-full pointer-events-none z-20 ${ui.islandLens}`}
             style={{
@@ -2366,16 +2366,13 @@ function TapxMainApp() {
                   ? 'transform 45ms linear'
                   : 'transform 460ms cubic-bezier(0.24, 1.22, 0.36, 1)',
               transform: `translate3d(${visualLensIndex * 100}%, 0, 0) scale3d(${
-                lensBulge ? 1.22 : 1.04
-              }, ${lensBulge ? 1.3 : 1.06}, 1)`
+                lensBulge ? 1.22 : 1.03
+              }, ${lensBulge ? 1.28 : 1.04}, 1)`
             }}
-          >
-            <div className="ios-lens-glare" />
-          </div>
+          />
 
           {NAV_TABS.map((item, idx) => {
             const active = activeTab === item.id;
-            // Calculate proximity to the magnifying lens for smooth continuous optical zoom
             const distance = Math.abs(visualLensIndex - idx);
             const proximity = Math.max(0, 1 - distance);
             const baseScale = 0.9 + proximity * 0.22;
