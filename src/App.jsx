@@ -4,25 +4,57 @@ import { supabase } from './supabaseClient';
 // Paste your iCloud Shortcut Share Link here once you create it on your iPhone (Share -> Copy iCloud Link)
 const SHARED_ICLOUD_SHORTCUT_URL = '';
 
-const WALLET_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#ec4899', '#06b6d4'];
+const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
 const CATEGORY_ICONS = ['🍔', '🛒', '⛽', '🛍️', '🎬', '⚡', '💊', '☕', '📚', '🏠', '💰', '✈️'];
-const CHART_COLORS = ['#6366f1', '#f43f5e', '#f59e0b', '#10b981', '#ec4899', '#06b6d4', '#8b5cf6', '#14b8a6'];
+const CHART_COLORS = ['#2563eb', '#e11d48', '#d97706', '#059669', '#7c3aed', '#0891b2', '#db2777', '#4f46e5'];
 
 const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#f43f5e', monthly_budget: 3000 },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#10b981', monthly_budget: 2500 },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#f59e0b', monthly_budget: 1500 },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#8b5cf6', monthly_budget: 2500 },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#ec4899', monthly_budget: 1000 },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#06b6d4', monthly_budget: 1500 },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#14b8a6', monthly_budget: 1000 },
-  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#10b981', monthly_budget: null }
+  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#e11d48', monthly_budget: 3000 },
+  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#059669', monthly_budget: 2500 },
+  { name: 'Transport', type: 'expense', icon: '⛽', color: '#d97706', monthly_budget: 1500 },
+  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#7c3aed', monthly_budget: 2500 },
+  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#db2777', monthly_budget: 1000 },
+  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#0891b2', monthly_budget: 1500 },
+  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#2563eb', monthly_budget: 1000 },
+  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#059669', monthly_budget: null }
 ];
 
-const CACHE_KEY = 'tapx_local_cache_v2';
+const CACHE_KEY = 'tapx_local_cache_v3';
+const THEME_KEY = 'tapx_theme_pref';
 
-// Built-in Error Boundary so the screen never turns black silently
+// Clean Vector Icons for Navigation & UI
+function NavIcon({ id, active }) {
+  const strokeWidth = active ? '2.2' : '1.75';
+  if (id === 'pad') {
+    return (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    );
+  }
+  if (id === 'wallets') {
+    return (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
+      </svg>
+    );
+  }
+  if (id === 'analytics') {
+    return (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+      </svg>
+    );
+  }
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+    </svg>
+  );
+}
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -43,17 +75,14 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-[100dvh] w-full bg-[#0b0f19] text-slate-100 flex flex-col items-center justify-center p-6 max-w-md mx-auto text-center space-y-4 overflow-hidden">
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-2xl">
-            ⚠️
-          </div>
-          <h2 className="text-lg font-bold text-white">Something went wrong</h2>
-          <p className="text-xs text-rose-300 bg-rose-950/50 border border-rose-500/30 p-3 rounded-xl font-mono break-all">
+        <div className="h-full w-full bg-[#09090b] text-zinc-100 flex flex-col items-center justify-center p-6 max-w-md mx-auto text-center space-y-4 overflow-hidden">
+          <p className="text-sm font-semibold text-white">Application Error</p>
+          <p className="text-xs text-rose-400 bg-rose-950/40 border border-rose-500/30 p-3 rounded-xl font-mono break-all">
             {this.state.errorMessage}
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold"
+            className="px-5 py-2.5 rounded-xl bg-white text-zinc-950 text-xs font-semibold"
           >
             Reload TAPX
           </button>
@@ -74,6 +103,80 @@ function TapxMainApp() {
     }
   }, []);
 
+  // Theme Mode: 'system' | 'dark' | 'light'
+  const [themePref, setThemePref] = useState(() => {
+    return localStorage.getItem(THEME_KEY) || 'system';
+  });
+  const [systemIsDark, setSystemIsDark] = useState(() => {
+    return window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true;
+  });
+
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e) => setSystemIsDark(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  const isDark = themePref === 'system' ? systemIsDark : themePref === 'dark';
+
+  // Sync theme color with iOS Status Bar / Notch so there is zero top blur or color seam
+  useEffect(() => {
+    localStorage.setItem(THEME_KEY, themePref);
+    const bgHex = isDark ? '#09090b' : '#f4f4f6';
+    document.documentElement.style.backgroundColor = bgHex;
+    document.body.style.backgroundColor = bgHex;
+    const meta = document.getElementById('theme-color-meta');
+    if (meta) meta.setAttribute('content', bgHex);
+  }, [themePref, isDark]);
+
+  // Dynamic Theme Palette (Editorial Apple Wallet / Copilot Aesthetic)
+  const ui = useMemo(() => {
+    if (isDark) {
+      return {
+        bg: 'bg-[#09090b] text-zinc-100',
+        card: 'bg-[#121215] border-[#222226]',
+        cardSubtle: 'bg-[#16161a] border-[#242429]',
+        input: 'bg-[#09090b] border-[#27272a] text-zinc-100 placeholder-zinc-500',
+        pillIdle: 'bg-[#141418] border-[#242429] text-zinc-400 hover:text-zinc-200',
+        pillActive: 'bg-zinc-100 border-zinc-100 text-zinc-950 shadow-sm',
+        numpadKey: 'bg-[#141418] hover:bg-[#1c1c21] active:bg-[#242429] border-[#222226] text-zinc-100',
+        segmentedBg: 'bg-[#121215] border-[#222226]',
+        segmentedActive: 'bg-[#242429] text-white shadow-sm',
+        textPrimary: 'text-zinc-100',
+        textSecondary: 'text-zinc-400',
+        textMuted: 'text-zinc-500',
+        island: 'bg-[#16161a]/95 border-white/[0.1] text-zinc-400 shadow-[0_12px_36px_rgba(0,0,0,0.75)]',
+        islandActive: 'bg-zinc-100 text-zinc-950',
+        primaryBtnExpense: 'bg-zinc-100 text-zinc-950 hover:bg-white',
+        primaryBtnIncome: 'bg-emerald-500 text-zinc-950 hover:bg-emerald-400',
+        primaryBtnTransfer: 'bg-blue-600 text-white hover:bg-blue-500',
+        divider: 'border-[#1f1f23]'
+      };
+    }
+    return {
+      bg: 'bg-[#f4f4f6] text-zinc-900',
+      card: 'bg-white border-zinc-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]',
+      cardSubtle: 'bg-zinc-100/80 border-zinc-200/70',
+      input: 'bg-[#f4f4f6] border-zinc-300 text-zinc-900 placeholder-zinc-400',
+      pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 hover:text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
+      pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-sm',
+      numpadKey: 'bg-white hover:bg-zinc-50 active:bg-zinc-100 border-zinc-200/80 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)]',
+      segmentedBg: 'bg-zinc-200/70 border-zinc-300/50',
+      segmentedActive: 'bg-white text-zinc-900 shadow-sm',
+      textPrimary: 'text-zinc-900',
+      textSecondary: 'text-zinc-600',
+      textMuted: 'text-zinc-400',
+      island: 'bg-white/95 border-zinc-200/90 text-zinc-500 shadow-[0_10px_30px_rgba(0,0,0,0.1)]',
+      islandActive: 'bg-zinc-900 text-white',
+      primaryBtnExpense: 'bg-zinc-900 text-white hover:bg-zinc-800',
+      primaryBtnIncome: 'bg-emerald-600 text-white hover:bg-emerald-500',
+      primaryBtnTransfer: 'bg-blue-600 text-white hover:bg-blue-500',
+      divider: 'border-zinc-200'
+    };
+  }, [isDark]);
+
   const [session, setSession] = useState(null);
   const [initialBoot, setInitialBoot] = useState(!cachedData);
   const [isSyncingBg, setIsSyncingBg] = useState(false);
@@ -82,7 +185,7 @@ function TapxMainApp() {
 
   // Navigation State: 'pad' | 'wallets' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState('pad');
-  const [settingsSection, setSettingsSection] = useState('budgets'); // 'budgets' | 'shortcut'
+  const [settingsSection, setSettingsSection] = useState('budgets'); // 'budgets' | 'shortcut' | 'appearance'
   const [shortcutMode, setShortcutMode] = useState('Fast'); // 'Fast' | 'Menu'
   const [analyticsRange, setAnalyticsRange] = useState('month'); // 'week' | 'month' | 'all'
 
@@ -110,7 +213,7 @@ function TapxMainApp() {
   const [newWalletName, setNewWalletName] = useState('');
   const [newWalletType, setNewWalletType] = useState('UPI / Wallet');
   const [newWalletBalance, setNewWalletBalance] = useState('');
-  const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[0]);
+  const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[1]);
   const [newWalletIcon, setNewWalletIcon] = useState(WALLET_ICONS[0]);
 
   // New Category Modal State
@@ -123,7 +226,7 @@ function TapxMainApp() {
   // Copy state for Shortcut setup
   const [copiedField, setCopiedField] = useState('');
 
-  // Save state to localStorage automatically whenever it changes
+  // Save state to localStorage automatically
   useEffect(() => {
     if (!session?.user?.id) return;
     try {
@@ -142,7 +245,7 @@ function TapxMainApp() {
     }
   }, [session?.user?.id, settings, wallets, categories, transactions]);
 
-  // 1. Listen to Auth State safely
+  // 1. Listen to Auth State
   useEffect(() => {
     let mounted = true;
 
@@ -156,8 +259,7 @@ function TapxMainApp() {
           setInitialBoot(false);
         }
       })
-      .catch((err) => {
-        console.error('Auth session error:', err);
+      .catch(() => {
         if (mounted) setInitialBoot(false);
       });
 
@@ -181,7 +283,7 @@ function TapxMainApp() {
     };
   }, []);
 
-  // 2. Fetch User Data silently in background when authenticated
+  // 2. Silent Background Sync
   useEffect(() => {
     if (session?.user?.id) {
       fetchUserData(session.user.id);
@@ -190,10 +292,9 @@ function TapxMainApp() {
 
   const showToast = (msg) => {
     setToast(String(msg));
-    setTimeout(() => setToast(''), 2400);
+    setTimeout(() => setToast(''), 2200);
   };
 
-  // Silent background sync + Auto-seeding 8 default categories if empty
   const fetchUserData = async (userId) => {
     setIsSyncingBg(true);
     setDbError('');
@@ -238,7 +339,7 @@ function TapxMainApp() {
       let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
       const fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
 
-      // Ensure all 8 default categories exist automatically
+      // Auto-provision the 8 default categories if missing
       if (fetchedCategories.length < 7 && !seedingRef.current) {
         seedingRef.current = true;
         const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
@@ -280,20 +381,13 @@ function TapxMainApp() {
         return firstExpenseCat?.id || '';
       });
     } catch (err) {
-      console.error('Supabase fetch error:', err);
-      setDbError(
-        String(
-          err?.message ||
-            'Could not load tables. Make sure you ran the Step 1 SQL script in your Supabase SQL Editor.'
-        )
-      );
+      setDbError(String(err?.message || 'Database connection error'));
     } finally {
       setInitialBoot(false);
       setIsSyncingBg(false);
     }
   };
 
-  // Sign in with Google
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -308,7 +402,6 @@ function TapxMainApp() {
     await supabase.auth.signOut();
   };
 
-  // Numpad Handler
   const handleDigitPress = (digit) => {
     if (digit === 'DEL') {
       setAmountStr((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
@@ -321,24 +414,24 @@ function TapxMainApp() {
     setAmountStr((prev) => {
       if (prev === '0') return digit;
       if (prev.includes('.') && prev.split('.')[1].length >= 2) return prev;
-      if (prev.length >= 9) return prev;
+      if (prev.length >= 8) return prev;
       return prev + digit;
     });
   };
 
-  // Optimistic Instant Transaction Logging (0ms UI response)
+  // Instant Optimistic Transaction Logging
   const handleLogTransaction = async () => {
     const numericAmount = parseFloat(amountStr);
     if (!numericAmount || numericAmount <= 0) {
-      showToast('Enter an amount greater than 0');
+      showToast('Enter an amount');
       return;
     }
     if (!selectedWalletId) {
-      showToast('Create or select a wallet first');
+      showToast('Add a wallet first');
       return;
     }
     if (entryType === 'transfer' && (!toWalletId || toWalletId === selectedWalletId)) {
-      showToast('Select two different wallets for transfer');
+      showToast('Select two different wallets');
       return;
     }
 
@@ -381,7 +474,7 @@ function TapxMainApp() {
 
     setAmountStr('0');
     setNote('');
-    showToast(`${settings?.currency || '₹'}${numericAmount} ${currentType} logged!`);
+    showToast(`${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged`);
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
@@ -411,7 +504,6 @@ function TapxMainApp() {
     }
   };
 
-  // Optimistic Delete Transaction
   const handleDeleteTransaction = async (id) => {
     const targetTx = transactions.find((t) => t.id === id);
     if (!targetTx) return;
@@ -434,12 +526,11 @@ function TapxMainApp() {
         return w;
       })
     );
-    showToast('Transaction removed & balance restored');
+    showToast('Transaction removed');
 
     await supabase.from('transactions').delete().eq('id', id);
   };
 
-  // Create Custom Wallet
   const handleCreateWallet = async (e) => {
     e.preventDefault();
     if (!newWalletName.trim()) return;
@@ -475,20 +566,18 @@ function TapxMainApp() {
         if (!selectedWalletId) setSelectedWalletId(createdWallet.id);
         return updated;
       });
-      showToast('Wallet created!');
+      showToast('Wallet added');
     } else if (error) {
       showToast(error.message);
     }
   };
 
-  // Optimistic Delete Wallet
   const handleDeleteWallet = async (id) => {
     setWallets((prev) => prev.filter((w) => w.id !== id));
     showToast('Wallet deleted');
     await supabase.from('wallets').delete().eq('id', id);
   };
 
-  // Create Custom Category
   const handleCreateCategory = async (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -524,27 +613,25 @@ function TapxMainApp() {
         }
         return updated;
       });
-      showToast('Category added!');
+      showToast('Category added');
     } else if (error) {
       showToast(error.message);
     }
   };
 
-  // Optimistic Delete Category
   const handleDeleteCategory = async (id) => {
     setCategories((prev) => prev.filter((c) => c.id !== id));
     showToast('Category deleted');
     await supabase.from('categories').delete().eq('id', id);
   };
 
-  // Regenerate Apple Shortcut Token
   const handleRegenerateToken = async () => {
     const randomHex = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
 
     setSettings((prev) => ({ ...prev, shortcut_token: randomHex }));
-    showToast('New Shortcut Token generated!');
+    showToast('Token regenerated');
 
     await supabase
       .from('user_settings')
@@ -558,11 +645,10 @@ function TapxMainApp() {
     setTimeout(() => setCopiedField(''), 2000);
   };
 
-  // 1-Tap Tappy-Style Shortcut Launcher
   const handleOneTapShortcut = () => {
     const fastUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}&q=`;
     navigator.clipboard.writeText(fastUrl);
-    showToast('Personal URL copied! Opening Shortcuts...');
+    showToast('URL copied · Opening Shortcuts');
 
     setTimeout(() => {
       if (SHARED_ICLOUD_SHORTCUT_URL) {
@@ -570,10 +656,9 @@ function TapxMainApp() {
       } else {
         window.location.href = 'shortcuts://create-shortcut';
       }
-    }, 600);
+    }, 500);
   };
 
-  // Computed Totals
   const totalNetWorth = useMemo(
     () => wallets.reduce((acc, w) => acc + (Number(w?.balance) || 0), 0),
     [wallets]
@@ -584,7 +669,6 @@ function TapxMainApp() {
     [categories, entryType]
   );
 
-  // Current Month Spending per Category
   const currentMonthSpendByCat = useMemo(() => {
     const now = new Date();
     const map = {};
@@ -603,7 +687,6 @@ function TapxMainApp() {
     return map;
   }, [transactions]);
 
-  // Comprehensive Analytics Calculations
   const analyticsData = useMemo(() => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -613,9 +696,7 @@ function TapxMainApp() {
     const filteredTx = transactions.filter((tx) => {
       if (!tx?.created_at) return false;
       const d = new Date(tx.created_at);
-      if (analyticsRange === 'week') {
-        return d >= sevenDaysAgo;
-      }
+      if (analyticsRange === 'week') return d >= sevenDaysAgo;
       if (analyticsRange === 'month') {
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       }
@@ -707,7 +788,7 @@ function TapxMainApp() {
           id: wId,
           name: wObj?.name || 'Wallet',
           icon: wObj?.icon || '💳',
-          color: wObj?.color || '#6366f1',
+          color: wObj?.color || '#2563eb',
           amount,
           pct
         };
@@ -737,60 +818,44 @@ function TapxMainApp() {
   const personalFastUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}&q=`;
   const personalMetaUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`;
 
-  // Dynamic Lively Accent Colors based on Entry Type
-  const activeAccent =
+  const primaryButtonClass =
     entryType === 'income'
-      ? {
-          button: 'from-emerald-500 to-teal-500 shadow-emerald-500/25',
-          pill: 'bg-emerald-500/20 border-emerald-400 text-emerald-100',
-          amountText: 'text-emerald-400'
-        }
+      ? ui.primaryBtnIncome
       : entryType === 'transfer'
-      ? {
-          button: 'from-cyan-500 to-blue-600 shadow-cyan-500/25',
-          pill: 'bg-cyan-500/20 border-cyan-400 text-cyan-100',
-          amountText: 'text-cyan-400'
-        }
-      : {
-          button: 'from-indigo-500 via-violet-500 to-fuchsia-500 shadow-indigo-500/25',
-          pill: 'bg-indigo-500/20 border-indigo-400 text-indigo-100',
-          amountText: 'text-white'
-        };
+      ? ui.primaryBtnTransfer
+      : ui.primaryBtnExpense;
 
   if (initialBoot) {
     return (
-      <div className="h-[100dvh] w-full bg-[#0b0f19] flex flex-col items-center justify-center p-6 overflow-hidden">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30 animate-pulse">
-          ⚡
-        </div>
+      <div className={`h-full w-full ${ui.bg} flex items-center justify-center p-6 overflow-hidden`}>
+        <div className="w-8 h-8 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  // GOOGLE SIGN-IN SCREEN
+  // SIGN-IN SCREEN
   if (!session) {
     return (
-      <div className="h-[100dvh] w-full bg-[#0b0f19] relative flex flex-col justify-between p-6 max-w-md mx-auto overflow-hidden">
-        {/* Lively Aurora Glows */}
-        <div className="absolute -top-24 -left-20 w-72 h-72 bg-indigo-600/25 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 -right-24 w-72 h-72 bg-fuchsia-600/20 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="mt-16 space-y-4 relative z-10">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl shadow-xl shadow-indigo-500/30">
-            ⚡
+      <div className={`h-full w-full ${ui.bg} flex flex-col justify-between p-7 max-w-md mx-auto overflow-hidden`}>
+        <div className="mt-16 space-y-3">
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${ui.card}`}>
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>iOS Lock Screen Expense Tracker</span>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">TAPX</h1>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            Instant iOS Lock Screen Back Tap logging paired with multi-wallet balance management and live spending analytics.
+          <h1 className={`text-4xl font-bold tracking-tight ${ui.textPrimary}`}>TAPX</h1>
+          <p className={`text-sm leading-relaxed ${ui.textSecondary}`}>
+            Minimal multi-wallet balance tracking with instant Back Tap lock screen logging.
           </p>
         </div>
 
-        <div className="space-y-4 mb-8 relative z-10">
+        <div className="space-y-4 mb-10">
           <button
             onClick={handleGoogleLogin}
-            className="w-full py-4 px-5 bg-white text-slate-950 font-bold rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition shadow-xl"
+            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition ${
+              isDark ? 'bg-white text-zinc-950' : 'bg-zinc-900 text-white'
+            }`}
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
@@ -810,8 +875,8 @@ function TapxMainApp() {
             </svg>
             Continue with Google
           </button>
-          <p className="text-xs text-center text-slate-400">
-            Install to your iPhone Home Screen via Safari Share → Add to Home Screen
+          <p className={`text-xs text-center ${ui.textMuted}`}>
+            Share → Add to Home Screen for full-screen iOS mode
           </p>
         </div>
       </div>
@@ -820,83 +885,75 @@ function TapxMainApp() {
 
   return (
     <div
-      className="h-[100dvh] w-full bg-[#0b0f19] text-slate-100 flex flex-col max-w-md mx-auto overflow-hidden relative select-none"
+      className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'max(env(safe-area-inset-top), 10px)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
+        paddingTop: 'max(env(safe-area-inset-top), 12px)'
       }}
     >
-      {/* Ambient Lively Background Aurora Blobs */}
-      <div className="absolute -top-28 -left-24 w-72 h-72 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 -right-28 w-72 h-72 bg-fuchsia-600/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 left-1/4 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Toast Notification */}
+      {/* Minimal Floating Toast Pill */}
       {toast && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl pointer-events-none">
+        <div
+          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-lg pointer-events-none transition-all ${
+            isDark ? 'bg-zinc-100 text-zinc-950' : 'bg-zinc-900 text-white'
+          }`}
+        >
           {toast}
         </div>
       )}
 
       {/* Database Error Banner */}
       {dbError && (
-        <div className="mx-4 mt-2 p-2.5 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-start gap-2 shrink-0 z-20">
-          <span className="text-sm">⚠️</span>
-          <div className="truncate">
-            <span className="font-bold">DB Error: </span>
-            <span className="text-rose-300">{dbError}</span>
-          </div>
+        <div className="mx-5 mt-1 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center justify-between shrink-0">
+          <span className="truncate">{dbError}</span>
         </div>
       )}
 
-      {/* Top Header — Solid & Clean (No Notch Blur, No Starter Pack Button) */}
-      <header className="px-4 pt-1 pb-2.5 shrink-0 relative z-10">
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600/25 via-violet-600/20 to-fuchsia-600/20 border border-indigo-400/25 flex items-center justify-between shadow-lg shadow-indigo-950/40">
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">
-                Total Net Balance
-              </p>
-              <span
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  isSyncingBg
-                    ? 'bg-amber-400 animate-ping'
-                    : 'bg-emerald-400 shadow-sm shadow-emerald-400/80'
-                }`}
-                title={isSyncingBg ? 'Syncing...' : 'Synced'}
-              />
-            </div>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight mt-0.5">
-              {currencySymbol}
-              {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </h2>
+      {/* Top Header — Zero Blur, Clean Editorial Typography */}
+      <header className="px-5 pt-1 pb-3 flex items-center justify-between shrink-0">
+        <div>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
+              Total Balance
+            </span>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isSyncingBg ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+              }`}
+            />
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setActiveTab('wallets');
-                setShowWalletModal(true);
-              }}
-              className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold transition active:scale-95"
-            >
-              + Wallet
-            </button>
-          </div>
+          <h2 className={`text-2xl font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+            {currencySymbol}
+            {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </h2>
         </div>
+
+        <button
+          onClick={() => {
+            setActiveTab('wallets');
+            setShowWalletModal(true);
+          }}
+          className={`px-3.5 py-2 rounded-full border text-xs font-semibold transition active:scale-95 ${ui.card} ${ui.textPrimary}`}
+        >
+          + Wallet
+        </button>
       </header>
 
-      {/* MAIN CONTENT VIEWPORT (Strictly Non-Scrolling Outer Container) */}
-      <main className="flex-1 min-h-0 flex flex-col overflow-hidden relative z-10">
-        {/* TAB 1: TAPPY-STYLE QUICK KEYPAD (100% Locked, Zero Vertical Scroll) */}
+      {/* MAIN VIEWPORT (Reserved Bottom Space for Floating Island Bar) */}
+      <main
+        className="flex-1 min-h-0 flex flex-col overflow-hidden px-5"
+        style={{
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 74px)'
+        }}
+      >
+        {/* TAB 1: KEYPAD */}
         {activeTab === 'pad' && (
-          <div className="flex-1 min-h-0 flex flex-col justify-between px-4 pb-2 overflow-hidden">
-            {/* Vibrant Type Switcher */}
-            <div className="grid grid-cols-3 bg-slate-900/90 border border-white/10 p-1 rounded-2xl shrink-0">
+          <div className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden">
+            {/* Segmented Mode Control */}
+            <div className={`grid grid-cols-3 p-1 rounded-xl border shrink-0 ${ui.segmentedBg}`}>
               {[
-                { id: 'expense', label: '💸 Expense', activeCls: 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md' },
-                { id: 'income', label: '💰 Income', activeCls: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md' },
-                { id: 'transfer', label: '⇄ Transfer', activeCls: 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-md' }
+                { id: 'expense', label: 'Expense' },
+                { id: 'income', label: 'Income' },
+                { id: 'transfer', label: 'Transfer' }
               ].map((t) => (
                 <button
                   key={t.id}
@@ -907,8 +964,8 @@ function TapxMainApp() {
                     );
                     if (firstMatch) setSelectedCategoryId(firstMatch.id);
                   }}
-                  className={`py-2 text-xs font-bold rounded-xl transition ${
-                    entryType === t.id ? t.activeCls : 'text-slate-400 hover:text-white'
+                  className={`py-1.5 text-xs font-semibold rounded-lg transition ${
+                    entryType === t.id ? ui.segmentedActive : ui.textSecondary
                   }`}
                 >
                   {t.label}
@@ -916,100 +973,92 @@ function TapxMainApp() {
               ))}
             </div>
 
-            {/* Big Amount Display + Note Input */}
+            {/* Center Amount Display & Note */}
             <div className="text-center my-auto py-1 shrink-0">
-              <div className={`text-5xl font-black tracking-tight ${activeAccent.amountText}`}>
-                <span className="text-2xl text-slate-400 mr-1 font-bold">{currencySymbol}</span>
+              <div className={`text-5xl font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+                <span className={`text-2xl mr-1 font-medium ${ui.textMuted}`}>{currencySymbol}</span>
                 {amountStr}
               </div>
               <input
                 type="text"
-                placeholder="Tap to add a quick note..."
+                placeholder="Add note..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className="mt-1.5 bg-white/[0.04] border border-white/[0.07] rounded-xl px-3 py-1.5 text-center text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 w-4/5 mx-auto block"
+                className={`mt-2 bg-transparent text-center text-xs focus:outline-none w-3/4 mx-auto block ${ui.textSecondary} placeholder:${ui.textMuted}`}
               />
             </div>
 
-            {/* Horizontal Scrollable Wallet & Category Pills */}
-            <div className="space-y-2 shrink-0">
-              {/* Wallet Selector Pills */}
+            {/* Wallet & Category Selector Pills */}
+            <div className="space-y-2.5 shrink-0">
+              {/* Wallet Row */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                    {entryType === 'transfer' ? 'From Wallet → To Wallet' : 'Wallet'}
-                  </span>
-                </div>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                <span className={`text-[10px] uppercase tracking-wider font-semibold px-0.5 ${ui.textMuted}`}>
+                  {entryType === 'transfer' ? 'From Wallet' : 'Account'}
+                </span>
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                   {wallets.length === 0 ? (
                     <button
                       onClick={() => {
                         setActiveTab('wallets');
                         setShowWalletModal(true);
                       }}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-500/20 border border-indigo-400/40 text-indigo-200 shrink-0"
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border shrink-0 ${ui.pillIdle}`}
                     >
-                      + Create Your First Wallet
+                      + Add your first wallet
                     </button>
                   ) : (
                     wallets.map((w) => (
                       <button
                         key={w.id}
                         onClick={() => setSelectedWalletId(w.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 border transition ${
-                          selectedWalletId === w.id
-                            ? activeAccent.pill
-                            : 'bg-slate-900/80 border-white/10 text-slate-300'
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition ${
+                          selectedWalletId === w.id ? ui.pillActive : ui.pillIdle
                         }`}
                       >
                         <span>{w.icon}</span>
                         <span>{w.name}</span>
-                        <span className="text-[10px] opacity-75">
-                          ({currencySymbol}
-                          {Number(w.balance || 0).toLocaleString('en-IN')})
+                        <span className="text-[10px] opacity-70 tabular-nums">
+                          {currencySymbol}
+                          {Number(w.balance || 0).toLocaleString('en-IN')}
                         </span>
                       </button>
                     ))
                   )}
                 </div>
 
-                {/* Destination Wallet for Transfers */}
+                {/* Transfer Destination Row */}
                 {entryType === 'transfer' && wallets.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pt-1 no-scrollbar">
+                  <div className="flex gap-1.5 overflow-x-auto pt-1 no-scrollbar">
                     {wallets
                       .filter((w) => w.id !== selectedWalletId)
                       .map((w) => (
                         <button
                           key={w.id}
                           onClick={() => setToWalletId(w.id)}
-                          className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 border transition ${
-                            toWalletId === w.id
-                              ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
-                              : 'bg-slate-900/60 border-white/10 text-slate-400'
+                          className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 shrink-0 border transition ${
+                            toWalletId === w.id ? ui.pillActive : ui.pillIdle
                           }`}
                         >
-                          <span>⇄ To {w.name}</span>
+                          <span>→ {w.name}</span>
                         </button>
                       ))}
                   </div>
                 )}
               </div>
 
-              {/* Category Selector Pills (8 Default Categories + Custom) */}
+              {/* Category Row */}
               {entryType !== 'transfer' && (
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold px-1">
+                  <span className={`text-[10px] uppercase tracking-wider font-semibold px-0.5 ${ui.textMuted}`}>
                     Category
                   </span>
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                  <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                     {filteredCategories.map((c) => (
                       <button
                         key={c.id}
                         onClick={() => setSelectedCategoryId(c.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 border transition ${
-                          selectedCategoryId === c.id
-                            ? activeAccent.pill
-                            : 'bg-slate-900/80 border-white/10 text-slate-300'
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition ${
+                          selectedCategoryId === c.id ? ui.pillActive : ui.pillIdle
                         }`}
                       >
                         <span>{c.icon}</span>
@@ -1021,64 +1070,68 @@ function TapxMainApp() {
               )}
             </div>
 
-            {/* Tactile Glass Numpad */}
+            {/* Tactile Numpad */}
             <div className="grid grid-cols-3 gap-2 pt-2 shrink-0">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
                 <button
                   key={key}
                   onClick={() => handleDigitPress(key)}
-                  className="h-11 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] active:scale-95 text-lg font-bold text-white flex items-center justify-center transition"
+                  className={`h-11 rounded-xl border text-lg font-semibold tabular-nums flex items-center justify-center active:scale-[0.97] transition ${ui.numpadKey}`}
                 >
-                  {key === 'DEL' ? '⌫' : key}
+                  {key === 'DEL' ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
+                    </svg>
+                  ) : (
+                    key
+                  )}
                 </button>
               ))}
             </div>
 
-            {/* Primary Log Action Button */}
+            {/* Submit Button */}
             <button
               onClick={handleLogTransaction}
-              className={`w-full py-3.5 mt-2 rounded-2xl bg-gradient-to-r ${activeAccent.button} active:scale-95 font-extrabold text-sm text-white shadow-lg transition shrink-0`}
+              className={`w-full py-3.5 mt-2 rounded-xl font-semibold text-sm active:scale-[0.98] transition shrink-0 ${primaryButtonClass}`}
             >
-              Log {entryType === 'transfer' ? 'Transfer' : entryType === 'income' ? 'Income' : 'Expense'}
+              Save {entryType === 'transfer' ? 'Transfer' : entryType === 'income' ? 'Income' : 'Expense'}
             </button>
           </div>
         )}
 
-        {/* TAB 2: WALLETS & RECENT TRANSACTIONS (Independent Scrollable Boxes Only) */}
+        {/* TAB 2: WALLETS & ACTIVITY */}
         {activeTab === 'wallets' && (
-          <div className="flex-1 min-h-0 flex flex-col px-4 pb-2 gap-3 overflow-hidden">
-            {/* Wallets Header */}
+          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
             <div className="flex items-center justify-between shrink-0">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
-                Your Wallets ({wallets.length})
+              <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
+                Accounts ({wallets.length})
               </h3>
               <button
                 onClick={() => setShowWalletModal((prev) => !prev)}
-                className="text-xs bg-gradient-to-r from-indigo-500 to-violet-500 text-white px-3 py-1.5 rounded-xl font-bold shadow"
+                className={`text-xs px-3 py-1 rounded-full border font-medium ${ui.card} ${ui.textPrimary}`}
               >
-                {showWalletModal ? 'Close' : '+ New Wallet'}
+                {showWalletModal ? 'Cancel' : '+ New'}
               </button>
             </div>
 
-            {/* Add Wallet Modal */}
             {showWalletModal && (
               <form
                 onSubmit={handleCreateWallet}
-                className="p-3.5 rounded-2xl bg-slate-900/95 border border-indigo-500/40 space-y-2.5 shrink-0 shadow-xl"
+                className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 ${ui.card}`}
               >
                 <input
                   type="text"
-                  placeholder="Wallet Name (e.g. FamPay, Cash, HDFC)"
+                  placeholder="Account Name (e.g. HDFC, Cash, FamPay)"
                   value={newWalletName}
                   onChange={(e) => setNewWalletName(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                  className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
                   required
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <select
                     value={newWalletType}
                     onChange={(e) => setNewWalletType(e.target.value)}
-                    className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                    className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
                   >
                     <option>UPI / Wallet</option>
                     <option>Cash</option>
@@ -1089,10 +1142,10 @@ function TapxMainApp() {
                   <input
                     type="number"
                     step="0.01"
-                    placeholder="Starting Balance"
+                    placeholder="Opening Balance"
                     value={newWalletBalance}
                     onChange={(e) => setNewWalletBalance(e.target.value)}
-                    className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                    className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
                   />
                 </div>
                 <div className="flex gap-1.5 justify-between">
@@ -1102,9 +1155,7 @@ function TapxMainApp() {
                       key={ic}
                       onClick={() => setNewWalletIcon(ic)}
                       className={`p-2 rounded-xl border text-sm ${
-                        newWalletIcon === ic
-                          ? 'border-indigo-400 bg-indigo-500/20'
-                          : 'border-white/10 bg-slate-950'
+                        newWalletIcon === ic ? ui.pillActive : ui.pillIdle
                       }`}
                     >
                       {ic}
@@ -1113,48 +1164,42 @@ function TapxMainApp() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-xs font-bold text-white"
+                  className={`w-full py-2.5 rounded-xl text-xs font-semibold ${ui.primaryBtnExpense}`}
                 >
-                  Save Wallet
+                  Create Account
                 </button>
               </form>
             )}
 
-            {/* Scrollable Wallets List (Only scrolls if many wallets are added) */}
-            <div className="max-h-[32%] custom-scroll space-y-2 pr-0.5 shrink-0">
+            {/* Scrollable Wallets Container */}
+            <div className="max-h-[34%] custom-scroll space-y-2 pr-0.5 shrink-0">
               {wallets.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-dashed border-white/15 text-center text-xs text-slate-400">
-                  No wallets yet. Tap <strong>+ New Wallet</strong> above to add Cash, UPI, or Bank.
+                <div className={`p-4 rounded-2xl border text-center text-xs ${ui.card} ${ui.textMuted}`}>
+                  No accounts added yet.
                 </div>
               ) : (
                 wallets.map((w) => (
                   <div
                     key={w.id}
-                    className="p-3 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-between"
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between ${ui.card}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner"
-                        style={{
-                          backgroundColor: `${w.color || '#6366f1'}25`,
-                          border: `1px solid ${w.color || '#6366f1'}66`
-                        }}
-                      >
+                      <div className={`w-9 h-9 rounded-xl border flex items-center justify-center text-base ${ui.cardSubtle}`}>
                         {w.icon}
                       </div>
                       <div>
-                        <p className="font-bold text-sm text-white">{w.name}</p>
-                        <p className="text-[11px] text-slate-400">{w.type}</p>
+                        <p className={`font-semibold text-sm ${ui.textPrimary}`}>{w.name}</p>
+                        <p className={`text-[11px] ${ui.textMuted}`}>{w.type}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <span className="font-extrabold text-sm text-white">
+                      <span className={`font-semibold text-sm tabular-nums ${ui.textPrimary}`}>
                         {currencySymbol}
                         {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                       <button
                         onClick={() => handleDeleteWallet(w.id)}
-                        className="text-slate-500 hover:text-rose-400 px-1.5 py-1 text-xs"
+                        className={`p-1 text-xs ${ui.textMuted} hover:text-rose-500`}
                       >
                         ✕
                       </button>
@@ -1164,18 +1209,18 @@ function TapxMainApp() {
               )}
             </div>
 
-            {/* Recent Transactions Header */}
             <div className="flex items-center justify-between pt-1 shrink-0">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
-                Recent Activity ({transactions.length})
+              <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
+                Recent Activity
               </h3>
+              <span className={`text-[11px] ${ui.textMuted}`}>{transactions.length} entries</span>
             </div>
 
-            {/* Scrollable Transactions Container (Scrolls independently) */}
-            <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5">
+            {/* Scrollable Transactions Container */}
+            <div className="flex-1 min-h-0 custom-scroll space-y-1.5 pr-0.5">
               {transactions.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 text-center text-xs text-slate-500">
-                  No transactions logged yet.
+                <div className={`p-6 rounded-2xl border text-center text-xs ${ui.card} ${ui.textMuted}`}>
+                  No transactions recorded yet.
                 </div>
               ) : (
                 transactions.slice(0, 50).map((tx) => {
@@ -1185,38 +1230,38 @@ function TapxMainApp() {
                   return (
                     <div
                       key={tx.id}
-                      className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-between"
+                      className={`p-3 rounded-2xl border flex items-center justify-between ${ui.card}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-400/20 flex items-center justify-center text-base shrink-0">
-                          {tx.type === 'transfer' ? '🔄' : c?.icon || '💸'}
+                        <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-sm shrink-0 ${ui.cardSubtle}`}>
+                          {tx.type === 'transfer' ? '⇄' : c?.icon || '💸'}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <p className="text-xs font-bold text-white truncate">
+                            <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
                               {tx.type === 'transfer'
-                                ? `${w?.name || 'Wallet'} → ${toW?.name || 'Wallet'}`
+                                ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
                                 : c?.name || tx.type}
                             </p>
                             {tx.source === 'shortcut' && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-fuchsia-500/20 border border-fuchsia-400/30 text-fuchsia-300 font-bold shrink-0">
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${ui.cardSubtle} ${ui.textSecondary}`}>
                                 Back Tap
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-400 truncate">
-                            {w?.name} {tx.note ? `• ${tx.note}` : ''}
+                          <p className={`text-[11px] truncate ${ui.textMuted}`}>
+                            {w?.name} {tx.note ? `· ${tx.note}` : ''}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span
-                          className={`text-xs font-extrabold ${
+                          className={`text-xs font-semibold tabular-nums ${
                             tx.type === 'income'
-                              ? 'text-emerald-400'
+                              ? 'text-emerald-500'
                               : tx.type === 'transfer'
-                              ? 'text-cyan-400'
-                              : 'text-rose-400'
+                              ? 'text-blue-500'
+                              : ui.textPrimary
                           }`}
                         >
                           {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
@@ -1225,7 +1270,7 @@ function TapxMainApp() {
                         </span>
                         <button
                           onClick={() => handleDeleteTransaction(tx.id)}
-                          className="text-slate-500 hover:text-rose-400 px-1 text-xs"
+                          className={`px-1 text-xs ${ui.textMuted} hover:text-rose-500`}
                         >
                           ✕
                         </button>
@@ -1238,27 +1283,24 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 3: ANALYTICS & INSIGHTS (Fixed KPIs + Inner Scrollable Breakdown) */}
+        {/* TAB 3: ANALYTICS */}
         {activeTab === 'analytics' && (
-          <div className="flex-1 min-h-0 flex flex-col px-4 pb-2 gap-3 overflow-hidden">
-            {/* Fixed Timeframe Filter Switcher */}
+          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
             <div className="flex items-center justify-between shrink-0">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
-                Spending Insights
+              <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
+                Overview
               </h3>
-              <div className="flex bg-slate-900/90 p-1 rounded-xl border border-white/10">
+              <div className={`flex p-0.5 rounded-xl border ${ui.segmentedBg}`}>
                 {[
-                  { id: 'week', label: '7 Days' },
+                  { id: 'week', label: '7D' },
                   { id: 'month', label: 'Month' },
                   { id: 'all', label: 'All' }
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setAnalyticsRange(tab.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                      analyticsRange === tab.id
-                        ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow'
-                        : 'text-slate-400'
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                      analyticsRange === tab.id ? ui.segmentedActive : ui.textSecondary
                     }`}
                   >
                     {tab.label}
@@ -1267,45 +1309,45 @@ function TapxMainApp() {
               </div>
             </div>
 
-            {/* Fixed KPI Summary Row */}
+            {/* KPI Row */}
             <div className="grid grid-cols-3 gap-2 shrink-0">
-              <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/25">
-                <p className="text-[10px] text-rose-300 font-bold uppercase">Spent</p>
-                <p className="text-sm font-black text-white mt-0.5 truncate">
+              <div className={`p-3 rounded-2xl border ${ui.card}`}>
+                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Total Spent</p>
+                <p className={`text-sm font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
                   {currencySymbol}
                   {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </p>
               </div>
 
-              <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/25">
-                <p className="text-[10px] text-indigo-300 font-bold uppercase">Daily Avg</p>
-                <p className="text-sm font-black text-white mt-0.5 truncate">
+              <div className={`p-3 rounded-2xl border ${ui.card}`}>
+                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Daily Avg</p>
+                <p className={`text-sm font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
                   {currencySymbol}
                   {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </p>
               </div>
 
-              <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25">
-                <p className="text-[10px] text-emerald-300 font-bold uppercase">Income</p>
-                <p className="text-sm font-black text-white mt-0.5 truncate">
+              <div className={`p-3 rounded-2xl border ${ui.card}`}>
+                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Income</p>
+                <p className="text-sm font-bold tabular-nums text-emerald-500 mt-0.5 truncate">
                   +{currencySymbol}
                   {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </p>
               </div>
             </div>
 
-            {/* Inner Scrollable Charts & Category Breakdown */}
+            {/* Inner Scrollable Analytics Cards */}
             <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
-              {/* 7-Day Daily Spending Bar Chart */}
-              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2.5">
+              {/* 7-Day Trend */}
+              <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-white">Last 7 Days Trend</h4>
-                  <span className="text-[10px] text-indigo-300 font-semibold">
-                    {analyticsData.shortcutPct}% via Back Tap
+                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Last 7 Days</h4>
+                  <span className={`text-[10px] font-medium ${ui.textMuted}`}>
+                    {analyticsData.shortcutPct}% logged via Back Tap
                   </span>
                 </div>
 
-                <div className="grid grid-cols-7 gap-2 items-end h-28 pt-3">
+                <div className="grid grid-cols-7 gap-2 items-end h-28 pt-2">
                   {analyticsData.last7Days.map((day, idx) => {
                     const heightPct =
                       day.amount > 0
@@ -1313,28 +1355,30 @@ function TapxMainApp() {
                         : 6;
                     return (
                       <div key={idx} className="flex flex-col items-center justify-end h-full gap-1">
-                        <span className="text-[9px] text-slate-300 font-mono truncate max-w-full">
+                        <span className={`text-[9px] font-mono tabular-nums truncate max-w-full ${ui.textMuted}`}>
                           {day.amount > 0
                             ? day.amount >= 1000
                               ? `${(day.amount / 1000).toFixed(1)}k`
                               : Math.round(day.amount)
                             : ''}
                         </span>
-                        <div className="w-full bg-slate-950/80 rounded-xl h-16 flex items-end p-0.5 border border-white/10">
+                        <div className={`w-full rounded-lg h-16 flex items-end p-0.5 border ${ui.cardSubtle}`}>
                           <div
-                            className={`w-full rounded-lg transition-all ${
+                            className={`w-full rounded-md transition-all ${
                               day.isToday
-                                ? 'bg-gradient-to-t from-indigo-500 to-fuchsia-400 shadow-sm shadow-indigo-500/50'
+                                ? isDark
+                                  ? 'bg-zinc-100'
+                                  : 'bg-zinc-900'
                                 : day.amount > 0
-                                ? 'bg-indigo-500/50'
-                                : 'bg-white/5'
+                                ? 'bg-blue-500/70'
+                                : 'bg-transparent'
                             }`}
                             style={{ height: `${heightPct}%` }}
                           />
                         </div>
                         <span
-                          className={`text-[10px] font-bold ${
-                            day.isToday ? 'text-indigo-300' : 'text-slate-500'
+                          className={`text-[10px] font-medium ${
+                            day.isToday ? ui.textPrimary : ui.textMuted
                           }`}
                         >
                           {day.isToday ? 'Today' : day.label}
@@ -1345,18 +1389,18 @@ function TapxMainApp() {
                 </div>
               </div>
 
-              {/* Category Distribution Breakdown */}
-              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2.5">
+              {/* Category Breakdown */}
+              <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-white">Category Breakdown</h4>
-                  <span className="text-[10px] text-slate-400">Share of Spend</span>
+                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Spending by Category</h4>
+                  <span className={`text-[10px] ${ui.textMuted}`}>{analyticsData.expenseCount} items</span>
                 </div>
 
                 {analyticsData.categoryBreakdown.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-2">No expenses logged in this period yet.</p>
+                  <p className={`text-xs py-2 ${ui.textMuted}`}>No expenses in this period.</p>
                 ) : (
                   <>
-                    <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden flex gap-0.5 p-0.5 border border-white/10">
+                    <div className={`w-full h-2.5 rounded-full overflow-hidden flex gap-0.5 p-0.5 border ${ui.cardSubtle}`}>
                       {analyticsData.categoryBreakdown.map((item) => (
                         <div
                           key={item.id}
@@ -1374,19 +1418,19 @@ function TapxMainApp() {
                         <div key={item.id} className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2 min-w-0">
                             <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              className="w-2 h-2 rounded-full shrink-0"
                               style={{ backgroundColor: item.color }}
                             />
                             <span>{item.icon}</span>
-                            <span className="font-semibold text-slate-100 truncate">{item.name}</span>
-                            <span className="text-[10px] text-slate-500">({item.count})</span>
+                            <span className={`font-medium truncate ${ui.textPrimary}`}>{item.name}</span>
+                            <span className={`text-[10px] ${ui.textMuted}`}>({item.count})</span>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="font-bold text-white">
+                          <div className="flex items-center gap-2 shrink-0 tabular-nums">
+                            <span className={`font-semibold ${ui.textPrimary}`}>
                               {currencySymbol}
                               {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-300 font-mono w-10 text-right">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono w-10 text-right ${ui.cardSubtle} ${ui.textSecondary}`}>
                               {item.pct}%
                             </span>
                           </div>
@@ -1397,27 +1441,27 @@ function TapxMainApp() {
                 )}
               </div>
 
-              {/* Wallet Split */}
+              {/* Wallet Breakdown */}
               {analyticsData.walletBreakdown.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2.5">
-                  <h4 className="text-xs font-bold text-white">Wallet Split</h4>
+                <div className={`p-4 rounded-2xl border space-y-2.5 ${ui.card}`}>
+                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Account Share</h4>
                   <div className="space-y-2">
                     {analyticsData.walletBreakdown.map((w) => (
                       <div key={w.id} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-slate-200">
+                        <div className="flex items-center justify-between text-xs tabular-nums">
+                          <span className={`font-medium ${ui.textPrimary}`}>
                             {w.icon} {w.name}
                           </span>
-                          <span className="font-bold text-white">
+                          <span className={`font-semibold ${ui.textPrimary}`}>
                             {currencySymbol}
                             {w.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}{' '}
-                            <span className="text-slate-400 text-[10px]">({w.pct}%)</span>
+                            <span className={`text-[10px] font-normal ${ui.textMuted}`}>({w.pct}%)</span>
                           </span>
                         </div>
-                        <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                        <div className={`w-full h-1.5 rounded-full overflow-hidden ${ui.cardSubtle}`}>
                           <div
-                            className="h-full rounded-full"
-                            style={{ width: `${w.pct}%`, backgroundColor: w.color }}
+                            className="h-full rounded-full bg-blue-500"
+                            style={{ width: `${w.pct}%` }}
                           />
                         </div>
                       </div>
@@ -1429,85 +1473,97 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 4: SETTINGS (Fixed Switcher + Inner Scrollable List for Categories or Back Tap) */}
+        {/* TAB 4: SETTINGS (Appearance + Budgets + Back Tap) */}
         {activeTab === 'settings' && (
-          <div className="flex-1 min-h-0 flex flex-col px-4 pb-2 gap-3 overflow-hidden">
-            {/* Fixed Top Sub-Navigation Buttons: Budgets vs. Back Tap */}
-            <div className="grid grid-cols-2 gap-2.5 shrink-0">
+          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+            {/* Appearance Mode Selector (Light / Dark / System) */}
+            <div className={`p-3 rounded-2xl border flex items-center justify-between shrink-0 ${ui.card}`}>
+              <div>
+                <p className={`text-xs font-semibold ${ui.textPrimary}`}>Appearance</p>
+                <p className={`text-[10px] ${ui.textMuted}`}>Light, Dark, or iPhone System</p>
+              </div>
+              <div className={`flex p-0.5 rounded-xl border ${ui.segmentedBg}`}>
+                {[
+                  { id: 'system', label: 'Auto' },
+                  { id: 'light', label: 'Light' },
+                  { id: 'dark', label: 'Dark' }
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setThemePref(m.id)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                      themePref === m.id ? ui.segmentedActive : ui.textSecondary
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sub-Section Switcher: Budgets vs Back Tap */}
+            <div className={`grid grid-cols-2 p-1 rounded-xl border shrink-0 ${ui.segmentedBg}`}>
               <button
                 onClick={() => setSettingsSection('budgets')}
-                className={`p-3 rounded-2xl border text-left transition flex items-center gap-3 ${
-                  settingsSection === 'budgets'
-                    ? 'bg-gradient-to-br from-indigo-500/25 to-fuchsia-500/20 border-indigo-400 text-white shadow'
-                    : 'bg-white/[0.04] border-white/10 text-slate-400'
+                className={`py-1.5 rounded-lg text-xs font-semibold transition ${
+                  settingsSection === 'budgets' ? ui.segmentedActive : ui.textSecondary
                 }`}
               >
-                <span className="text-xl">🎯</span>
-                <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-white truncate">Budgets</p>
-                  <p className="text-[10px] text-slate-300 truncate">{categories.length} Categories</p>
-                </div>
+                Budgets & Categories
               </button>
-
               <button
                 onClick={() => setSettingsSection('shortcut')}
-                className={`p-3 rounded-2xl border text-left transition flex items-center gap-3 ${
-                  settingsSection === 'shortcut'
-                    ? 'bg-gradient-to-br from-indigo-500/25 to-fuchsia-500/20 border-indigo-400 text-white shadow'
-                    : 'bg-white/[0.04] border-white/10 text-slate-400'
+                className={`py-1.5 rounded-lg text-xs font-semibold transition ${
+                  settingsSection === 'shortcut' ? ui.segmentedActive : ui.textSecondary
                 }`}
               >
-                <span className="text-xl">📱</span>
-                <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-white truncate">Back Tap</p>
-                  <p className="text-[10px] text-slate-300 truncate">iOS Lock Screen</p>
-                </div>
+                Back Tap Setup
               </button>
             </div>
 
-            {/* SUB-VIEW 1: BUDGETS & CATEGORIES (Scrolls Only Inside Category List) */}
+            {/* SUB-VIEW 1: BUDGETS & CATEGORIES */}
             {settingsSection === 'budgets' && (
               <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
                 <div className="flex items-center justify-between shrink-0">
-                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
-                    Categories & Monthly Budgets
-                  </h4>
+                  <span className={`text-[11px] font-medium ${ui.textMuted}`}>
+                    {categories.length} Categories
+                  </span>
                   <button
                     onClick={() => setShowCategoryModal((prev) => !prev)}
-                    className="text-xs bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-1.5 rounded-xl font-bold text-white"
+                    className={`text-xs px-3 py-1 rounded-full border font-semibold ${ui.card} ${ui.textPrimary}`}
                   >
-                    {showCategoryModal ? 'Close' : '+ Category'}
+                    {showCategoryModal ? 'Close' : '+ Add Category'}
                   </button>
                 </div>
 
                 {showCategoryModal && (
                   <form
                     onSubmit={handleCreateCategory}
-                    className="p-3.5 rounded-2xl bg-slate-900/95 border border-indigo-500/40 space-y-2.5 shrink-0"
+                    className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 ${ui.card}`}
                   >
                     <input
                       type="text"
-                      placeholder="Category Name (e.g. Snacks, Gym, Salary)"
+                      placeholder="Category Name"
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                      className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
                       required
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <select
                         value={newCatType}
                         onChange={(e) => setNewCatType(e.target.value)}
-                        className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                        className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
                       >
                         <option value="expense">Expense</option>
                         <option value="income">Income</option>
                       </select>
                       <input
                         type="number"
-                        placeholder="Monthly Budget (Optional)"
+                        placeholder="Monthly Limit (Optional)"
                         value={newCatBudget}
                         onChange={(e) => setNewCatBudget(e.target.value)}
-                        className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                        className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
                       />
                     </div>
                     <div className="flex gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
@@ -1517,9 +1573,7 @@ function TapxMainApp() {
                           key={ic}
                           onClick={() => setNewCatIcon(ic)}
                           className={`p-2 rounded-xl border shrink-0 text-sm ${
-                            newCatIcon === ic
-                              ? 'border-indigo-400 bg-indigo-500/20'
-                              : 'border-white/10 bg-slate-950'
+                            newCatIcon === ic ? ui.pillActive : ui.pillIdle
                           }`}
                         >
                           {ic}
@@ -1528,14 +1582,13 @@ function TapxMainApp() {
                     </div>
                     <button
                       type="submit"
-                      className="w-full py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-xs font-bold text-white"
+                      className={`w-full py-2 rounded-xl text-xs font-semibold ${ui.primaryBtnExpense}`}
                     >
                       Save Category
                     </button>
                   </form>
                 )}
 
-                {/* Scrollable Categories Container */}
                 <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5">
                   {categories.map((c) => {
                     const spent = currentMonthSpendByCat[c.id] || 0;
@@ -1545,21 +1598,21 @@ function TapxMainApp() {
                     return (
                       <div
                         key={c.id}
-                        className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2"
+                        className={`p-3 rounded-2xl border space-y-2 ${ui.card}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
-                            <span className="text-lg">{c.icon}</span>
+                            <span className="text-base">{c.icon}</span>
                             <div>
-                              <p className="text-xs font-bold text-white">{c.name}</p>
-                              <p className="text-[10px] text-slate-400 capitalize">
-                                {c.type} {budget > 0 ? `• ${pct}% used` : ''}
+                              <p className={`text-xs font-semibold ${ui.textPrimary}`}>{c.name}</p>
+                              <p className={`text-[10px] capitalize ${ui.textMuted}`}>
+                                {c.type} {budget > 0 ? `· ${pct}% used` : ''}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-2 tabular-nums">
                             {c.type === 'expense' && (
-                              <span className="text-xs font-bold text-slate-200">
+                              <span className={`text-xs font-semibold ${ui.textPrimary}`}>
                                 {currencySymbol}
                                 {spent.toLocaleString('en-IN')}
                                 {budget > 0 ? ` / ${currencySymbol}${budget.toLocaleString('en-IN')}` : ''}
@@ -1567,21 +1620,17 @@ function TapxMainApp() {
                             )}
                             <button
                               onClick={() => handleDeleteCategory(c.id)}
-                              className="text-slate-500 hover:text-rose-400 px-1.5 text-xs"
+                              className={`px-1 text-xs ${ui.textMuted} hover:text-rose-500`}
                             >
                               ✕
                             </button>
                           </div>
                         </div>
                         {budget > 0 && c.type === 'expense' && (
-                          <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                          <div className={`w-full h-1.5 rounded-full overflow-hidden ${ui.cardSubtle}`}>
                             <div
                               className={`h-full rounded-full ${
-                                pct >= 90
-                                  ? 'bg-rose-500'
-                                  : pct >= 70
-                                  ? 'bg-amber-400'
-                                  : 'bg-gradient-to-r from-indigo-500 to-cyan-400'
+                                pct >= 90 ? 'bg-rose-500' : pct >= 75 ? 'bg-amber-500' : 'bg-blue-500'
                               }`}
                               style={{ width: `${pct}%` }}
                             />
@@ -1594,68 +1643,68 @@ function TapxMainApp() {
               </div>
             )}
 
-            {/* SUB-VIEW 2: LOCK SCREEN BACK TAP SETUP (Scrolls Internally if Needed) */}
+            {/* SUB-VIEW 2: BACK TAP SHORTCUT */}
             {settingsSection === 'shortcut' && (
               <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-600/25 to-fuchsia-600/15 border border-indigo-400/40 space-y-2.5">
+                <div className={`p-4 rounded-2xl border space-y-2.5 ${ui.card}`}>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-extrabold text-white">⚡ 1-Tap iOS Shortcut Setup</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 font-bold">
-                      Lock Screen Ready
+                    <h3 className={`text-xs font-semibold ${ui.textPrimary}`}>iOS Lock Screen Bridge</h3>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${ui.cardSubtle} ${ui.textSecondary}`}>
+                      Back Tap
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    Copies your personal logging URL and opens Apple Shortcuts immediately.
+                  <p className={`text-[11px] leading-relaxed ${ui.textSecondary}`}>
+                    Copies your personal logging URL and launches Apple Shortcuts.
                   </p>
                   <button
                     onClick={handleOneTapShortcut}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 active:scale-95 text-white font-bold text-xs shadow-lg flex items-center justify-center gap-2 transition"
+                    className={`w-full py-3 px-4 rounded-xl font-semibold text-xs active:scale-[0.98] transition ${ui.primaryBtnExpense}`}
                   >
-                    <span>⚡ Copy Personal URL & Open Shortcuts</span>
+                    Copy Personal URL & Open Shortcuts
                   </button>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2.5">
+                <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                   <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase">
-                      1-Line Instant Logging URL
+                    <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
+                      Instant Logging URL
                     </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         readOnly
                         value={personalFastUrl}
-                        className="flex-1 bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-slate-300"
+                        className={`flex-1 border rounded-xl px-3 py-2 text-xs font-mono ${ui.input}`}
                       />
                       <button
                         onClick={() => copyToClipboard(personalFastUrl, 'fastUrl')}
-                        className="px-3 py-2 rounded-xl bg-indigo-600 text-xs font-bold text-white shrink-0"
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold shrink-0 ${ui.primaryBtnExpense}`}
                       >
-                        {copiedField === 'fastUrl' ? 'Copied!' : 'Copy'}
+                        {copiedField === 'fastUrl' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase">
-                      Personal Token
+                    <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
+                      Shortcut Token
                     </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         readOnly
                         value={settings?.shortcut_token || ''}
-                        className="flex-1 bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-slate-400"
+                        className={`flex-1 border rounded-xl px-3 py-2 text-xs font-mono ${ui.input}`}
                       />
                       <button
                         onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
-                        className="px-3 py-2 rounded-xl bg-white/10 text-xs font-bold text-slate-200"
+                        className={`px-3 py-2 rounded-xl border text-xs font-semibold ${ui.cardSubtle} ${ui.textPrimary}`}
                       >
                         {copiedField === 'token' ? 'Copied' : 'Copy'}
                       </button>
                       <button
                         onClick={handleRegenerateToken}
-                        className="px-3 py-2 rounded-xl bg-white/10 text-xs font-bold text-slate-200"
+                        className={`px-3 py-2 rounded-xl border text-xs font-semibold ${ui.cardSubtle} ${ui.textPrimary}`}
                         title="Regenerate Token"
                       >
                         ↻
@@ -1664,82 +1713,64 @@ function TapxMainApp() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2.5 text-xs text-slate-300">
-                  <div className="grid grid-cols-2 bg-slate-950 p-1 rounded-xl">
+                <div className={`p-4 rounded-2xl border space-y-2.5 text-xs ${ui.card}`}>
+                  <div className={`grid grid-cols-2 p-0.5 rounded-xl border ${ui.segmentedBg}`}>
                     <button
                       onClick={() => setShortcutMode('Fast')}
-                      className={`py-1.5 rounded-lg text-xs font-bold transition ${
-                        shortcutMode === 'Fast' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                      className={`py-1 rounded-lg text-[11px] font-semibold transition ${
+                        shortcutMode === 'Fast' ? ui.segmentedActive : ui.textSecondary
                       }`}
                     >
-                      ⚡ 3-Block Setup
+                      3-Step Quick Input
                     </button>
                     <button
                       onClick={() => setShortcutMode('Menu')}
-                      className={`py-1.5 rounded-lg text-xs font-bold transition ${
-                        shortcutMode === 'Menu' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                      className={`py-1 rounded-lg text-[11px] font-semibold transition ${
+                        shortcutMode === 'Menu' ? ui.segmentedActive : ui.textSecondary
                       }`}
                     >
-                      📋 Menu Picker
+                      Menu Picker
                     </button>
                   </div>
 
                   {shortcutMode === 'Fast' ? (
-                    <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300">
-                      <li>
-                        Add <strong>Ask for Input</strong> (Prompt: <em>"Amount Spent?"</em>).
-                      </li>
-                      <li>
-                        Add <strong>Get Contents of URL</strong>: paste your <strong>1-Line Instant Logging URL</strong> and attach <strong>Provided Input</strong> after <code className="text-indigo-300">&amp;q=</code>.
-                      </li>
-                      <li>
-                        Add <strong>Show Notification</strong> set to <strong>Contents of URL</strong>.
-                      </li>
+                    <ol className={`list-decimal list-inside space-y-1.5 text-[11px] ${ui.textSecondary}`}>
+                      <li>Add <strong>Ask for Input</strong> (Prompt: <em>Amount Spent?</em>).</li>
+                      <li>Add <strong>Get Contents of URL</strong>: paste your Instant Logging URL and attach <strong>Provided Input</strong> after <code>&amp;q=</code>.</li>
+                      <li>Add <strong>Show Notification</strong> set to <strong>Contents of URL</strong>.</li>
                     </ol>
                   ) : (
-                    <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300">
-                      <li>
-                        Add <strong>Get Contents of URL</strong>: <code className="text-indigo-300 break-all">{personalMetaUrl}</code>
-                      </li>
-                      <li>
-                        Add <strong>Get Dictionary Value</strong> (<code className="text-white">wallets</code>) → <strong>Choose from List</strong>.
-                      </li>
-                      <li>
-                        Add <strong>Get Dictionary Value</strong> (<code className="text-white">categories</code>) → <strong>Choose from List</strong>.
-                      </li>
-                      <li>
-                        Add <strong>Ask for Input</strong> (Type: <em>Number</em>).
-                      </li>
-                      <li>
-                        Add <strong>Get Contents of URL</strong>: <code className="text-indigo-300 break-all">{personalMetaUrl}&amp;amount=[Input]&amp;wallet=[Wallet]&amp;category=[Category]</code>
-                      </li>
-                      <li>
-                        Add <strong>Show Notification</strong> set to <strong>Contents of URL</strong>.
-                      </li>
+                    <ol className={`list-decimal list-inside space-y-1.5 text-[11px] ${ui.textSecondary}`}>
+                      <li>Add <strong>Get Contents of URL</strong>: <code className="break-all">{personalMetaUrl}</code></li>
+                      <li>Add <strong>Get Dictionary Value</strong> (<code>wallets</code>) → <strong>Choose from List</strong>.</li>
+                      <li>Add <strong>Get Dictionary Value</strong> (<code>categories</code>) → <strong>Choose from List</strong>.</li>
+                      <li>Add <strong>Ask for Input</strong> (Number).</li>
+                      <li>Add <strong>Get Contents of URL</strong>: <code className="break-all">{personalMetaUrl}&amp;amount=[Input]&amp;wallet=[Wallet]&amp;category=[Category]</code></li>
+                      <li>Add <strong>Show Notification</strong> set to <strong>Contents of URL</strong>.</li>
                     </ol>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Fixed Account & Sync Footer */}
-            <div className="pt-2 border-t border-white/10 flex items-center justify-between shrink-0">
-              <div className="text-[11px] text-slate-400 truncate max-w-[180px]">
+            {/* Account Footer */}
+            <div className={`pt-2 border-t flex items-center justify-between shrink-0 ${ui.divider}`}>
+              <span className={`text-[11px] truncate max-w-[180px] ${ui.textMuted}`}>
                 {session?.user?.email}
-              </div>
+              </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     fetchUserData(session.user.id);
-                    showToast('Synced with cloud');
+                    showToast('Synced');
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-bold"
+                  className={`px-3 py-1.5 rounded-full border text-xs font-medium ${ui.card} ${ui.textPrimary}`}
                 >
-                  ↻ Sync
+                  Sync
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold"
+                  className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-semibold"
                 >
                   Sign Out
                 </button>
@@ -1749,31 +1780,38 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* Bottom Navigation Bar (Docked Flex Child, Never Overlaps Content) */}
-      <nav className="shrink-0 bg-slate-950/90 backdrop-blur-xl border-t border-white/10 px-6 py-2 flex justify-between items-center z-30">
-        {[
-          { id: 'pad', label: 'Quick Tap', icon: '⚡' },
-          { id: 'wallets', label: 'Wallets', icon: '💳' },
-          { id: 'analytics', label: 'Analytics', icon: '📊' },
-          { id: 'settings', label: 'Settings', icon: '⚙️' }
-        ].map((item) => {
-          const active = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center gap-0.5 py-1.5 px-3.5 rounded-2xl transition ${
-                active
-                  ? 'bg-gradient-to-r from-indigo-500/25 to-fuchsia-500/25 border border-indigo-400/40 text-white shadow'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <span className="text-base leading-none">{item.icon}</span>
-              <span className="text-[10px] font-bold">{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* FLOATING iOS ISLAND NAVIGATION BAR */}
+      <div
+        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-6"
+        style={{
+          bottom: 'max(env(safe-area-inset-bottom), 14px)'
+        }}
+      >
+        <nav
+          className={`pointer-events-auto flex items-center gap-1.5 p-1.5 rounded-full border backdrop-blur-xl transition-colors ${ui.island}`}
+        >
+          {[
+            { id: 'pad', label: 'Keypad' },
+            { id: 'wallets', label: 'Accounts' },
+            { id: 'analytics', label: 'Insights' },
+            { id: 'settings', label: 'Settings' }
+          ].map((item) => {
+            const active = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+                  active ? ui.islandActive : 'hover:opacity-80'
+                }`}
+              >
+                <NavIcon id={item.id} active={active} />
+                {active && <span>{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }
