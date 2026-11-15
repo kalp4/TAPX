@@ -37,53 +37,104 @@ const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 
-// Custom TAPX Wallet + Rising Bar Chart Logo Component (loads /logo.png if present, or crisp inline SVG)
-function TapxLogo({ className = 'w-9 h-9 rounded-xl' }) {
-  const [imgFailed, setImgFailed] = useState(false);
-
-  if (!imgFailed) {
-    return (
-      <img
-        src="/logo.png"
-        alt="TAPX Logo"
-        onError={() => setImgFailed(true)}
-        className={`${className} object-cover bg-white shadow-sm shrink-0`}
-      />
-    );
-  }
+// Frameless, 100% Transparent-Cutout Vector Logo (No White Background Box)
+function TapxLogo({ className = 'w-9 h-9' }) {
+  const uid = React.useId().replace(/:/g, '');
+  const walletMaskId = `wallet-cut-${uid}`;
+  const claspMaskId = `clasp-cut-${uid}`;
+  const bar1Id = `b1-${uid}`;
+  const bar2Id = `b2-${uid}`;
+  const bar3Id = `b3-${uid}`;
+  const navyId = `nv-${uid}`;
 
   return (
     <svg
-      viewBox="0 0 512 512"
-      className={`${className} shadow-sm shrink-0`}
+      viewBox="85 60 345 395"
+      className={`${className} shrink-0 select-none`}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect width="512" height="512" rx="115" fill="#ffffff" />
-      <rect x="172" y="158" width="54" height="90" rx="4" fill="#08996f" />
-      <rect x="242" y="122" width="54" height="126" rx="4" fill="#179c99" />
-      <rect x="312" y="84" width="54" height="164" rx="4" fill="#1077e6" />
+      <defs>
+        <linearGradient id={bar1Id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <linearGradient id={bar2Id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2dd4bf" />
+          <stop offset="100%" stopColor="#0d9488" />
+        </linearGradient>
+        <linearGradient id={bar3Id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#2563eb" />
+        </linearGradient>
+        <linearGradient id={navyId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#163e7a" />
+          <stop offset="100%" stopColor="#0a2347" />
+        </linearGradient>
+
+        <mask id={walletMaskId}>
+          <rect x="0" y="0" width="512" height="512" fill="white" />
+          <path
+            d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z"
+            fill="black"
+          />
+          <circle cx="298" cy="260" r="60" fill="black" />
+          <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
+        </mask>
+
+        <mask id={claspMaskId}>
+          <rect x="0" y="0" width="512" height="512" fill="white" />
+          <circle cx="358" cy="354" r="12" fill="black" />
+        </mask>
+      </defs>
+
+      <g mask={`url(#${walletMaskId})`}>
+        {/* 3 Rising Bars */}
+        <rect x="172" y="152" width="54" height="106" rx="6" fill={`url(#${bar1Id})`} />
+        <rect x="242" y="114" width="54" height="144" rx="6" fill={`url(#${bar2Id})`} />
+        <rect x="312" y="74" width="54" height="184" rx="6" fill={`url(#${bar3Id})`} />
+
+        {/* Wallet Base */}
+        <path
+          d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z"
+          fill={`url(#${navyId})`}
+        />
+
+        {/* Mid Teal Wave */}
+        <path
+          d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z"
+          fill="#0e7c86"
+        />
+
+        {/* Right Emerald Wave */}
+        <path
+          d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z"
+          fill="#15a378"
+        />
+      </g>
+
+      {/* Center Emerald Arch Swoop */}
       <path
-        d="M118 214 h36 v18 h-22 a8 8 0 0 0 0 16 h234 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-218 a38 38 0 0 1 -38 -38 v-150 a38 38 0 0 1 38 -38 Z"
-        fill="#072144"
+        d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z"
+        fill="#15a378"
       />
       <path
-        d="M236 248 h130 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-32 c-52 -24 -88 -94 -98 -202 Z"
-        fill="#0e747d"
-      />
-      <path
-        d="M262 248 a42 42 0 0 1 84 0 h20 a38 38 0 0 1 38 38 v126 a38 38 0 0 1 -38 38 h-24 c-38 -32 -66 -102 -80 -202 Z"
-        fill="#149a72"
-      />
-      <path
-        d="M276 232 a28 28 0 0 1 52 0"
+        d="M 272 246 A 28 28 0 0 1 324 246"
         fill="none"
-        stroke="#0c6e5c"
-        strokeWidth="6"
+        stroke="#0a5c4c"
+        strokeWidth="7"
         strokeLinecap="round"
       />
-      <rect x="316" y="310" width="106" height="72" rx="36" fill="#ffffff" />
-      <rect x="330" y="322" width="90" height="48" rx="24" fill="#072144" />
-      <circle cx="358" cy="346" r="11" fill="#ffffff" />
+
+      {/* Clasp with Transparent Button Dot */}
+      <rect
+        x="328"
+        y="328"
+        width="96"
+        height="52"
+        rx="26"
+        fill={`url(#${navyId})`}
+        mask={`url(#${claspMaskId})`}
+      />
     </svg>
   );
 }
@@ -121,7 +172,6 @@ function formatRelativeDateTime(isoString) {
 function NavIcon({ id, active }) {
   const sizeClass = 'w-[22px] h-[22px]';
 
-  // Authentic iPhone Phone App 10-Dot Keypad Grid Icon (circle.grid.3x3.fill)
   if (id === 'pad') {
     const r = active ? '2.2' : '1.75';
     return (
@@ -140,7 +190,6 @@ function NavIcon({ id, active }) {
     );
   }
 
-  // SF Symbol: creditcard.fill / creditcard
   if (id === 'wallets') {
     if (active) {
       return (
@@ -162,7 +211,6 @@ function NavIcon({ id, active }) {
     );
   }
 
-  // SF Symbol: chart.bar.fill / chart.bar
   if (id === 'analytics') {
     if (active) {
       return (
@@ -182,7 +230,6 @@ function NavIcon({ id, active }) {
     );
   }
 
-  // SF Symbol: gearshape.fill / gearshape
   return (
     <svg
       className={sizeClass}
@@ -292,6 +339,7 @@ function TapxMainApp() {
         card: 'bg-[#131316] border-[#232329]',
         cardElevated: 'bg-[#18181c] border-[#292930]',
         cardSubtle: 'bg-[#1c1c21] border-[#27272e]',
+        logoBadge: 'bg-white/[0.04] border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]',
         input: 'bg-[#131316] border-[#27272e] text-zinc-100 placeholder-zinc-500',
         pillIdle: 'bg-[#141418] border-[#24242b] text-zinc-400',
         pillActive: 'bg-zinc-100 border-zinc-100 text-zinc-950 shadow-sm',
@@ -316,6 +364,7 @@ function TapxMainApp() {
       card: 'bg-white border-zinc-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]',
       cardElevated: 'bg-white border-zinc-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.04)]',
       cardSubtle: 'bg-zinc-100 border-zinc-200/70',
+      logoBadge: 'bg-white/90 border-zinc-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)]',
       input: 'bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400',
       pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
       pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-sm',
@@ -1350,33 +1399,121 @@ function TapxMainApp() {
   if (initialBoot) {
     return (
       <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
-        <TapxLogo className="w-16 h-16 rounded-3xl animate-pulse" />
-        <div className="w-6 h-6 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+        <div className={`w-16 h-16 rounded-[22px] border flex items-center justify-center ${ui.logoBadge}`}>
+          <TapxLogo className="w-11 h-11 animate-pulse" />
+        </div>
+        <div className="w-5 h-5 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  // SIGN-IN SCREEN
+  // REDESIGNED FLAGSHIP LOGIN SCREEN
   if (!session) {
     return (
-      <div className={`h-full w-full ${ui.bg} flex flex-col justify-between p-7 max-w-md mx-auto overflow-hidden`}>
-        <div className="mt-14 space-y-4">
-          <TapxLogo className="w-16 h-16 rounded-[20px]" />
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${ui.card}`}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>iOS Lock Screen Expense Tracker</span>
+      <div
+        className={`h-full w-full ${ui.bg} flex flex-col justify-between px-6 max-w-md mx-auto overflow-hidden relative select-none`}
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top), 24px)',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 24px)'
+        }}
+      >
+        {/* Ambient Aurora Glow Matching Logo Palette */}
+        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-gradient-to-tr from-emerald-500/20 via-teal-500/15 to-blue-500/20 blur-3xl" />
+
+        {/* Top Status Pill */}
+        <div className="relative z-10 flex items-center justify-center pt-2">
+          <div
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-semibold tracking-tight backdrop-blur-xl ${ui.card}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className={ui.textSecondary}>iOS Back Tap Expense Tracker</span>
           </div>
-          <h1 className={`text-4xl font-bold tracking-tight ${ui.textPrimary}`}>TAPX</h1>
-          <p className={`text-sm leading-relaxed ${ui.textSecondary}`}>
-            Minimal multi-wallet balance tracking with instant Back Tap lock screen logging.
-          </p>
         </div>
 
-        <div className="space-y-4 mb-10">
+        {/* Center Hero + Live iOS Notification Showcase */}
+        <div className="relative z-10 my-auto flex flex-col items-center text-center space-y-5">
+          {/* Frosted Glass Squircle Pedestal with Transparent Logo */}
+          <div className="relative">
+            <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-b from-blue-500/20 via-teal-500/15 to-emerald-500/20 blur-xl opacity-80" />
+            <div
+              className={`relative w-20 h-20 rounded-[26px] border flex items-center justify-center backdrop-blur-2xl ${ui.logoBadge}`}
+            >
+              <TapxLogo className="w-14 h-14" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <h1 className={`text-4xl font-extrabold tracking-tight ${ui.textPrimary}`}>
+              TAPX
+            </h1>
+            <p className={`text-xs max-w-[265px] mx-auto leading-relaxed ${ui.textSecondary}`}>
+              Log expenses in 2 seconds straight from your iPhone Lock Screen without opening an app.
+            </p>
+          </div>
+
+          {/* Simulated iOS Lock Screen Notification Banner Preview */}
+          <div
+            className={`w-full p-3.5 rounded-[22px] border text-left backdrop-blur-2xl space-y-2.5 ${ui.cardElevated}`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded-lg border flex items-center justify-center ${ui.logoBadge}`}>
+                  <TapxLogo className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className={`text-[11px] font-bold leading-none ${ui.textPrimary}`}>
+                    TAPX · Back Tap
+                  </p>
+                  <p className={`text-[10px] mt-0.5 ${ui.textMuted}`}>now</p>
+                </div>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
+                Synced
+              </span>
+            </div>
+
+            <div className={`pt-2 border-t flex items-center justify-between text-xs ${ui.divider}`}>
+              <div className="space-y-0.5">
+                <p className={`font-semibold ${ui.textPrimary}`}>
+                  ✅ -₹150 • Food & Drinks
+                </p>
+                <p className={`text-[11px] tabular-nums ${ui.textSecondary}`}>
+                  💳 UPI Balance: ₹4,850.00
+                </p>
+              </div>
+              <span className="text-xs font-bold tabular-nums text-emerald-500">
+                2.1s
+              </span>
+            </div>
+          </div>
+
+          {/* 3-Pillar Feature Row */}
+          <div className="grid grid-cols-3 gap-2 w-full">
+            {[
+              { icon: '⚡', title: 'Back Tap', sub: 'Lock Screen' },
+              { icon: '💳', title: 'Multi-Wallet', sub: 'Live Balances' },
+              { icon: '📊', title: 'Insights', sub: 'Zero Clutter' }
+            ].map((feat) => (
+              <div
+                key={feat.title}
+                className={`p-2.5 rounded-2xl border text-center space-y-0.5 ${ui.card}`}
+              >
+                <div className="text-sm">{feat.icon}</div>
+                <p className={`text-[11px] font-semibold ${ui.textPrimary}`}>{feat.title}</p>
+                <p className={`text-[9.5px] ${ui.textMuted}`}>{feat.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom CTA Action Dock */}
+        <div className="relative z-10 space-y-3 pb-1">
           <button
             onClick={handleGoogleLogin}
-            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 key-press ${
-              isDark ? 'bg-white text-zinc-950' : 'bg-zinc-900 text-white'
+            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 shadow-lg key-press ${
+              isDark
+                ? 'bg-white text-zinc-950 shadow-white/5'
+                : 'bg-zinc-900 text-white shadow-zinc-900/15'
             }`}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -1399,8 +1536,9 @@ function TapxMainApp() {
             </svg>
             Continue with Google
           </button>
-          <p className={`text-xs text-center ${ui.textMuted}`}>
-            Share → Add to Home Screen for full-screen iOS mode
+
+          <p className={`text-[11px] text-center ${ui.textMuted}`}>
+            Tip: Tap <strong>Share → Add to Home Screen</strong> for full-screen iOS mode
           </p>
         </div>
       </div>
@@ -1432,10 +1570,14 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Crisp Top Header with Brand Logo */}
+      {/* Crisp Top Header with Transparent-Cutout Brand Logo */}
       <header className="px-5 pt-2 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <TapxLogo className="w-10 h-10 rounded-[13px]" />
+          <div
+            className={`w-10 h-10 rounded-[14px] border flex items-center justify-center shrink-0 ${ui.logoBadge}`}
+          >
+            <TapxLogo className="w-7 h-7" />
+          </div>
           <div>
             <div className="flex items-center gap-1.5">
               <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
