@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="TAPX" />
     <meta name="theme-color" content="#09090b" id="theme-color-meta" />
     <link rel="manifest" href="/manifest.json" />
@@ -13,23 +13,23 @@
     <style>
       * {
         -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
         box-sizing: border-box;
       }
       html,
       body,
       #root {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         width: 100%;
         height: 100%;
         margin: 0;
         padding: 0;
         overflow: hidden;
         overscroll-behavior: none;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+        touch-action: manipulation;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
       .no-scrollbar::-webkit-scrollbar {
         display: none;
@@ -41,9 +41,51 @@
       .tabular-nums {
         font-variant-numeric: tabular-nums;
       }
+
+      /* Native iOS Spring Physics */
+      .ios-spring {
+        transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .key-press {
+        transition: transform 110ms cubic-bezier(0.2, 0, 0, 1), background-color 110ms ease;
+        will-change: transform;
+      }
+      .key-press:active {
+        transform: scale(0.92);
+      }
+
+      @keyframes tabFadeSlide {
+        0% {
+          opacity: 0;
+          transform: translateY(8px) scale(0.99);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .animate-tab {
+        animation: tabFadeSlide 240ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        will-change: transform, opacity;
+      }
+
+      @keyframes amountPop {
+        0% {
+          transform: scale(0.96);
+        }
+        60% {
+          transform: scale(1.02);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .animate-pop {
+        animation: amountPop 160ms cubic-bezier(0.32, 0.72, 0, 1);
+      }
     </style>
   </head>
-  <body class="antialiased selection:bg-zinc-500 selection:text-white">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
