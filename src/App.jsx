@@ -66,37 +66,95 @@ function formatRelativeDateTime(isoString) {
   return `${dayMonth}, ${timeStr}`;
 }
 
+// Authentic iOS Phone App SF Symbols Icon Set (Filled when active, crisp outline/dots when idle)
 function NavIcon({ id, active }) {
-  const strokeWidth = active ? '2.3' : '1.8';
-  const sizeClass = `w-[21px] h-[21px] transition-transform duration-300 ios-spring ${
-    active ? 'scale-105' : 'scale-100'
+  const sizeClass = `w-[22px] h-[22px] transition-transform duration-300 ios-spring ${
+    active ? 'scale-110' : 'scale-100'
   }`;
 
+  // Authentic iPhone Phone App 10-Dot Keypad Grid Icon (circle.grid.3x3.fill)
   if (id === 'pad') {
+    const r = active ? '2.15' : '1.75';
     return (
-      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="6.5" cy="4.5" r={r} />
+        <circle cx="12" cy="4.5" r={r} />
+        <circle cx="17.5" cy="4.5" r={r} />
+        <circle cx="6.5" cy="10" r={r} />
+        <circle cx="12" cy="10" r={r} />
+        <circle cx="17.5" cy="10" r={r} />
+        <circle cx="6.5" cy="15.5" r={r} />
+        <circle cx="12" cy="15.5" r={r} />
+        <circle cx="17.5" cy="15.5" r={r} />
+        <circle cx="12" cy="20.5" r={r} />
       </svg>
     );
   }
+
+  // SF Symbol: creditcard.fill / creditcard
   if (id === 'wallets') {
+    if (active) {
+      return (
+        <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4.5 3.75A2.25 2.25 0 0 0 2.25 6v1.5h19.5V6a2.25 2.25 0 0 0-2.25-2.25H4.5Z" />
+          <path
+            fillRule="evenodd"
+            d="M2.25 9.75v8.25A2.25 2.25 0 0 0 4.5 20.25h15a2.25 2.25 0 0 0 2.25-2.25V9.75H2.25Zm3.75 4.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Z"
+            clipRule="evenodd"
+          />
+        </svg>
+      );
+    }
     return (
-      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
+      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.85">
+        <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
+        <path strokeLinecap="round" d="M2.5 9.25h19M6.5 14.5h3.5" />
       </svg>
     );
   }
+
+  // SF Symbol: chart.bar.fill / chart.bar
   if (id === 'analytics') {
+    if (active) {
+      return (
+        <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3.5" y="12" width="4.2" height="8.5" rx="1.4" />
+          <rect x="9.9" y="7.5" width="4.2" height="13" rx="1.4" />
+          <rect x="16.3" y="3.5" width="4.2" height="17" rx="1.4" />
+        </svg>
+      );
+    }
     return (
-      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.85">
+        <rect x="3.75" y="12.25" width="3.75" height="8" rx="1.1" />
+        <rect x="10.12" y="7.75" width="3.75" height="12.5" rx="1.1" />
+        <rect x="16.5" y="3.75" width="3.75" height="16.5" rx="1.1" />
       </svg>
     );
   }
+
+  // SF Symbol: gearshape.fill / gearshape
   return (
-    <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+    <svg
+      className={sizeClass}
+      fill={active ? 'currentColor' : 'none'}
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={active ? '1.2' : '1.85'}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill={active ? '#09090b' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }
@@ -177,7 +235,7 @@ function TapxMainApp() {
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Refined Apple-Grade Palette
+  // Refined Apple-Grade Palette + iOS 27 Phone App Liquid Glass Island
   const ui = useMemo(() => {
     if (isDark) {
       return {
@@ -194,10 +252,10 @@ function TapxMainApp() {
         textPrimary: 'text-zinc-50',
         textSecondary: 'text-zinc-400',
         textMuted: 'text-zinc-500',
-        island: 'bg-[#151519]/95 border-white/[0.12] text-zinc-400 shadow-[0_18px_42px_rgba(0,0,0,0.9)]',
-        islandThumb: 'bg-zinc-100 shadow-[0_2px_10px_rgba(255,255,255,0.12)]',
-        islandTextActive: 'text-zinc-950',
-        islandTextIdle: 'text-zinc-400',
+        islandBar: 'ios-glass-bar-dark',
+        islandLens: 'ios-glass-lens-dark',
+        islandTextActive: 'text-white',
+        islandTextIdle: 'text-zinc-400/90',
         primaryBtnExpense: 'bg-zinc-100 text-zinc-950',
         primaryBtnIncome: 'bg-emerald-500 text-zinc-950',
         primaryBtnTransfer: 'bg-blue-500 text-white',
@@ -218,9 +276,9 @@ function TapxMainApp() {
       textPrimary: 'text-zinc-900',
       textSecondary: 'text-zinc-500',
       textMuted: 'text-zinc-400',
-      island: 'bg-white/95 border-zinc-200/90 text-zinc-500 shadow-[0_14px_36px_rgba(0,0,0,0.14)]',
-      islandThumb: 'bg-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.18)]',
-      islandTextActive: 'text-white',
+      islandBar: 'ios-glass-bar-light',
+      islandLens: 'ios-glass-lens-light',
+      islandTextActive: 'text-[#007AFF]',
       islandTextIdle: 'text-zinc-500',
       primaryBtnExpense: 'bg-zinc-900 text-white',
       primaryBtnIncome: 'bg-emerald-600 text-white',
@@ -2206,7 +2264,7 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* LARGER FLOATING iOS ISLAND NAVIGATION BAR WITH SLIDING PILL THUMB */}
+      {/* iOS PHONE APP LIQUID GLASS FLOATING TAB BAR */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
@@ -2214,11 +2272,11 @@ function TapxMainApp() {
         }}
       >
         <nav
-          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[390px] h-[64px] p-1.5 rounded-[32px] border backdrop-blur-2xl transition-colors duration-300 ${ui.island}`}
+          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[66px] p-[5px] rounded-full transition-colors duration-300 ${ui.islandBar}`}
         >
-          {/* Animated Sliding Pill Indicator */}
+          {/* Morphing Liquid Glass Active Lens */}
           <div
-            className={`absolute top-1.5 bottom-1.5 left-1.5 w-[calc(25%-3px)] rounded-[26px] transition-transform duration-500 ios-spring ${ui.islandThumb}`}
+            className={`absolute top-[5px] bottom-[5px] left-[5px] w-[calc(25%-2.5px)] rounded-full ios-liquid-spring ${ui.islandLens}`}
             style={{
               transform: `translate3d(${activeTabIndex * 100}%, 0, 0)`
             }}
@@ -2230,13 +2288,17 @@ function TapxMainApp() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => handleSelectTab(item.id)}
-                className={`relative z-10 h-full flex flex-col items-center justify-center gap-1 rounded-[26px] transition-colors duration-300 key-press ${
-                  active ? ui.islandTextActive : `${ui.islandTextIdle} hover:opacity-80`
+                onPointerDown={() => handleSelectTab(item.id)}
+                className={`relative z-10 h-full flex flex-col items-center justify-center gap-[3px] rounded-full transition-colors duration-200 key-press ${
+                  active ? ui.islandTextActive : `${ui.islandTextIdle} hover:opacity-85`
                 }`}
               >
                 <NavIcon id={item.id} active={active} />
-                <span className="text-[11px] font-semibold leading-none tracking-tight">
+                <span
+                  className={`text-[10.5px] leading-none tracking-[-0.01em] ${
+                    active ? 'font-semibold' : 'font-medium'
+                  }`}
+                >
                   {item.label}
                 </span>
               </button>
