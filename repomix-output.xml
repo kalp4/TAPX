@@ -49,6 +49,7 @@ public/
   icons.svg
   logo.png
   manifest.json
+  privacy.html
 src/
   assets/
     hero.png
@@ -70,6 +71,504 @@ vite.config.js
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="public/privacy.html">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Privacy Policy — TAPX</title>
+    <style>
+      :root {
+        --bg: #09090b;
+        --surface: #131316;
+        --surface-elevated: #18181c;
+        --border: #232329;
+        --text-primary: #fafafa;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+        --accent: #10b981;
+        --accent-soft: rgba(16, 185, 129, 0.12);
+        --accent-border: rgba(16, 185, 129, 0.28);
+        --link: #38bdf8;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        background-color: var(--bg);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.65;
+      }
+
+      .container {
+        max-width: 740px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 36px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+      }
+
+      .brand-name {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .back-link {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-decoration: none;
+        padding: 8px 14px;
+        border-radius: 9999px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        transition: color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .back-link:hover {
+        color: var(--text-primary);
+        border-color: #3f3f46;
+      }
+
+      .hero {
+        margin-bottom: 32px;
+      }
+
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border: 1px solid var(--accent-border);
+        padding: 4px 10px;
+        border-radius: 9999px;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        margin-bottom: 10px;
+      }
+
+      .meta {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .summary-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 20px 22px;
+        margin-bottom: 32px;
+      }
+
+      .summary-card p {
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+
+      section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px 24px;
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        font-size: 17px;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        padding-left: 18px;
+        margin-top: 8px;
+        margin-bottom: 12px;
+      }
+
+      ul:last-child {
+        margin-bottom: 0;
+      }
+
+      li {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      li:last-child {
+        margin-bottom: 0;
+      }
+
+      strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      a {
+        color: var(--link);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .contact-item {
+        background: var(--surface-elevated);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+
+      .contact-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+      }
+
+      .contact-value {
+        font-size: 13px;
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+
+      footer {
+        margin-top: 36px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 28px 16px 56px;
+        }
+        h1 {
+          font-size: 26px;
+        }
+        section {
+          padding: 20px 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <a href="/" class="brand">
+          <svg viewBox="85 60 345 395" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="p-bar1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#10b981" />
+                <stop offset="100%" stop-color="#059669" />
+              </linearGradient>
+              <linearGradient id="p-bar2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2dd4bf" />
+                <stop offset="100%" stop-color="#0d9488" />
+              </linearGradient>
+              <linearGradient id="p-bar3" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#2563eb" />
+              </linearGradient>
+              <linearGradient id="p-navy" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#163e7a" />
+                <stop offset="100%" stop-color="#0a2347" />
+              </linearGradient>
+              <mask id="p-wallet-cut">
+                <rect x="0" y="0" width="512" height="512" fill="white" />
+                <path d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z" fill="black" />
+                <circle cx="298" cy="260" r="60" fill="black" />
+                <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
+              </mask>
+              <mask id="p-clasp-cut">
+                <rect x="0" y="0" width="512" height="512" fill="white" />
+                <circle cx="358" cy="354" r="12" fill="black" />
+              </mask>
+            </defs>
+            <g mask="url(#p-wallet-cut)">
+              <rect x="172" y="152" width="54" height="106" rx="6" fill="url(#p-bar1)" />
+              <rect x="242" y="114" width="54" height="144" rx="6" fill="url(#p-bar2)" />
+              <rect x="312" y="74" width="54" height="184" rx="6" fill="url(#p-bar3)" />
+              <path
+                d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z"
+                fill="url(#p-navy)"
+              />
+              <path
+                d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z"
+                fill="#0e7c86"
+              />
+              <path
+                d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z"
+                fill="#15a378"
+              />
+            </g>
+            <path
+              d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z"
+              fill="#15a378"
+            />
+            <path
+              d="M 272 246 A 28 28 0 0 1 324 246"
+              fill="none"
+              stroke="#0a5c4c"
+              stroke-width="7"
+              stroke-linecap="round"
+            />
+            <rect
+              x="328"
+              y="328"
+              width="96"
+              height="52"
+              rx="26"
+              fill="url(#p-navy)"
+              mask="url(#p-clasp-cut)"
+            />
+          </svg>
+          <span class="brand-name">TAPX</span>
+        </a>
+        <a href="/" class="back-link">Open App</a>
+      </header>
+
+      <div class="hero">
+        <span class="badge">Privacy &amp; Data Protection</span>
+        <h1>Privacy Policy</h1>
+        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 15, 2026</p>
+      </div>
+
+      <div class="summary-card">
+        <p>
+          <strong>TAPX</strong> (<a href="https://xtap.vercel.app">https://xtap.vercel.app</a>) is a personal
+          multi-wallet expense tracking web application developed and operated by <strong>Kalp Patel</strong>.
+          Your financial records belong strictly to you—we never sell, rent, advertise against, or share your
+          personal or financial information with third parties.
+        </p>
+      </div>
+
+      <section>
+        <h2>1. Information We Collect</h2>
+        <p>
+          TAPX collects only the minimum information necessary to authenticate your account, synchronize your
+          balances across devices, and power quick transaction logging:
+        </p>
+        <ul>
+          <li>
+            <strong>Google Account Information:</strong> When you sign in with Google OAuth, we receive your
+            basic profile information (display name, email address, and unique Google User ID) via standard
+            <code>openid</code>, <code>userinfo.email</code>, and <code>userinfo.profile</code> scopes. TAPX
+            does <strong>not</strong> request access to your Gmail messages, Google Drive, Contacts, Calendar,
+            or external bank accounts.
+          </li>
+          <li>
+            <strong>User-Entered Financial Records:</strong> Wallets/accounts, initial and current balances,
+            custom expense or income categories, optional monthly spending limits, currency preferences,
+            transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
+          </li>
+          <li>
+            <strong>Automation &amp; Local Storage Data:</strong> A unique, revocable Shortcut Security Token
+            generated for your account to authenticate iPhone Back Tap / Apple Shortcuts requests, along with
+            local browser storage (<code>localStorage</code>) on your device to provide instant offline-ready
+            loading and theme preferences.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>2. How We Use Your Information</h2>
+        <p>We process the information described above exclusively for the following purposes:</p>
+        <ul>
+          <li>Authenticating your session and isolating your workspace from other users.</li>
+          <li>Calculating wallet balances, inter-wallet transfers, category totals, and spending insights.</li>
+          <li>
+            Validating and recording quick expense or income entries submitted through your personal Apple
+            Shortcuts webhook URL.
+          </li>
+          <li>Maintaining application uptime, security, and database integrity.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. Google API Services User Data Policy</h2>
+        <p>
+          TAPX's use and transfer to any other app of information received from Google APIs strictly adheres
+          to the
+          <a
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Google API Services User Data Policy
+          </a>, including the Limited Use requirements.
+        </p>
+        <p>
+          Specifically, Google user data obtained through sign-in is used solely to provide and maintain
+          user-facing authentication within TAPX and is never transferred to third-party data brokers, used
+          for targeted advertising, or used to train artificial intelligence or machine learning models.
+        </p>
+      </section>
+
+      <section>
+        <h2>4. Infrastructure &amp; Service Providers</h2>
+        <p>
+          TAPX relies on trusted cloud infrastructure providers to host the application and store your records
+          securely:
+        </p>
+        <ul>
+          <li>
+            <strong>Supabase:</strong> Provides user authentication and managed PostgreSQL database hosting.
+            All tables enforce PostgreSQL Row-Level Security (RLS) so that only your authenticated account
+            can read or modify your records.
+          </li>
+          <li>
+            <strong>Vercel:</strong> Hosts the TAPX web interface and executes serverless API endpoints
+            (such as <code>/api/shortcut</code>) over encrypted HTTPS connections.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Data Security</h2>
+        <p>
+          All network communication between your device, Vercel, and Supabase is encrypted in transit using
+          HTTPS/TLS. Access to your data is protected by Google OAuth 2.0 session tokens and database-level
+          Row-Level Security policies. If you ever suspect your Apple Shortcuts token has been exposed, you
+          can immediately invalidate it and generate a new token inside <strong>Settings &rarr; Back Tap Setup</strong>.
+        </p>
+      </section>
+
+      <section>
+        <h2>6. Data Retention &amp; Your Deletion Rights</h2>
+        <p>
+          Your financial data is retained only while your TAPX account remains active. You maintain direct
+          control over your information at all times:
+        </p>
+        <ul>
+          <li>
+            <strong>In-App Controls:</strong> You can edit or permanently delete individual transactions,
+            wallets, and categories directly inside TAPX at any time. Signing out automatically clears local
+            cached data from your browser.
+          </li>
+          <li>
+            <strong>Full Account Deletion:</strong> You may request permanent deletion of your TAPX account
+            and all associated database records at any time by emailing
+            <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a> from your registered
+            email address. Deletion requests are completed within 7 days.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. Children's Privacy</h2>
+        <p>
+          TAPX is not directed to children under the age of 13 (or the minimum age of digital consent in your
+          jurisdiction), and we do not knowingly collect personal information from children.
+        </p>
+      </section>
+
+      <section>
+        <h2>8. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy periodically to reflect improvements to TAPX or changes in legal
+          requirements. Any updates will be published on this page with an updated effective date.
+        </p>
+      </section>
+
+      <section>
+        <h2>9. Contact Information</h2>
+        <p>
+          If you have any questions about this Privacy Policy, data security, or account deletion, please
+          contact the developer:
+        </p>
+        <div class="contact-grid">
+          <div class="contact-item">
+            <span class="contact-label">Developer</span>
+            <span class="contact-value">Kalp Patel</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Contact Email</span>
+            <span class="contact-value">
+              <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a>
+            </span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Application URL</span>
+            <span class="contact-value">
+              <a href="https://xtap.vercel.app">https://xtap.vercel.app</a>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>&copy; 2026 TAPX. All rights reserved.</span>
+        <span>Built by Kalp Patel &middot; Ahmedabad, India</span>
+      </footer>
+    </div>
+  </body>
+</html>
+</file>
 
 <file path="api/keepalive.js">
 import { createClient } from '@supabase/supabase-js';
@@ -674,23 +1173,38 @@ function extractAmount(payload) {
 
 // Normalize user/Shortcut type input ('Expense', 'Spent', 'Income', 'Earned', '+', '-')
 function normalizeTxType(rawType, rawQueryText = '') {
-  const clean = String(rawType || '').trim().toLowerCase();
-  if (
-    clean.includes('income') ||
-    clean.includes('earn') ||
-    clean.includes('credit') ||
-    clean === '+'
-  ) {
-    return 'income';
+  if (Array.isArray(rawType)) {
+    return 'expense';
   }
+
+  const clean = String(rawType || '').trim().toLowerCase();
+
+  if (clean.includes('expense') && clean.includes('income')) {
+    return 'expense';
+  }
+
   if (
-    clean.includes('expense') ||
-    clean.includes('spent') ||
-    clean.includes('spend') ||
-    clean.includes('debit') ||
-    clean === '-'
+    clean === 'expense' ||
+    clean === 'spent' ||
+    clean === 'spend' ||
+    clean === 'debit' ||
+    clean === '-' ||
+    clean.startsWith('expense') ||
+    clean.startsWith('spent')
   ) {
     return 'expense';
+  }
+
+  if (
+    clean === 'income' ||
+    clean === 'earned' ||
+    clean === 'earn' ||
+    clean === 'credit' ||
+    clean === '+' ||
+    clean.startsWith('income') ||
+    clean.startsWith('earn')
+  ) {
+    return 'income';
   }
 
   const qLower = String(rawQueryText || '').trim().toLowerCase();
@@ -711,13 +1225,11 @@ function cleanForCompare(str) {
     .toLowerCase();
 }
 
-// Match single chosen item against DB list without matching multi-line arrays
 function findItemInDbList(preferredValue, allPayloadValues, dbList) {
   if (!Array.isArray(dbList) || dbList.length === 0) {
     return String(preferredValue || '').trim();
   }
 
-  // If preferredValue is a single string (not an array or newline-separated list)
   if (
     preferredValue &&
     !Array.isArray(preferredValue) &&
@@ -725,11 +1237,9 @@ function findItemInDbList(preferredValue, allPayloadValues, dbList) {
   ) {
     const cleanPref = cleanForCompare(preferredValue);
     if (cleanPref) {
-      // 1. Exact match first
       const exact = dbList.find((item) => cleanForCompare(item) === cleanPref);
       if (exact) return exact;
 
-      // 2. Partial match where DB item contains the chosen word
       const partial = dbList.find(
         (item) =>
           cleanForCompare(item).includes(cleanPref) ||
@@ -739,7 +1249,6 @@ function findItemInDbList(preferredValue, allPayloadValues, dbList) {
     }
   }
 
-  // Scan all other single-value fields in the payload in case two variables were swapped in Step 10
   for (const val of allPayloadValues) {
     if (Array.isArray(val) || String(val).includes('\n')) continue;
     const cleanVal = cleanForCompare(val);
@@ -755,7 +1264,6 @@ function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Helper to build a clean, UTF-8 safe iOS Notification Banner string
 function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategory, type = 'expense') {
   let payload = data;
   if (typeof payload === 'string') {
@@ -785,7 +1293,7 @@ function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategor
   ).trim();
   const newBalance = payload?.new_balance ?? payload?.balance;
 
-  const isIncome = normalizeTxType(type) === 'income';
+  const isIncome = normalizeTxType(payload?.type || type) === 'income';
   const actionSign = isIncome ? '+' : '-';
   const statusIcon = isIncome ? '💰' : '✅';
   const catLabel = categoryName ? ` • ${categoryName}` : '';
@@ -851,15 +1359,6 @@ export default async function handler(req, res) {
       return res.status(400).send('⚠️ Enter a valid amount greater than 0');
     }
 
-    // Warn clearly if the user linked Dictionary Value (whole list) instead of Chosen Item in Step 10
-    if (Array.isArray(rawWalletArg) || String(rawWalletArg).includes('\n')) {
-      return res
-        .status(400)
-        .send(
-          '⚠️ In Shortcut Step 10, set "wallet" to Chosen Item (below the 2nd Choose from List), not Dictionary Value!'
-        );
-    }
-
     const { data: meta } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
@@ -881,10 +1380,14 @@ export default async function handler(req, res) {
 
     let resolvedType = normalizeTxType(rawTypeArg);
     if (!rawTypeArg) {
-      const foundIncomeWord = allValues.some((v) =>
-        /^(income|earned|earn|\+)$/i.test(String(v).trim())
+      const singleExpense = allValues.some(
+        (v) => !Array.isArray(v) && /^(expense|spent|spend|-)$/i.test(String(v).trim())
       );
-      if (foundIncomeWord) resolvedType = 'income';
+      const singleIncome = allValues.some(
+        (v) => !Array.isArray(v) && /^(income|earned|earn|\+)$/i.test(String(v).trim())
+      );
+      if (singleExpense) resolvedType = 'expense';
+      else if (singleIncome) resolvedType = 'income';
     }
 
     const { data, error } = await supabase.rpc('shortcut_quick_log', {
@@ -1039,13 +1542,25 @@ export default async function handler(req, res) {
       /income|allowance|salary/i.test(String(c))
     );
 
+    const resolvedExpenseCats = expenseCats.length > 0 ? expenseCats : categoriesList;
+    const resolvedIncomeCats =
+      incomeCats.length > 0 ? incomeCats : ['Income & Allowance', ...categoriesList];
+
+    // Return all casing variations so Apple Shortcuts Get Dictionary Value never misses
     return res.status(200).json({
       ...(typeof data === 'object' && data !== null ? data : {}),
       types: ['Expense', 'Income'],
+      Types: ['Expense', 'Income'],
       wallets: walletsList,
+      Wallets: walletsList,
       categories: categoriesList,
-      Expense: expenseCats.length > 0 ? expenseCats : categoriesList,
-      Income: incomeCats.length > 0 ? incomeCats : ['Income & Allowance', ...categoriesList]
+      Categories: categoriesList,
+      category: categoriesList,
+      Category: categoriesList,
+      Expense: resolvedExpenseCats,
+      expense: resolvedExpenseCats,
+      Income: resolvedIncomeCats,
+      income: resolvedIncomeCats
     });
   }
 
@@ -1432,7 +1947,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { supabase } from './supabaseClient';
 
 // Shared iCloud Shortcut Link for 1-Tap Setup
-const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/ab752c99877049a3bb53981115357de3';
+const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/e2b04fe336ae49af8df883fccb1370f2';
 
 const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
