@@ -4,19 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="TAPX" />
-    <meta name="theme-color" content="#09090b" />
+    <meta name="theme-color" content="#0b0f19" />
     <link rel="manifest" href="/manifest.json" />
     <title>TAPX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      body {
-        background-color: #09090b;
-        color: #f4f4f5;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-        overscroll-behavior-y: none;
+      html,
+      body,
+      #root {
+        height: 100dvh;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        position: fixed;
+        inset: 0;
+        background-color: #0b0f19;
+        color: #f8fafc;
+        overscroll-behavior: none;
         -webkit-tap-highlight-color: transparent;
       }
       .no-scrollbar::-webkit-scrollbar {
@@ -28,7 +35,7 @@
       }
     </style>
   </head>
-  <body class="bg-zinc-950 text-zinc-100 antialiased selection:bg-blue-500 selection:text-white">
+  <body class="bg-[#0b0f19] text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
