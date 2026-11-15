@@ -431,59 +431,6 @@ If you are developing a production application, we recommend using TypeScript wi
 }
 </file>
 
-<file path="index.html">
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="TAPX" />
-    <meta name="theme-color" content="#09090b" id="theme-color-meta" />
-    <link rel="manifest" href="/manifest.json" />
-    <title>TAPX</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      * {
-        -webkit-tap-highlight-color: transparent;
-        box-sizing: border-box;
-      }
-      html,
-      body,
-      #root {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        overscroll-behavior: none;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
-      }
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-      .tabular-nums {
-        font-variant-numeric: tabular-nums;
-      }
-    </style>
-  </head>
-  <body class="antialiased selection:bg-zinc-500 selection:text-white">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
-</file>
-
 <file path="vite.config.js">
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -709,44 +656,6 @@ export default async function handler(req, res) {
 }
 </file>
 
-<file path="src/index.css">
-html,
-body,
-#root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  overscroll-behavior: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.custom-scroll {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-}
-
-.custom-scroll::-webkit-scrollbar {
-  width: 3px;
-}
-
-.custom-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.25);
-  border-radius: 9999px;
-}
-</file>
-
 <file path="package.json">
 {
   "name": "tapx",
@@ -767,6 +676,137 @@ body,
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.2.0"
   }
+}
+</file>
+
+<file path="index.html">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="TAPX" />
+    <meta name="theme-color" content="#09090b" id="theme-color-meta" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>TAPX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        box-sizing: border-box;
+      }
+      html,
+      body,
+      #root {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .tabular-nums {
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Native iOS Spring Physics */
+      .ios-spring {
+        transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .key-press {
+        transition: transform 110ms cubic-bezier(0.2, 0, 0, 1), background-color 110ms ease;
+        will-change: transform;
+      }
+      .key-press:active {
+        transform: scale(0.92);
+      }
+
+      @keyframes tabFadeSlide {
+        0% {
+          opacity: 0;
+          transform: translateY(8px) scale(0.99);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .animate-tab {
+        animation: tabFadeSlide 240ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        will-change: transform, opacity;
+      }
+
+      @keyframes amountPop {
+        0% {
+          transform: scale(0.96);
+        }
+        60% {
+          transform: scale(1.02);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .animate-pop {
+        animation: amountPop 160ms cubic-bezier(0.32, 0.72, 0, 1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="src/index.css">
+html,
+body,
+#root {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.custom-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(161, 161, 170, 0.25);
+  border-radius: 9999px;
 }
 </file>
 
@@ -793,35 +833,34 @@ const DEFAULT_CATEGORIES_TEMPLATE = [
   { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#059669', monthly_budget: null }
 ];
 
-const CACHE_KEY = 'tapx_local_cache_v3';
+const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 
-// Clean Vector Icons for Navigation & UI
 function NavIcon({ id, active }) {
-  const strokeWidth = active ? '2.2' : '1.75';
+  const strokeWidth = active ? '2.25' : '1.75';
   if (id === 'pad') {
     return (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
     );
   }
   if (id === 'wallets') {
     return (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
       </svg>
     );
   }
   if (id === 'analytics') {
     return (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
       </svg>
     );
   }
   return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
@@ -894,58 +933,60 @@ function TapxMainApp() {
 
   const isDark = themePref === 'system' ? systemIsDark : themePref === 'dark';
 
-  // Sync theme color with iOS Status Bar / Notch so there is zero top blur or color seam
+  // Sync theme color with iOS Status Bar so top area is 100% solid and sharp
   useEffect(() => {
     localStorage.setItem(THEME_KEY, themePref);
-    const bgHex = isDark ? '#09090b' : '#f4f4f6';
+    const bgHex = isDark ? '#09090b' : '#f5f5f7';
     document.documentElement.style.backgroundColor = bgHex;
     document.body.style.backgroundColor = bgHex;
     const meta = document.getElementById('theme-color-meta');
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Dynamic Theme Palette (Editorial Apple Wallet / Copilot Aesthetic)
+  // Refined Apple-Grade Palette
   const ui = useMemo(() => {
     if (isDark) {
       return {
         bg: 'bg-[#09090b] text-zinc-100',
-        card: 'bg-[#121215] border-[#222226]',
-        cardSubtle: 'bg-[#16161a] border-[#242429]',
-        input: 'bg-[#09090b] border-[#27272a] text-zinc-100 placeholder-zinc-500',
-        pillIdle: 'bg-[#141418] border-[#242429] text-zinc-400 hover:text-zinc-200',
+        card: 'bg-[#131316] border-[#232329]',
+        cardElevated: 'bg-[#18181c] border-[#292930]',
+        cardSubtle: 'bg-[#1c1c21] border-[#27272e]',
+        input: 'bg-[#131316] border-[#27272e] text-zinc-100 placeholder-zinc-500',
+        pillIdle: 'bg-[#141418] border-[#24242b] text-zinc-400',
         pillActive: 'bg-zinc-100 border-zinc-100 text-zinc-950 shadow-sm',
-        numpadKey: 'bg-[#141418] hover:bg-[#1c1c21] active:bg-[#242429] border-[#222226] text-zinc-100',
-        segmentedBg: 'bg-[#121215] border-[#222226]',
-        segmentedActive: 'bg-[#242429] text-white shadow-sm',
-        textPrimary: 'text-zinc-100',
+        numpadKey: 'bg-[#151519] border-[#24242b] text-zinc-100 shadow-[0_1px_0_rgba(255,255,255,0.04)]',
+        segmentedBg: 'bg-[#131316] border-[#222228]',
+        segmentedThumb: 'bg-[#26262d] shadow-sm',
+        textPrimary: 'text-zinc-50',
         textSecondary: 'text-zinc-400',
         textMuted: 'text-zinc-500',
-        island: 'bg-[#16161a]/95 border-white/[0.1] text-zinc-400 shadow-[0_12px_36px_rgba(0,0,0,0.75)]',
-        islandActive: 'bg-zinc-100 text-zinc-950',
-        primaryBtnExpense: 'bg-zinc-100 text-zinc-950 hover:bg-white',
-        primaryBtnIncome: 'bg-emerald-500 text-zinc-950 hover:bg-emerald-400',
-        primaryBtnTransfer: 'bg-blue-600 text-white hover:bg-blue-500',
-        divider: 'border-[#1f1f23]'
+        island: 'bg-[#16161a]/95 border-white/[0.11] text-zinc-400 shadow-[0_14px_38px_rgba(0,0,0,0.85)]',
+        islandActive: 'bg-zinc-100 text-zinc-950 shadow-sm',
+        primaryBtnExpense: 'bg-zinc-100 text-zinc-950',
+        primaryBtnIncome: 'bg-emerald-500 text-zinc-950',
+        primaryBtnTransfer: 'bg-blue-500 text-white',
+        divider: 'border-[#1e1e24]'
       };
     }
     return {
-      bg: 'bg-[#f4f4f6] text-zinc-900',
-      card: 'bg-white border-zinc-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]',
-      cardSubtle: 'bg-zinc-100/80 border-zinc-200/70',
-      input: 'bg-[#f4f4f6] border-zinc-300 text-zinc-900 placeholder-zinc-400',
-      pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 hover:text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
+      bg: 'bg-[#f5f5f7] text-zinc-900',
+      card: 'bg-white border-zinc-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]',
+      cardElevated: 'bg-white border-zinc-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.04)]',
+      cardSubtle: 'bg-zinc-100 border-zinc-200/70',
+      input: 'bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400',
+      pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
       pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-sm',
-      numpadKey: 'bg-white hover:bg-zinc-50 active:bg-zinc-100 border-zinc-200/80 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)]',
-      segmentedBg: 'bg-zinc-200/70 border-zinc-300/50',
-      segmentedActive: 'bg-white text-zinc-900 shadow-sm',
+      numpadKey: 'bg-white border-zinc-200/90 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+      segmentedBg: 'bg-zinc-200/80 border-zinc-300/40',
+      segmentedThumb: 'bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]',
       textPrimary: 'text-zinc-900',
-      textSecondary: 'text-zinc-600',
+      textSecondary: 'text-zinc-500',
       textMuted: 'text-zinc-400',
-      island: 'bg-white/95 border-zinc-200/90 text-zinc-500 shadow-[0_10px_30px_rgba(0,0,0,0.1)]',
-      islandActive: 'bg-zinc-900 text-white',
-      primaryBtnExpense: 'bg-zinc-900 text-white hover:bg-zinc-800',
-      primaryBtnIncome: 'bg-emerald-600 text-white hover:bg-emerald-500',
-      primaryBtnTransfer: 'bg-blue-600 text-white hover:bg-blue-500',
+      island: 'bg-white/95 border-zinc-200/90 text-zinc-500 shadow-[0_12px_32px_rgba(0,0,0,0.12)]',
+      islandActive: 'bg-zinc-900 text-white shadow-sm',
+      primaryBtnExpense: 'bg-zinc-900 text-white',
+      primaryBtnIncome: 'bg-emerald-600 text-white',
+      primaryBtnTransfer: 'bg-blue-600 text-white',
       divider: 'border-zinc-200'
     };
   }, [isDark]);
@@ -956,11 +997,12 @@ function TapxMainApp() {
   const [dbError, setDbError] = useState('');
   const seedingRef = useRef(false);
 
-  // Navigation State: 'pad' | 'wallets' | 'analytics' | 'settings'
+  // Navigation & Animation Triggers
   const [activeTab, setActiveTab] = useState('pad');
-  const [settingsSection, setSettingsSection] = useState('budgets'); // 'budgets' | 'shortcut' | 'appearance'
-  const [shortcutMode, setShortcutMode] = useState('Fast'); // 'Fast' | 'Menu'
-  const [analyticsRange, setAnalyticsRange] = useState('month'); // 'week' | 'month' | 'all'
+  const [settingsSection, setSettingsSection] = useState('budgets');
+  const [shortcutMode, setShortcutMode] = useState('Fast');
+  const [analyticsRange, setAnalyticsRange] = useState('month');
+  const [popKey, setPopKey] = useState(0);
 
   // User Database State
   const [settings, setSettings] = useState(
@@ -971,7 +1013,7 @@ function TapxMainApp() {
   const [transactions, setTransactions] = useState(cachedData?.transactions || []);
 
   // Quick Pad Entry State
-  const [entryType, setEntryType] = useState('expense'); // 'expense' | 'income' | 'transfer'
+  const [entryType, setEntryType] = useState('expense');
   const [amountStr, setAmountStr] = useState('0');
   const [selectedWalletId, setSelectedWalletId] = useState(cachedData?.wallets?.[0]?.id || '');
   const [toWalletId, setToWalletId] = useState(cachedData?.wallets?.[1]?.id || '');
@@ -996,10 +1038,9 @@ function TapxMainApp() {
   const [newCatIcon, setNewCatIcon] = useState(CATEGORY_ICONS[0]);
   const [newCatBudget, setNewCatBudget] = useState('');
 
-  // Copy state for Shortcut setup
   const [copiedField, setCopiedField] = useState('');
 
-  // Save state to localStorage automatically
+  // Cache state automatically
   useEffect(() => {
     if (!session?.user?.id) return;
     try {
@@ -1018,7 +1059,6 @@ function TapxMainApp() {
     }
   }, [session?.user?.id, settings, wallets, categories, transactions]);
 
-  // 1. Listen to Auth State
   useEffect(() => {
     let mounted = true;
 
@@ -1028,9 +1068,7 @@ function TapxMainApp() {
         if (!mounted) return;
         const currentSession = res?.data?.session || null;
         setSession(currentSession);
-        if (!currentSession) {
-          setInitialBoot(false);
-        }
+        if (!currentSession) setInitialBoot(false);
       })
       .catch(() => {
         if (mounted) setInitialBoot(false);
@@ -1050,13 +1088,10 @@ function TapxMainApp() {
 
     return () => {
       mounted = false;
-      if (authListener?.subscription) {
-        authListener.subscription.unsubscribe();
-      }
+      if (authListener?.subscription) authListener.subscription.unsubscribe();
     };
   }, []);
 
-  // 2. Silent Background Sync
   useEffect(() => {
     if (session?.user?.id) {
       fetchUserData(session.user.id);
@@ -1065,7 +1100,7 @@ function TapxMainApp() {
 
   const showToast = (msg) => {
     setToast(String(msg));
-    setTimeout(() => setToast(''), 2200);
+    setTimeout(() => setToast(''), 2000);
   };
 
   const fetchUserData = async (userId) => {
@@ -1112,7 +1147,6 @@ function TapxMainApp() {
       let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
       const fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
 
-      // Auto-provision the 8 default categories if missing
       if (fetchedCategories.length < 7 && !seedingRef.current) {
         seedingRef.current = true;
         const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
@@ -1175,7 +1209,9 @@ function TapxMainApp() {
     await supabase.auth.signOut();
   };
 
+  // Zero-Latency Numpad Handler
   const handleDigitPress = (digit) => {
+    setPopKey((k) => k + 1);
     if (digit === 'DEL') {
       setAmountStr((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
       return;
@@ -1192,7 +1228,6 @@ function TapxMainApp() {
     });
   };
 
-  // Instant Optimistic Transaction Logging
   const handleLogTransaction = async () => {
     const numericAmount = parseFloat(amountStr);
     if (!numericAmount || numericAmount <= 0) {
@@ -1247,7 +1282,7 @@ function TapxMainApp() {
 
     setAmountStr('0');
     setNote('');
-    showToast(`${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged`);
+    showToast(`${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} saved`);
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
@@ -1299,7 +1334,7 @@ function TapxMainApp() {
         return w;
       })
     );
-    showToast('Transaction removed');
+    showToast('Entry deleted');
 
     await supabase.from('transactions').delete().eq('id', id);
   };
@@ -1339,7 +1374,7 @@ function TapxMainApp() {
         if (!selectedWalletId) setSelectedWalletId(createdWallet.id);
         return updated;
       });
-      showToast('Wallet added');
+      showToast('Account created');
     } else if (error) {
       showToast(error.message);
     }
@@ -1347,7 +1382,7 @@ function TapxMainApp() {
 
   const handleDeleteWallet = async (id) => {
     setWallets((prev) => prev.filter((w) => w.id !== id));
-    showToast('Wallet deleted');
+    showToast('Account deleted');
     await supabase.from('wallets').delete().eq('id', id);
   };
 
@@ -1386,7 +1421,7 @@ function TapxMainApp() {
         }
         return updated;
       });
-      showToast('Category added');
+      showToast('Category created');
     } else if (error) {
       showToast(error.message);
     }
@@ -1404,7 +1439,7 @@ function TapxMainApp() {
       .join('');
 
     setSettings((prev) => ({ ...prev, shortcut_token: randomHex }));
-    showToast('Token regenerated');
+    showToast('Token updated');
 
     await supabase
       .from('user_settings')
@@ -1435,6 +1470,11 @@ function TapxMainApp() {
   const totalNetWorth = useMemo(
     () => wallets.reduce((acc, w) => acc + (Number(w?.balance) || 0), 0),
     [wallets]
+  );
+
+  const selectedWalletObj = useMemo(
+    () => wallets.find((w) => w.id === selectedWalletId) || wallets[0] || null,
+    [wallets, selectedWalletId]
   );
 
   const filteredCategories = useMemo(
@@ -1598,10 +1638,12 @@ function TapxMainApp() {
       ? ui.primaryBtnTransfer
       : ui.primaryBtnExpense;
 
+  const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
+
   if (initialBoot) {
     return (
       <div className={`h-full w-full ${ui.bg} flex items-center justify-center p-6 overflow-hidden`}>
-        <div className="w-8 h-8 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+        <div className="w-7 h-7 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -1624,7 +1666,7 @@ function TapxMainApp() {
         <div className="space-y-4 mb-10">
           <button
             onClick={handleGoogleLogin}
-            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition ${
+            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 key-press ${
               isDark ? 'bg-white text-zinc-950' : 'bg-zinc-900 text-white'
             }`}
           >
@@ -1660,13 +1702,13 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'max(env(safe-area-inset-top), 12px)'
+        paddingTop: 'max(env(safe-area-inset-top), 18px)'
       }}
     >
-      {/* Minimal Floating Toast Pill */}
+      {/* Floating Toast Pill */}
       {toast && (
         <div
-          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-lg pointer-events-none transition-all ${
+          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-xl pointer-events-none animate-tab ${
             isDark ? 'bg-zinc-100 text-zinc-950' : 'bg-zinc-900 text-white'
           }`}
         >
@@ -1681,20 +1723,20 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Top Header — Zero Blur, Clean Editorial Typography */}
-      <header className="px-5 pt-1 pb-3 flex items-center justify-between shrink-0">
+      {/* Crisp Top Header — Pushed cleanly below the iPhone notch */}
+      <header className="px-5 pt-2 pb-3 flex items-center justify-between shrink-0">
         <div>
           <div className="flex items-center gap-1.5">
             <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
               Total Balance
             </span>
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
+              className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
                 isSyncingBg ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
               }`}
             />
           </div>
-          <h2 className={`text-2xl font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+          <h2 className={`text-[26px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
             {currencySymbol}
             {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </h2>
@@ -1705,24 +1747,28 @@ function TapxMainApp() {
             setActiveTab('wallets');
             setShowWalletModal(true);
           }}
-          className={`px-3.5 py-2 rounded-full border text-xs font-semibold transition active:scale-95 ${ui.card} ${ui.textPrimary}`}
+          className={`px-3.5 py-2 rounded-full border text-xs font-semibold key-press ${ui.cardElevated} ${ui.textPrimary}`}
         >
           + Wallet
         </button>
       </header>
 
-      {/* MAIN VIEWPORT (Reserved Bottom Space for Floating Island Bar) */}
+      {/* MAIN VIEWPORT */}
       <main
         className="flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 74px)'
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 72px)'
         }}
       >
         {/* TAB 1: KEYPAD */}
         {activeTab === 'pad' && (
-          <div className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden">
-            {/* Segmented Mode Control */}
-            <div className={`grid grid-cols-3 p-1 rounded-xl border shrink-0 ${ui.segmentedBg}`}>
+          <div key="tab-pad" className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden animate-tab">
+            {/* Hardware-Accelerated Sliding Segmented Control */}
+            <div className={`relative grid grid-cols-3 p-1 rounded-2xl border shrink-0 ${ui.segmentedBg}`}>
+              <div
+                className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
+                style={{ transform: `translateX(${entryIndex * 100}%)` }}
+              />
               {[
                 { id: 'expense', label: 'Expense' },
                 { id: 'income', label: 'Income' },
@@ -1737,8 +1783,8 @@ function TapxMainApp() {
                     );
                     if (firstMatch) setSelectedCategoryId(firstMatch.id);
                   }}
-                  className={`py-1.5 text-xs font-semibold rounded-lg transition ${
-                    entryType === t.id ? ui.segmentedActive : ui.textSecondary
+                  className={`relative z-10 py-1.5 text-xs font-semibold rounded-xl transition-colors duration-200 ${
+                    entryType === t.id ? ui.textPrimary : ui.textSecondary
                   }`}
                 >
                   {t.label}
@@ -1746,27 +1792,49 @@ function TapxMainApp() {
               ))}
             </div>
 
-            {/* Center Amount Display & Note */}
-            <div className="text-center my-auto py-1 shrink-0">
-              <div className={`text-5xl font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+            {/* Center Amount Hero Card — Eliminates the awkward blank gap */}
+            <div className={`my-auto py-3 px-4 rounded-3xl border flex flex-col items-center justify-center shrink-0 ${ui.card}`}>
+              <div
+                key={popKey}
+                className={`text-[44px] leading-none font-bold tracking-tight tabular-nums animate-pop ${
+                  entryType === 'income'
+                    ? 'text-emerald-500'
+                    : entryType === 'transfer'
+                    ? 'text-blue-500'
+                    : ui.textPrimary
+                }`}
+              >
                 <span className={`text-2xl mr-1 font-medium ${ui.textMuted}`}>{currencySymbol}</span>
                 {amountStr}
               </div>
+
               <input
                 type="text"
-                placeholder="Add note..."
+                placeholder="Add a note..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className={`mt-2 bg-transparent text-center text-xs focus:outline-none w-3/4 mx-auto block ${ui.textSecondary} placeholder:${ui.textMuted}`}
+                className={`mt-2.5 bg-transparent text-center text-xs focus:outline-none w-4/5 ${ui.textSecondary} placeholder:${ui.textMuted}`}
               />
+
+              {selectedWalletObj && (
+                <div className={`mt-2 pt-2 border-t w-full flex items-center justify-center gap-1.5 text-[11px] ${ui.divider} ${ui.textMuted}`}>
+                  <span>{selectedWalletObj.icon}</span>
+                  <span>{selectedWalletObj.name}</span>
+                  <span>·</span>
+                  <span className="tabular-nums">
+                    {currencySymbol}
+                    {Number(selectedWalletObj.balance || 0).toLocaleString('en-IN')} available
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Wallet & Category Selector Pills */}
-            <div className="space-y-2.5 shrink-0">
+            <div className="space-y-2 shrink-0">
               {/* Wallet Row */}
               <div className="space-y-1">
                 <span className={`text-[10px] uppercase tracking-wider font-semibold px-0.5 ${ui.textMuted}`}>
-                  {entryType === 'transfer' ? 'From Wallet' : 'Account'}
+                  {entryType === 'transfer' ? 'From Account' : 'Account'}
                 </span>
                 <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                   {wallets.length === 0 ? (
@@ -1775,7 +1843,7 @@ function TapxMainApp() {
                         setActiveTab('wallets');
                         setShowWalletModal(true);
                       }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border shrink-0 ${ui.pillIdle}`}
+                      className={`px-3.5 py-2 rounded-full text-xs font-medium border shrink-0 key-press ${ui.pillIdle}`}
                     >
                       + Add your first wallet
                     </button>
@@ -1784,7 +1852,7 @@ function TapxMainApp() {
                       <button
                         key={w.id}
                         onClick={() => setSelectedWalletId(w.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-colors duration-150 key-press ${
                           selectedWalletId === w.id ? ui.pillActive : ui.pillIdle
                         }`}
                       >
@@ -1808,7 +1876,7 @@ function TapxMainApp() {
                         <button
                           key={w.id}
                           onClick={() => setToWalletId(w.id)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 shrink-0 border transition ${
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 shrink-0 border transition-colors duration-150 key-press ${
                             toWalletId === w.id ? ui.pillActive : ui.pillIdle
                           }`}
                         >
@@ -1830,7 +1898,7 @@ function TapxMainApp() {
                       <button
                         key={c.id}
                         onClick={() => setSelectedCategoryId(c.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-colors duration-150 key-press ${
                           selectedCategoryId === c.id ? ui.pillActive : ui.pillIdle
                         }`}
                       >
@@ -1843,13 +1911,17 @@ function TapxMainApp() {
               )}
             </div>
 
-            {/* Tactile Numpad */}
+            {/* Zero-Latency Tactile Numpad (onPointerDown eliminates iOS 300ms delay) */}
             <div className="grid grid-cols-3 gap-2 pt-2 shrink-0">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
                 <button
                   key={key}
-                  onClick={() => handleDigitPress(key)}
-                  className={`h-11 rounded-xl border text-lg font-semibold tabular-nums flex items-center justify-center active:scale-[0.97] transition ${ui.numpadKey}`}
+                  type="button"
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    handleDigitPress(key);
+                  }}
+                  className={`h-11 rounded-2xl border text-lg font-semibold tabular-nums flex items-center justify-center key-press ${ui.numpadKey}`}
                 >
                   {key === 'DEL' ? (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
@@ -1865,7 +1937,7 @@ function TapxMainApp() {
             {/* Submit Button */}
             <button
               onClick={handleLogTransaction}
-              className={`w-full py-3.5 mt-2 rounded-xl font-semibold text-sm active:scale-[0.98] transition shrink-0 ${primaryButtonClass}`}
+              className={`w-full py-3.5 mt-2 rounded-2xl font-semibold text-sm key-press shrink-0 shadow-sm ${primaryButtonClass}`}
             >
               Save {entryType === 'transfer' ? 'Transfer' : entryType === 'income' ? 'Income' : 'Expense'}
             </button>
@@ -1874,14 +1946,14 @@ function TapxMainApp() {
 
         {/* TAB 2: WALLETS & ACTIVITY */}
         {activeTab === 'wallets' && (
-          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+          <div key="tab-wallets" className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden animate-tab">
             <div className="flex items-center justify-between shrink-0">
               <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
                 Accounts ({wallets.length})
               </h3>
               <button
                 onClick={() => setShowWalletModal((prev) => !prev)}
-                className={`text-xs px-3 py-1 rounded-full border font-medium ${ui.card} ${ui.textPrimary}`}
+                className={`text-xs px-3 py-1 rounded-full border font-medium key-press ${ui.cardElevated} ${ui.textPrimary}`}
               >
                 {showWalletModal ? 'Cancel' : '+ New'}
               </button>
@@ -1890,7 +1962,7 @@ function TapxMainApp() {
             {showWalletModal && (
               <form
                 onSubmit={handleCreateWallet}
-                className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 ${ui.card}`}
+                className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 animate-tab ${ui.cardElevated}`}
               >
                 <input
                   type="text"
@@ -1927,7 +1999,7 @@ function TapxMainApp() {
                       type="button"
                       key={ic}
                       onClick={() => setNewWalletIcon(ic)}
-                      className={`p-2 rounded-xl border text-sm ${
+                      className={`p-2 rounded-xl border text-sm key-press ${
                         newWalletIcon === ic ? ui.pillActive : ui.pillIdle
                       }`}
                     >
@@ -1937,7 +2009,7 @@ function TapxMainApp() {
                 </div>
                 <button
                   type="submit"
-                  className={`w-full py-2.5 rounded-xl text-xs font-semibold ${ui.primaryBtnExpense}`}
+                  className={`w-full py-2.5 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
                 >
                   Create Account
                 </button>
@@ -1972,7 +2044,7 @@ function TapxMainApp() {
                       </span>
                       <button
                         onClick={() => handleDeleteWallet(w.id)}
-                        className={`p-1 text-xs ${ui.textMuted} hover:text-rose-500`}
+                        className={`p-1 text-xs key-press ${ui.textMuted} hover:text-rose-500`}
                       >
                         ✕
                       </button>
@@ -2043,7 +2115,7 @@ function TapxMainApp() {
                         </span>
                         <button
                           onClick={() => handleDeleteTransaction(tx.id)}
-                          className={`px-1 text-xs ${ui.textMuted} hover:text-rose-500`}
+                          className={`px-1 text-xs key-press ${ui.textMuted} hover:text-rose-500`}
                         >
                           ✕
                         </button>
@@ -2058,7 +2130,7 @@ function TapxMainApp() {
 
         {/* TAB 3: ANALYTICS */}
         {activeTab === 'analytics' && (
-          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+          <div key="tab-analytics" className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden animate-tab">
             <div className="flex items-center justify-between shrink-0">
               <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
                 Overview
@@ -2072,8 +2144,8 @@ function TapxMainApp() {
                   <button
                     key={tab.id}
                     onClick={() => setAnalyticsRange(tab.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
-                      analyticsRange === tab.id ? ui.segmentedActive : ui.textSecondary
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
+                      analyticsRange === tab.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
                     }`}
                   >
                     {tab.label}
@@ -2111,7 +2183,6 @@ function TapxMainApp() {
 
             {/* Inner Scrollable Analytics Cards */}
             <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
-              {/* 7-Day Trend */}
               <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
                   <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Last 7 Days</h4>
@@ -2137,13 +2208,13 @@ function TapxMainApp() {
                         </span>
                         <div className={`w-full rounded-lg h-16 flex items-end p-0.5 border ${ui.cardSubtle}`}>
                           <div
-                            className={`w-full rounded-md transition-all ${
+                            className={`w-full rounded-md transition-all duration-500 ios-spring ${
                               day.isToday
                                 ? isDark
                                   ? 'bg-zinc-100'
                                   : 'bg-zinc-900'
                                 : day.amount > 0
-                                ? 'bg-blue-500/70'
+                                ? 'bg-blue-500/75'
                                 : 'bg-transparent'
                             }`}
                             style={{ height: `${heightPct}%` }}
@@ -2162,7 +2233,6 @@ function TapxMainApp() {
                 </div>
               </div>
 
-              {/* Category Breakdown */}
               <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
                   <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Spending by Category</h4>
@@ -2181,7 +2251,7 @@ function TapxMainApp() {
                             width: `${Math.max(item.pct, 4)}%`,
                             backgroundColor: item.color
                           }}
-                          className="h-full first:rounded-l-full last:rounded-r-full"
+                          className="h-full first:rounded-l-full last:rounded-r-full transition-all duration-500 ios-spring"
                         />
                       ))}
                     </div>
@@ -2214,7 +2284,6 @@ function TapxMainApp() {
                 )}
               </div>
 
-              {/* Wallet Breakdown */}
               {analyticsData.walletBreakdown.length > 0 && (
                 <div className={`p-4 rounded-2xl border space-y-2.5 ${ui.card}`}>
                   <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Account Share</h4>
@@ -2233,7 +2302,7 @@ function TapxMainApp() {
                         </div>
                         <div className={`w-full h-1.5 rounded-full overflow-hidden ${ui.cardSubtle}`}>
                           <div
-                            className="h-full rounded-full bg-blue-500"
+                            className="h-full rounded-full bg-blue-500 transition-all duration-500 ios-spring"
                             style={{ width: `${w.pct}%` }}
                           />
                         </div>
@@ -2248,8 +2317,8 @@ function TapxMainApp() {
 
         {/* TAB 4: SETTINGS (Appearance + Budgets + Back Tap) */}
         {activeTab === 'settings' && (
-          <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
-            {/* Appearance Mode Selector (Light / Dark / System) */}
+          <div key="tab-settings" className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden animate-tab">
+            {/* Appearance Mode Selector */}
             <div className={`p-3 rounded-2xl border flex items-center justify-between shrink-0 ${ui.card}`}>
               <div>
                 <p className={`text-xs font-semibold ${ui.textPrimary}`}>Appearance</p>
@@ -2264,8 +2333,8 @@ function TapxMainApp() {
                   <button
                     key={m.id}
                     onClick={() => setThemePref(m.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
-                      themePref === m.id ? ui.segmentedActive : ui.textSecondary
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
+                      themePref === m.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
                     }`}
                   >
                     {m.label}
@@ -2274,20 +2343,20 @@ function TapxMainApp() {
               </div>
             </div>
 
-            {/* Sub-Section Switcher: Budgets vs Back Tap */}
+            {/* Sub-Section Switcher */}
             <div className={`grid grid-cols-2 p-1 rounded-xl border shrink-0 ${ui.segmentedBg}`}>
               <button
                 onClick={() => setSettingsSection('budgets')}
-                className={`py-1.5 rounded-lg text-xs font-semibold transition ${
-                  settingsSection === 'budgets' ? ui.segmentedActive : ui.textSecondary
+                className={`py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  settingsSection === 'budgets' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
                 }`}
               >
                 Budgets & Categories
               </button>
               <button
                 onClick={() => setSettingsSection('shortcut')}
-                className={`py-1.5 rounded-lg text-xs font-semibold transition ${
-                  settingsSection === 'shortcut' ? ui.segmentedActive : ui.textSecondary
+                className={`py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  settingsSection === 'shortcut' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
                 }`}
               >
                 Back Tap Setup
@@ -2296,14 +2365,14 @@ function TapxMainApp() {
 
             {/* SUB-VIEW 1: BUDGETS & CATEGORIES */}
             {settingsSection === 'budgets' && (
-              <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
+              <div key="sub-budgets" className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden animate-tab">
                 <div className="flex items-center justify-between shrink-0">
                   <span className={`text-[11px] font-medium ${ui.textMuted}`}>
                     {categories.length} Categories
                   </span>
                   <button
                     onClick={() => setShowCategoryModal((prev) => !prev)}
-                    className={`text-xs px-3 py-1 rounded-full border font-semibold ${ui.card} ${ui.textPrimary}`}
+                    className={`text-xs px-3 py-1 rounded-full border font-semibold key-press ${ui.cardElevated} ${ui.textPrimary}`}
                   >
                     {showCategoryModal ? 'Close' : '+ Add Category'}
                   </button>
@@ -2312,7 +2381,7 @@ function TapxMainApp() {
                 {showCategoryModal && (
                   <form
                     onSubmit={handleCreateCategory}
-                    className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 ${ui.card}`}
+                    className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 animate-tab ${ui.cardElevated}`}
                   >
                     <input
                       type="text"
@@ -2345,7 +2414,7 @@ function TapxMainApp() {
                           type="button"
                           key={ic}
                           onClick={() => setNewCatIcon(ic)}
-                          className={`p-2 rounded-xl border shrink-0 text-sm ${
+                          className={`p-2 rounded-xl border shrink-0 text-sm key-press ${
                             newCatIcon === ic ? ui.pillActive : ui.pillIdle
                           }`}
                         >
@@ -2355,7 +2424,7 @@ function TapxMainApp() {
                     </div>
                     <button
                       type="submit"
-                      className={`w-full py-2 rounded-xl text-xs font-semibold ${ui.primaryBtnExpense}`}
+                      className={`w-full py-2 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
                     >
                       Save Category
                     </button>
@@ -2393,7 +2462,7 @@ function TapxMainApp() {
                             )}
                             <button
                               onClick={() => handleDeleteCategory(c.id)}
-                              className={`px-1 text-xs ${ui.textMuted} hover:text-rose-500`}
+                              className={`px-1 text-xs key-press ${ui.textMuted} hover:text-rose-500`}
                             >
                               ✕
                             </button>
@@ -2402,7 +2471,7 @@ function TapxMainApp() {
                         {budget > 0 && c.type === 'expense' && (
                           <div className={`w-full h-1.5 rounded-full overflow-hidden ${ui.cardSubtle}`}>
                             <div
-                              className={`h-full rounded-full ${
+                              className={`h-full rounded-full transition-all duration-500 ios-spring ${
                                 pct >= 90 ? 'bg-rose-500' : pct >= 75 ? 'bg-amber-500' : 'bg-blue-500'
                               }`}
                               style={{ width: `${pct}%` }}
@@ -2418,7 +2487,7 @@ function TapxMainApp() {
 
             {/* SUB-VIEW 2: BACK TAP SHORTCUT */}
             {settingsSection === 'shortcut' && (
-              <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
+              <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 animate-tab">
                 <div className={`p-4 rounded-2xl border space-y-2.5 ${ui.card}`}>
                   <div className="flex items-center justify-between">
                     <h3 className={`text-xs font-semibold ${ui.textPrimary}`}>iOS Lock Screen Bridge</h3>
@@ -2431,7 +2500,7 @@ function TapxMainApp() {
                   </p>
                   <button
                     onClick={handleOneTapShortcut}
-                    className={`w-full py-3 px-4 rounded-xl font-semibold text-xs active:scale-[0.98] transition ${ui.primaryBtnExpense}`}
+                    className={`w-full py-3 px-4 rounded-xl font-semibold text-xs key-press ${ui.primaryBtnExpense}`}
                   >
                     Copy Personal URL & Open Shortcuts
                   </button>
@@ -2451,7 +2520,7 @@ function TapxMainApp() {
                       />
                       <button
                         onClick={() => copyToClipboard(personalFastUrl, 'fastUrl')}
-                        className={`px-3 py-2 rounded-xl text-xs font-semibold shrink-0 ${ui.primaryBtnExpense}`}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold shrink-0 key-press ${ui.primaryBtnExpense}`}
                       >
                         {copiedField === 'fastUrl' ? 'Copied' : 'Copy'}
                       </button>
@@ -2471,13 +2540,13 @@ function TapxMainApp() {
                       />
                       <button
                         onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
-                        className={`px-3 py-2 rounded-xl border text-xs font-semibold ${ui.cardSubtle} ${ui.textPrimary}`}
+                        className={`px-3 py-2 rounded-xl border text-xs font-semibold key-press ${ui.cardSubtle} ${ui.textPrimary}`}
                       >
                         {copiedField === 'token' ? 'Copied' : 'Copy'}
                       </button>
                       <button
                         onClick={handleRegenerateToken}
-                        className={`px-3 py-2 rounded-xl border text-xs font-semibold ${ui.cardSubtle} ${ui.textPrimary}`}
+                        className={`px-3 py-2 rounded-xl border text-xs font-semibold key-press ${ui.cardSubtle} ${ui.textPrimary}`}
                         title="Regenerate Token"
                       >
                         ↻
@@ -2490,16 +2559,16 @@ function TapxMainApp() {
                   <div className={`grid grid-cols-2 p-0.5 rounded-xl border ${ui.segmentedBg}`}>
                     <button
                       onClick={() => setShortcutMode('Fast')}
-                      className={`py-1 rounded-lg text-[11px] font-semibold transition ${
-                        shortcutMode === 'Fast' ? ui.segmentedActive : ui.textSecondary
+                      className={`py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
+                        shortcutMode === 'Fast' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
                       }`}
                     >
                       3-Step Quick Input
                     </button>
                     <button
                       onClick={() => setShortcutMode('Menu')}
-                      className={`py-1 rounded-lg text-[11px] font-semibold transition ${
-                        shortcutMode === 'Menu' ? ui.segmentedActive : ui.textSecondary
+                      className={`py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
+                        shortcutMode === 'Menu' ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
                       }`}
                     >
                       Menu Picker
@@ -2537,13 +2606,13 @@ function TapxMainApp() {
                     fetchUserData(session.user.id);
                     showToast('Synced');
                   }}
-                  className={`px-3 py-1.5 rounded-full border text-xs font-medium ${ui.card} ${ui.textPrimary}`}
+                  className={`px-3 py-1.5 rounded-full border text-xs font-medium key-press ${ui.cardElevated} ${ui.textPrimary}`}
                 >
                   Sync
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-semibold"
+                  className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-semibold key-press"
                 >
                   Sign Out
                 </button>
@@ -2555,13 +2624,13 @@ function TapxMainApp() {
 
       {/* FLOATING iOS ISLAND NAVIGATION BAR */}
       <div
-        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-6"
+        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-5"
         style={{
           bottom: 'max(env(safe-area-inset-bottom), 14px)'
         }}
       >
         <nav
-          className={`pointer-events-auto flex items-center gap-1.5 p-1.5 rounded-full border backdrop-blur-xl transition-colors ${ui.island}`}
+          className={`pointer-events-auto flex items-center gap-1 p-1.5 rounded-full border backdrop-blur-2xl transition-colors duration-300 ${ui.island}`}
         >
           {[
             { id: 'pad', label: 'Keypad' },
@@ -2574,7 +2643,7 @@ function TapxMainApp() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold transition-all duration-300 ios-spring key-press ${
                   active ? ui.islandActive : 'hover:opacity-80'
                 }`}
               >
