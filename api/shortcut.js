@@ -128,7 +128,6 @@ function normalizeTxType(rawType, rawQueryText = '') {
   return 'expense';
 }
 
-// Strip emojis and extra whitespace for fuzzy comparison while returning the exact DB string
 function cleanForCompare(str) {
   return String(str || '')
     .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
@@ -136,43 +135,46 @@ function cleanForCompare(str) {
     .toLowerCase();
 }
 
-// Match an incoming string (or any string in payload) against the exact DB array from shortcut_get_meta
-function resolveExactDbMatch(preferredValue, allPayloadValues, dbList) {
+// Match single chosen item against DB list without matching multi-line arrays
+function findItemInDbList(preferredValue, allPayloadValues, dbList) {
   if (!Array.isArray(dbList) || dbList.length === 0) {
     return String(preferredValue || '').trim();
   }
 
-  const cleanPreferred = cleanForCompare(preferredValue);
+  // If preferredValue is a single string (not an array or newline-separated list)
+  if (
+    preferredValue &&
+    !Array.isArray(preferredValue) &&
+    !String(preferredValue).includes('\n')
+  ) {
+    const cleanPref = cleanForCompare(preferredValue);
+    if (cleanPref) {
+      // 1. Exact match first
+      const exact = dbList.find((item) => cleanForCompare(item) === cleanPref);
+      if (exact) return exact;
 
-  // 1. Exact or trimmed/case-insensitive match on preferred field
-  if (cleanPreferred) {
-    const directMatch = dbList.find(
-      (item) =>
-        String(item).toLowerCase() === String(preferredValue).toLowerCase() ||
-        cleanForCompare(item) === cleanPreferred ||
-        cleanForCompare(item).includes(cleanPreferred) ||
-        cleanPreferred.includes(cleanForCompare(item))
-    );
-    if (directMatch) return directMatch; // Return exact DB string (preserves any trailing spaces in DB)
+      // 2. Partial match where DB item contains the chosen word
+      const partial = dbList.find(
+        (item) =>
+          cleanForCompare(item).includes(cleanPref) ||
+          cleanPref.includes(cleanForCompare(item))
+      );
+      if (partial) return partial;
+    }
   }
 
-  // 2. Scan all other values sent in the Shortcut payload (in case variables were swapped or key was capitalized/renamed)
+  // Scan all other single-value fields in the payload in case two variables were swapped in Step 10
   for (const val of allPayloadValues) {
+    if (Array.isArray(val) || String(val).includes('\n')) continue;
     const cleanVal = cleanForCompare(val);
     if (!cleanVal) continue;
-    const found = dbList.find(
-      (item) =>
-        String(item).toLowerCase() === String(val).toLowerCase() ||
-        cleanForCompare(item) === cleanVal
-    );
-    if (found) return found;
+    const exactMatch = dbList.find((item) => cleanForCompare(item) === cleanVal);
+    if (exactMatch) return exactMatch;
   }
 
-  // 3. Fallback to the user's first item in DB so shortcut_quick_log never fails with "No wallet found"
-  return dbList[0];
+  return '';
 }
 
-// Escape regex special chars when stripping matched wallet/category names from note
 function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -254,29 +256,34 @@ export default async function handler(req, res) {
 
   const extractedAmount = extractAmount(payload);
   const rawWalletArg =
-    payload.wallet || payload.selectedwallet || payload.account || payload.wallets || '';
+    payload.wallet ?? payload.selectedwallet ?? payload.account ?? payload.wallets ?? '';
   const rawCategoryArg =
-    payload.category || payload.selectedcategory || payload.cat || payload.categories || '';
+    payload.category ?? payload.selectedcategory ?? payload.cat ?? payload.categories ?? '';
   const rawTypeArg =
-    payload.type || payload.selectedtype || payload.kind || payload.types || '';
+    payload.type ?? payload.selectedtype ?? payload.kind ?? payload.types ?? '';
   const noteArg = String(payload.note || '').trim();
 
-  // Collect all non-token values in case Shortcut keys were named differently or variables were swapped
   const allValues = Object.entries(payload)
     .filter(([k]) => k !== 'token' && k !== 'q')
-    .map(([, v]) => String(v ?? ''));
+    .map(([, v]) => v);
 
   // MODE 1: POST Request OR GET Request with Amount (Interactive Menu Shortcut)
   if (req.method === 'POST' || extractedAmount > 0) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
     if (!extractedAmount || extractedAmount <= 0) {
-      return res
-        .status(400)
-        .send('⚠️ Enter a valid amount greater than 0');
+      return res.status(400).send('⚠️ Enter a valid amount greater than 0');
     }
 
-    // Fetch user's exact wallet and category names from DB so spelling/spaces always match 100%
+    // Warn clearly if the user linked Dictionary Value (whole list) instead of Chosen Item in Step 10
+    if (Array.isArray(rawWalletArg) || String(rawWalletArg).includes('\n')) {
+      return res
+        .status(400)
+        .send(
+          '⚠️ In Shortcut Step 10, set "wallet" to Chosen Item (below the 2nd Choose from List), not Dictionary Value!'
+        );
+    }
+
     const { data: meta } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
@@ -284,10 +291,18 @@ export default async function handler(req, res) {
     const dbWallets = Array.isArray(meta?.wallets) ? meta.wallets : [];
     const dbCategories = Array.isArray(meta?.categories) ? meta.categories : [];
 
-    const matchedWallet = resolveExactDbMatch(rawWalletArg, allValues, dbWallets);
-    const matchedCategory = resolveExactDbMatch(rawCategoryArg, allValues, dbCategories);
+    const matchedWallet =
+      findItemInDbList(rawWalletArg, allValues, dbWallets) ||
+      String(rawWalletArg || '').trim() ||
+      dbWallets[0] ||
+      '';
 
-    // Detect type from either the type field or any value containing 'income'/'expense'
+    const matchedCategory =
+      findItemInDbList(rawCategoryArg, allValues, dbCategories) ||
+      String(rawCategoryArg || '').trim() ||
+      dbCategories[0] ||
+      '';
+
     let resolvedType = normalizeTxType(rawTypeArg);
     if (!rawTypeArg) {
       const foundIncomeWord = allValues.some((v) =>
@@ -319,7 +334,7 @@ export default async function handler(req, res) {
     return res.status(200).send(bannerText);
   }
 
-  // MODE 2: Smart 1-Line Quick Input via GET (?token=xxx&q=150 fampay food)
+  // MODE 2: Smart 1-Line Quick Input via GET (?token=xxx&q=150 cash food)
   if (req.method === 'GET' && payload.q !== undefined && String(payload.q).trim() !== '') {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
@@ -327,7 +342,7 @@ export default async function handler(req, res) {
     const amountMatch = rawQuery.match(/(\d+(\.\d+)?)/);
 
     if (!amountMatch) {
-      return res.status(400).send('⚠️ Enter an amount (e.g. 150 fampay food or +500 cash)');
+      return res.status(400).send('⚠️ Enter an amount (e.g. 150 cash food or +500 cash)');
     }
 
     const numericAmount = Number(amountMatch[1]);

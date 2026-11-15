@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { supabase } from './supabaseClient';
 
 // PASTE YOUR SHARED ICLOUD SHORTCUT LINK HERE (e.g. 'https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxx')
-const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/3253a12bfc8f4747af046ce61ff12423';
+const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/63b2448b218e4268868c16f556d37ca3';
 
 const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
@@ -82,7 +82,7 @@ function NavIcon({ id, active }) {
   }
   return (
     <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107.1204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
   );
@@ -286,51 +286,13 @@ function TapxMainApp() {
     }
   }, [session?.user?.id, settings, wallets, categories, transactions]);
 
-  useEffect(() => {
-    let mounted = true;
-
-    supabase.auth
-      .getSession()
-      .then((res) => {
-        if (!mounted) return;
-        const currentSession = res?.data?.session || null;
-        setSession(currentSession);
-        if (!currentSession) setInitialBoot(false);
-      })
-      .catch(() => {
-        if (mounted) setInitialBoot(false);
-      });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (!mounted) return;
-      setSession(newSession || null);
-      if (!newSession) {
-        setWallets([]);
-        setCategories([]);
-        setTransactions([]);
-        localStorage.removeItem(CACHE_KEY);
-        setInitialBoot(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      if (authListener?.subscription) authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetchUserData(session.user.id);
-    }
-  }, [session?.user?.id]);
-
   const showToast = (msg) => {
     setToast(String(msg));
     setTimeout(() => setToast(''), 2000);
   };
 
-  const fetchUserData = async (userId) => {
+  const fetchUserData = useCallback(async (userId) => {
+    if (!userId) return;
     setIsSyncingBg(true);
     setDbError('');
     try {
@@ -377,7 +339,6 @@ function TapxMainApp() {
       if (!seedingRef.current) {
         seedingRef.current = true;
 
-        // Auto-seed starter wallets for brand-new users so Back Tap works immediately
         if (fetchedWallets.length === 0 && fetchedTx.length === 0) {
           const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({
             ...w,
@@ -392,7 +353,6 @@ function TapxMainApp() {
           }
         }
 
-        // Auto-seed default categories
         if (fetchedCategories.length < 7) {
           const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
           const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
@@ -439,7 +399,62 @@ function TapxMainApp() {
       setInitialBoot(false);
       setIsSyncingBg(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth
+      .getSession()
+      .then((res) => {
+        if (!mounted) return;
+        const currentSession = res?.data?.session || null;
+        setSession(currentSession);
+        if (!currentSession) setInitialBoot(false);
+      })
+      .catch(() => {
+        if (mounted) setInitialBoot(false);
+      });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!mounted) return;
+      setSession(newSession || null);
+      if (!newSession) {
+        setWallets([]);
+        setCategories([]);
+        setTransactions([]);
+        localStorage.removeItem(CACHE_KEY);
+        setInitialBoot(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      if (authListener?.subscription) authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUserData(session.user.id);
+    }
+  }, [session?.user?.id, fetchUserData]);
+
+  // Automatically sync when returning to the app after using Back Tap
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUserData(session.user.id);
+      }
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    return () => {
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+    };
+  }, [session?.user?.id, fetchUserData]);
 
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
@@ -510,6 +525,19 @@ function TapxMainApp() {
     const destId = currentType === 'transfer' ? toWalletId : null;
     const catId = currentType === 'transfer' ? null : selectedCategoryId || null;
 
+    const fromWalletObj = wallets.find((w) => w.id === fromId);
+    const toWalletObj = destId ? wallets.find((w) => w.id === destId) : null;
+
+    const expectedFromBalance =
+      currentType === 'income'
+        ? Number(fromWalletObj?.balance || 0) + numericAmount
+        : Number(fromWalletObj?.balance || 0) - numericAmount;
+
+    const expectedToBalance =
+      currentType === 'transfer' && toWalletObj
+        ? Number(toWalletObj.balance || 0) + numericAmount
+        : null;
+
     const tempId = `temp-${Date.now()}`;
     const optimisticTx = {
       id: tempId,
@@ -527,15 +555,9 @@ function TapxMainApp() {
     setTransactions((prev) => [optimisticTx, ...prev]);
     setWallets((prev) =>
       prev.map((w) => {
-        if (currentType === 'expense' && w.id === fromId) {
-          return { ...w, balance: Number(w.balance || 0) - numericAmount };
-        }
-        if (currentType === 'income' && w.id === fromId) {
-          return { ...w, balance: Number(w.balance || 0) + numericAmount };
-        }
-        if (currentType === 'transfer') {
-          if (w.id === fromId) return { ...w, balance: Number(w.balance || 0) - numericAmount };
-          if (w.id === destId) return { ...w, balance: Number(w.balance || 0) + numericAmount };
+        if (w.id === fromId) return { ...w, balance: expectedFromBalance };
+        if (currentType === 'transfer' && w.id === destId && expectedToBalance !== null) {
+          return { ...w, balance: expectedToBalance };
         }
         return w;
       })
@@ -568,6 +590,35 @@ function TapxMainApp() {
       return;
     }
 
+    // Check if DB trigger already updated wallet balance; if not, persist it directly
+    const { data: checkFromWallet } = await supabase
+      .from('wallets')
+      .select('balance')
+      .eq('id', fromId)
+      .maybeSingle();
+
+    if (checkFromWallet && Number(checkFromWallet.balance) !== expectedFromBalance) {
+      await supabase
+        .from('wallets')
+        .update({ balance: expectedFromBalance })
+        .eq('id', fromId);
+    }
+
+    if (currentType === 'transfer' && destId && expectedToBalance !== null) {
+      const { data: checkToWallet } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('id', destId)
+        .maybeSingle();
+
+      if (checkToWallet && Number(checkToWallet.balance) !== expectedToBalance) {
+        await supabase
+          .from('wallets')
+          .update({ balance: expectedToBalance })
+          .eq('id', destId);
+      }
+    }
+
     if (insertedRow) {
       setTransactions((prev) => prev.map((tx) => (tx.id === tempId ? insertedRow : tx)));
     }
@@ -578,19 +629,30 @@ function TapxMainApp() {
     if (!targetTx) return;
 
     const amt = Number(targetTx.amount) || 0;
+    const fromWallet = wallets.find((w) => w.id === targetTx.wallet_id);
+    const toWallet = targetTx.to_wallet_id
+      ? wallets.find((w) => w.id === targetTx.to_wallet_id)
+      : null;
+
+    const restoredFromBalance = fromWallet
+      ? targetTx.type === 'income'
+        ? Number(fromWallet.balance || 0) - amt
+        : Number(fromWallet.balance || 0) + amt
+      : null;
+
+    const restoredToBalance =
+      targetTx.type === 'transfer' && toWallet
+        ? Number(toWallet.balance || 0) - amt
+        : null;
 
     setTransactions((prev) => prev.filter((t) => t.id !== id));
     setWallets((prev) =>
       prev.map((w) => {
-        if (targetTx.type === 'expense' && w.id === targetTx.wallet_id) {
-          return { ...w, balance: Number(w.balance || 0) + amt };
+        if (w.id === targetTx.wallet_id && restoredFromBalance !== null) {
+          return { ...w, balance: restoredFromBalance };
         }
-        if (targetTx.type === 'income' && w.id === targetTx.wallet_id) {
-          return { ...w, balance: Number(w.balance || 0) - amt };
-        }
-        if (targetTx.type === 'transfer') {
-          if (w.id === targetTx.wallet_id) return { ...w, balance: Number(w.balance || 0) + amt };
-          if (w.id === targetTx.to_wallet_id) return { ...w, balance: Number(w.balance || 0) - amt };
+        if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && restoredToBalance !== null) {
+          return { ...w, balance: restoredToBalance };
         }
         return w;
       })
@@ -598,6 +660,34 @@ function TapxMainApp() {
     showToast('Entry deleted');
 
     await supabase.from('transactions').delete().eq('id', id);
+
+    if (targetTx.wallet_id && restoredFromBalance !== null) {
+      const { data: checkW } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('id', targetTx.wallet_id)
+        .maybeSingle();
+      if (checkW && Number(checkW.balance) !== restoredFromBalance) {
+        await supabase
+          .from('wallets')
+          .update({ balance: restoredFromBalance })
+          .eq('id', targetTx.wallet_id);
+      }
+    }
+
+    if (targetTx.type === 'transfer' && targetTx.to_wallet_id && restoredToBalance !== null) {
+      const { data: checkToW } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('id', targetTx.to_wallet_id)
+        .maybeSingle();
+      if (checkToW && Number(checkToW.balance) !== restoredToBalance) {
+        await supabase
+          .from('wallets')
+          .update({ balance: restoredToBalance })
+          .eq('id', targetTx.to_wallet_id);
+      }
+    }
   };
 
   const openEditWallet = (wallet) => {
