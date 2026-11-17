@@ -22,6 +22,15 @@ async function getRawBody(req) {
   });
 }
 
+// Unwrap single-item arrays that Apple Shortcuts frequently produces from menu/list actions
+function unwrapShortcutValue(val) {
+  if (Array.isArray(val)) {
+    if (val.length === 1) return unwrapShortcutValue(val[0]);
+    return val;
+  }
+  return val;
+}
+
 // Parse JSON or URL-encoded form body into a normalized lowercase-key object
 function parseAndNormalizePayload(rawBody, queryObj = {}) {
   let obj = {};
@@ -53,7 +62,7 @@ function parseAndNormalizePayload(rawBody, queryObj = {}) {
   const normalized = {};
   for (const [key, val] of Object.entries({ ...queryObj, ...obj })) {
     const cleanKey = String(key).trim().toLowerCase();
-    normalized[cleanKey] = val;
+    normalized[cleanKey] = unwrapShortcutValue(val);
   }
 
   return normalized;
@@ -98,11 +107,12 @@ function extractAmount(payload) {
 
 // Normalize user/Shortcut type input ('Expense', 'Spent', 'Income', 'Earned', '+', '-')
 function normalizeTxType(rawType, rawQueryText = '') {
-  if (Array.isArray(rawType)) {
+  const unwrapped = unwrapShortcutValue(rawType);
+  if (Array.isArray(unwrapped)) {
     return 'expense';
   }
 
-  const clean = String(rawType || '').trim().toLowerCase();
+  const clean = String(unwrapped || '').trim().toLowerCase();
 
   if (clean.includes('expense') && clean.includes('income')) {
     return 'expense';
@@ -151,16 +161,18 @@ function cleanForCompare(str) {
 }
 
 function findItemInDbList(preferredValue, allPayloadValues, dbList) {
+  const unwrappedPref = unwrapShortcutValue(preferredValue);
+
   if (!Array.isArray(dbList) || dbList.length === 0) {
-    return String(preferredValue || '').trim();
+    return Array.isArray(unwrappedPref) ? '' : String(unwrappedPref || '').trim();
   }
 
   if (
-    preferredValue &&
-    !Array.isArray(preferredValue) &&
-    !String(preferredValue).includes('\n')
+    unwrappedPref &&
+    !Array.isArray(unwrappedPref) &&
+    !String(unwrappedPref).includes('\n')
   ) {
-    const cleanPref = cleanForCompare(preferredValue);
+    const cleanPref = cleanForCompare(unwrappedPref);
     if (cleanPref) {
       const exact = dbList.find((item) => cleanForCompare(item) === cleanPref);
       if (exact) return exact;
@@ -174,7 +186,8 @@ function findItemInDbList(preferredValue, allPayloadValues, dbList) {
     }
   }
 
-  for (const val of allPayloadValues) {
+  for (const rawVal of allPayloadValues) {
+    const val = unwrapShortcutValue(rawVal);
     if (Array.isArray(val) || String(val).includes('\n')) continue;
     const cleanVal = cleanForCompare(val);
     if (!cleanVal) continue;
@@ -265,11 +278,26 @@ export default async function handler(req, res) {
 
   const extractedAmount = extractAmount(payload);
   const rawWalletArg =
-    payload.wallet ?? payload.selectedwallet ?? payload.account ?? payload.wallets ?? '';
+    payload.wallet ??
+    payload.selectedwallet ??
+    payload.account ??
+    payload.selectedaccount ??
+    payload.wallets ??
+    '';
   const rawCategoryArg =
-    payload.category ?? payload.selectedcategory ?? payload.cat ?? payload.categories ?? '';
+    payload.category ??
+    payload.selectedcategory ??
+    payload.cat ??
+    payload.chosenitem ??
+    payload['chosen item'] ??
+    payload.categories ??
+    '';
   const rawTypeArg =
-    payload.type ?? payload.selectedtype ?? payload.kind ?? payload.types ?? '';
+    payload.type ??
+    payload.selectedtype ??
+    payload.kind ??
+    payload.types ??
+    '';
   const noteArg = String(payload.note || '').trim();
 
   const allValues = Object.entries(payload)
@@ -291,18 +319,6 @@ export default async function handler(req, res) {
     const dbWallets = Array.isArray(meta?.wallets) ? meta.wallets : [];
     const dbCategories = Array.isArray(meta?.categories) ? meta.categories : [];
 
-    const matchedWallet =
-      findItemInDbList(rawWalletArg, allValues, dbWallets) ||
-      String(rawWalletArg || '').trim() ||
-      dbWallets[0] ||
-      '';
-
-    const matchedCategory =
-      findItemInDbList(rawCategoryArg, allValues, dbCategories) ||
-      String(rawCategoryArg || '').trim() ||
-      dbCategories[0] ||
-      '';
-
     let resolvedType = normalizeTxType(rawTypeArg);
     if (!rawTypeArg) {
       const singleExpense = allValues.some(
@@ -314,6 +330,22 @@ export default async function handler(req, res) {
       if (singleExpense) resolvedType = 'expense';
       else if (singleIncome) resolvedType = 'income';
     }
+
+    const defaultCategoryForType =
+      resolvedType === 'income'
+        ? dbCategories.find((c) => /income|allowance|salary/i.test(String(c))) || 'Income & Allowance'
+        : dbCategories.find((c) => !/income|allowance|salary/i.test(String(c))) || dbCategories[0] || '';
+
+    const matchedWallet =
+      findItemInDbList(rawWalletArg, allValues, dbWallets) ||
+      (Array.isArray(rawWalletArg) ? '' : String(rawWalletArg || '').trim()) ||
+      dbWallets[0] ||
+      '';
+
+    const matchedCategory =
+      findItemInDbList(rawCategoryArg, allValues, dbCategories) ||
+      (Array.isArray(rawCategoryArg) ? '' : String(rawCategoryArg || '').trim()) ||
+      defaultCategoryForType;
 
     const { data, error } = await supabase.rpc('shortcut_quick_log', {
       p_token: cleanToken,
@@ -362,8 +394,8 @@ export default async function handler(req, res) {
       p_token: cleanToken
     });
 
-    let matchedWallet = String(rawWalletArg).trim();
-    let matchedCategory = String(rawCategoryArg).trim();
+    let matchedWallet = Array.isArray(rawWalletArg) ? '' : String(rawWalletArg).trim();
+    let matchedCategory = Array.isArray(rawCategoryArg) ? '' : String(rawCategoryArg).trim();
 
     const lowerRemaining = remainingText.toLowerCase();
 
@@ -400,7 +432,10 @@ export default async function handler(req, res) {
           .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'ig'), '')
           .trim();
       } else {
-        matchedCategory = meta.categories[0];
+        matchedCategory =
+          resolvedType === 'income'
+            ? meta.categories.find((c) => /income|allowance|salary/i.test(String(c))) || 'Income & Allowance'
+            : meta.categories[0];
       }
     }
 
@@ -471,7 +506,6 @@ export default async function handler(req, res) {
     const resolvedIncomeCats =
       incomeCats.length > 0 ? incomeCats : ['Income & Allowance', ...categoriesList];
 
-    // Return all casing variations so Apple Shortcuts Get Dictionary Value never misses
     return res.status(200).json({
       ...(typeof data === 'object' && data !== null ? data : {}),
       types: ['Expense', 'Income'],

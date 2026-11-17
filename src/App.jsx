@@ -14,7 +14,6 @@ const DEFAULT_WALLETS_TEMPLATE = [
   { name: 'Cash', type: 'Cash', balance: 0, color: '#059669', icon: '💵' }
 ];
 
-// All default monthly_budget values are null (no pre-set budgets)
 const DEFAULT_CATEGORIES_TEMPLATE = [
   { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#e11d48', monthly_budget: null },
   { name: 'Groceries', type: 'expense', icon: '🛒', color: '#059669', monthly_budget: null },
@@ -37,7 +36,49 @@ const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 
-// Frameless, 100% Transparent-Cutout Vector Logo (No Border, No Background Box)
+// Format raw numeric string into Indian locale commas while preserving trailing dot/zeros
+function formatDisplayAmount(rawStr) {
+  if (!rawStr || rawStr === '0') return '0';
+  const parts = String(rawStr).split('.');
+  const intPart = Number(parts[0] || 0).toLocaleString('en-IN');
+  if (parts.length > 1) {
+    return `${intPart}.${parts[1]}`;
+  }
+  return intPart;
+}
+
+function formatDayGroupLabel(isoString) {
+  if (!isoString) return 'Recent';
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return 'Recent';
+
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  if (date.toDateString() === now.toDateString()) return 'Today';
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+  return date.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    ...(date.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {})
+  });
+}
+
+function formatTimeOnly(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
+// Frameless, 100% Transparent-Cutout Vector Logo
 function TapxLogo({ className = 'w-16 h-16' }) {
   const uid = React.useId().replace(/:/g, '');
   const walletMaskId = `wallet-cut-${uid}`;
@@ -88,31 +129,26 @@ function TapxLogo({ className = 'w-16 h-16' }) {
       </defs>
 
       <g mask={`url(#${walletMaskId})`}>
-        {/* 3 Rising Bars */}
         <rect x="172" y="152" width="54" height="106" rx="6" fill={`url(#${bar1Id})`} />
         <rect x="242" y="114" width="54" height="144" rx="6" fill={`url(#${bar2Id})`} />
         <rect x="312" y="74" width="54" height="184" rx="6" fill={`url(#${bar3Id})`} />
 
-        {/* Wallet Base */}
         <path
           d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z"
           fill={`url(#${navyId})`}
         />
 
-        {/* Mid Teal Wave */}
         <path
           d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z"
           fill="#0e7c86"
         />
 
-        {/* Right Emerald Wave */}
         <path
           d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z"
           fill="#15a378"
         />
       </g>
 
-      {/* Center Emerald Arch Swoop */}
       <path
         d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z"
         fill="#15a378"
@@ -125,7 +161,6 @@ function TapxLogo({ className = 'w-16 h-16' }) {
         strokeLinecap="round"
       />
 
-      {/* Clasp with Transparent Button Dot */}
       <rect
         x="328"
         y="328"
@@ -139,41 +174,12 @@ function TapxLogo({ className = 'w-16 h-16' }) {
   );
 }
 
-function formatRelativeDateTime(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return '';
-
-  const now = new Date();
-  const todayStr = now.toDateString();
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-
-  const timeStr = date.toLocaleTimeString('en-IN', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-
-  if (date.toDateString() === todayStr) {
-    return `Today, ${timeStr}`;
-  }
-  if (date.toDateString() === yesterday.toDateString()) {
-    return `Yesterday, ${timeStr}`;
-  }
-  const dayMonth = date.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short'
-  });
-  return `${dayMonth}, ${timeStr}`;
-}
-
-// Authentic iOS Phone App SF Symbols Icon Set
+// Authentic iOS SF Symbols Icon Set
 function NavIcon({ id, active }) {
-  const sizeClass = 'w-[22px] h-[22px]';
+  const sizeClass = 'w-[21px] h-[21px]';
 
   if (id === 'pad') {
-    const r = active ? '2.2' : '1.75';
+    const r = active ? '2.15' : '1.75';
     return (
       <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
         <circle cx="6.5" cy="4.5" r={r} />
@@ -331,18 +337,19 @@ function TapxMainApp() {
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Refined Apple-Grade Palette + Optical Crystal Liquid Glass
+  // Refined Apple-Grade Palette
   const ui = useMemo(() => {
     if (isDark) {
       return {
         bg: 'bg-[#09090b] text-zinc-100',
+        sheetBg: 'bg-[#141418] border-[#27272f] text-zinc-100',
         card: 'bg-[#131316] border-[#232329]',
         cardElevated: 'bg-[#18181c] border-[#292930]',
         cardSubtle: 'bg-[#1c1c21] border-[#27272e]',
         input: 'bg-[#131316] border-[#27272e] text-zinc-100 placeholder-zinc-500',
         pillIdle: 'bg-[#141418] border-[#24242b] text-zinc-400',
         pillActive: 'bg-zinc-100 border-zinc-100 text-zinc-950 shadow-sm',
-        numpadKey: 'bg-[#151519] border-[#24242b] text-zinc-100 shadow-[0_1px_0_rgba(255,255,255,0.04)]',
+        numpadKey: 'bg-[#151519] border-[#24242b] text-zinc-100 shadow-[0_1px_0_rgba(255,255,255,0.04)] active:bg-[#222228]',
         segmentedBg: 'bg-[#131316] border-[#222228]',
         segmentedThumb: 'bg-[#26262d] shadow-sm',
         textPrimary: 'text-zinc-50',
@@ -355,18 +362,20 @@ function TapxMainApp() {
         primaryBtnExpense: 'bg-zinc-100 text-zinc-950',
         primaryBtnIncome: 'bg-emerald-500 text-zinc-950',
         primaryBtnTransfer: 'bg-blue-500 text-white',
-        divider: 'border-[#1e1e24]'
+        divider: 'border-[#1e1e24]',
+        stickyHeader: 'bg-[#09090b]/90 backdrop-blur-md'
       };
     }
     return {
       bg: 'bg-[#f5f5f7] text-zinc-900',
+      sheetBg: 'bg-white border-zinc-200 text-zinc-900',
       card: 'bg-white border-zinc-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]',
       cardElevated: 'bg-white border-zinc-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.04)]',
       cardSubtle: 'bg-zinc-100 border-zinc-200/70',
       input: 'bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400',
       pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
       pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-sm',
-      numpadKey: 'bg-white border-zinc-200/90 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+      numpadKey: 'bg-white border-zinc-200/90 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:bg-zinc-100',
       segmentedBg: 'bg-zinc-200/80 border-zinc-300/40',
       segmentedThumb: 'bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]',
       textPrimary: 'text-zinc-900',
@@ -379,7 +388,8 @@ function TapxMainApp() {
       primaryBtnExpense: 'bg-zinc-900 text-white',
       primaryBtnIncome: 'bg-emerald-600 text-white',
       primaryBtnTransfer: 'bg-blue-600 text-white',
-      divider: 'border-zinc-200'
+      divider: 'border-zinc-200',
+      stickyHeader: 'bg-[#f5f5f7]/90 backdrop-blur-md'
     };
   }, [isDark]);
 
@@ -402,9 +412,19 @@ function TapxMainApp() {
 
   const [settingsSection, setSettingsSection] = useState('shortcut');
   const [analyticsRange, setAnalyticsRange] = useState('month');
-  const [popKey, setPopKey] = useState(0);
+  const [selectedBarIdx, setSelectedBarIdx] = useState(6); // Default to Today (index 6)
+  const [amountPulse, setAmountPulse] = useState(false);
+  const pulseTimerRef = useRef(null);
+  const delHoldTimerRef = useRef(null);
+  const noteInputRef = useRef(null);
 
-  const triggerLensMagnification = useCallback((duration = 440) => {
+  const triggerAmountPulse = useCallback(() => {
+    setAmountPulse(true);
+    if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+    pulseTimerRef.current = setTimeout(() => setAmountPulse(false), 110);
+  }, []);
+
+  const triggerLensMagnification = useCallback((duration = 280) => {
     setLensBulge(true);
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     lensTimerRef.current = setTimeout(() => {
@@ -416,7 +436,10 @@ function TapxMainApp() {
 
   const handleSelectTab = useCallback(
     (nextTabId) => {
-      triggerLensMagnification(440);
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      triggerLensMagnification(260);
       setActiveTab((prevTab) => {
         if (nextTabId === prevTab) return prevTab;
         const prevIdx = NAV_TABS.findIndex((t) => t.id === prevTab);
@@ -428,7 +451,7 @@ function TapxMainApp() {
     [triggerLensMagnification]
   );
 
-  // Helper to get continuous 0..3 index from finger X position
+  // Continuous 0..3 index from finger X position
   const getClampedIndexFromClientX = useCallback((clientX) => {
     if (!navBarRef.current) return 0;
     const rect = navBarRef.current.getBoundingClientRect();
@@ -446,26 +469,18 @@ function TapxMainApp() {
 
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     setLensBulge(true);
-    setScrubProgress(null);
-
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // Ignore capture errors
-    }
-
-    const nearestIdx = Math.round(getClampedIndexFromClientX(e.clientX));
-    const targetTab = NAV_TABS[nearestIdx]?.id;
-    if (targetTab) {
-      handleSelectTab(targetTab);
-    }
   };
 
   const handleNavPointerMove = (e) => {
     if (!isPointerDownOnNavRef.current) return;
 
-    if (!isScrubbingRef.current && Math.abs(e.clientX - pointerStartXRef.current) > 14) {
+    if (!isScrubbingRef.current && Math.abs(e.clientX - pointerStartXRef.current) > 10) {
       isScrubbingRef.current = true;
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Ignore capture errors
+      }
     }
 
     if (isScrubbingRef.current) {
@@ -501,7 +516,7 @@ function TapxMainApp() {
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     lensTimerRef.current = setTimeout(() => {
       setLensBulge(false);
-    }, 300);
+    }, 220);
   };
 
   const activeTabIndex = Math.max(
@@ -529,12 +544,17 @@ function TapxMainApp() {
     cachedData?.categories?.find((c) => c.type === 'expense')?.id || ''
   );
   const [note, setNote] = useState('');
-  const [toast, setToast] = useState('');
 
-  // Activity Filter State
+  // Toast + Undo State
+  const [toast, setToast] = useState(null); // { message, onUndo }
+  const toastTimerRef = useRef(null);
+
+  // Activity Filter & Search State
   const [activityWalletFilter, setActivityWalletFilter] = useState('all');
+  const [activityTypeFilter, setActivityTypeFilter] = useState('all');
+  const [activitySearch, setActivitySearch] = useState('');
 
-  // New / Edit Wallet Modal State
+  // Bottom Sheet State: New / Edit Wallet
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [editingWalletId, setEditingWalletId] = useState(null);
   const [newWalletName, setNewWalletName] = useState('');
@@ -543,7 +563,7 @@ function TapxMainApp() {
   const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[1]);
   const [newWalletIcon, setNewWalletIcon] = useState(WALLET_ICONS[0]);
 
-  // New / Edit Category Modal State
+  // Bottom Sheet State: New / Edit Category
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCatId, setEditingCatId] = useState(null);
   const [newCatName, setNewCatName] = useState('');
@@ -551,9 +571,25 @@ function TapxMainApp() {
   const [newCatIcon, setNewCatIcon] = useState(CATEGORY_ICONS[0]);
   const [newCatBudget, setNewCatBudget] = useState('');
 
+  // Bottom Sheet State: Edit Transaction
+  const [editingTx, setEditingTx] = useState(null);
+  const [editTxAmount, setEditTxAmount] = useState('');
+  const [editTxNote, setEditTxNote] = useState('');
+  const [editTxWalletId, setEditTxWalletId] = useState('');
+  const [editTxToWalletId, setEditTxToWalletId] = useState('');
+  const [editTxCategoryId, setEditTxCategoryId] = useState('');
+
   // Two-Tap Delete Confirmation State
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [copiedField, setCopiedField] = useState('');
+
+  // Keep Transfer destination wallet distinct from source wallet automatically
+  useEffect(() => {
+    if (wallets.length > 1 && selectedWalletId === toWalletId) {
+      const fallback = wallets.find((w) => w.id !== selectedWalletId);
+      if (fallback) setToWalletId(fallback.id);
+    }
+  }, [selectedWalletId, toWalletId, wallets]);
 
   // Cache state automatically
   useEffect(() => {
@@ -574,10 +610,13 @@ function TapxMainApp() {
     }
   }, [session?.user?.id, settings, wallets, categories, transactions]);
 
-  const showToast = (msg) => {
-    setToast(String(msg));
-    setTimeout(() => setToast(''), 2000);
-  };
+  const showToast = useCallback((message, onUndo = null, duration = 2200) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message: String(message), onUndo });
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+    }, onUndo ? 4000 : duration);
+  }, []);
 
   const fetchUserData = useCallback(async (userId) => {
     if (!userId) return;
@@ -624,7 +663,6 @@ function TapxMainApp() {
       let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
       const fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
 
-      // One-time auto-cleanup to remove previously seeded default budgets from Supabase
       const alreadyCleanedBudgets = localStorage.getItem(BUDGET_CLEANUP_KEY);
       if (!alreadyCleanedBudgets && fetchedCategories.some((c) => c.monthly_budget !== null)) {
         await supabase
@@ -773,7 +811,11 @@ function TapxMainApp() {
 
   // Zero-Latency Numpad Handler
   const handleDigitPress = (digit) => {
-    setPopKey((k) => k + 1);
+    if (noteInputRef.current && document.activeElement === noteInputRef.current) {
+      noteInputRef.current.blur();
+    }
+    triggerAmountPulse();
+
     if (digit === 'CLEAR') {
       setAmountStr('0');
       return;
@@ -783,40 +825,54 @@ function TapxMainApp() {
       return;
     }
     if (digit === '.') {
-      if (!amountStr.includes('.')) setAmountStr((prev) => prev + '.');
+      setAmountStr((prev) => (prev.includes('.') ? prev : `${prev}.`));
       return;
     }
     setAmountStr((prev) => {
       if (prev === '0') return digit;
       if (prev.includes('.') && prev.split('.')[1].length >= 2) return prev;
-      if (prev.length >= 8) return prev;
+      if (prev.replace('.', '').length >= 8) return prev;
       return prev + digit;
     });
   };
 
   const handleQuickAddAmount = (delta) => {
-    setPopKey((k) => k + 1);
+    if (noteInputRef.current && document.activeElement === noteInputRef.current) {
+      noteInputRef.current.blur();
+    }
+    triggerAmountPulse();
     setAmountStr((prev) => {
       const current = parseFloat(prev) || 0;
-      const next = current + delta;
+      const next = Math.max(0, Number((current + delta).toFixed(2)));
       return String(next);
     });
   };
 
+  const handleSwapTransferWallets = () => {
+    if (!selectedWalletId || !toWalletId) return;
+    const prevFrom = selectedWalletId;
+    setSelectedWalletId(toWalletId);
+    setToWalletId(prevFrom);
+  };
+
   const handleLogTransaction = async () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     const numericAmount = parseFloat(amountStr);
     if (!numericAmount || numericAmount <= 0) {
-      showToast('Enter an amount');
+      showToast('Enter an amount above 0');
       return;
     }
     if (!selectedWalletId) {
-      showToast('Add a wallet first');
-      handleSelectTab('wallets');
+      showToast('Create an account first');
+      resetWalletModal();
       setShowWalletModal(true);
       return;
     }
     if (entryType === 'transfer' && (!toWalletId || toWalletId === selectedWalletId)) {
-      showToast('Select two different wallets');
+      showToast('Select two different accounts');
       return;
     }
 
@@ -866,7 +922,8 @@ function TapxMainApp() {
 
     setAmountStr('0');
     setNote('');
-    showToast(`${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} saved`);
+    const actionPrefix = currentType === 'income' ? '+' : currentType === 'expense' ? '-' : '⇄ ';
+    showToast(`${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} saved`);
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
@@ -924,6 +981,7 @@ function TapxMainApp() {
     }
   };
 
+  // Delete Transaction with Instant Undo Support
   const handleDeleteTransaction = async (id) => {
     const targetTx = transactions.find((t) => t.id === id);
     if (!targetTx) return;
@@ -934,15 +992,18 @@ function TapxMainApp() {
       ? wallets.find((w) => w.id === targetTx.to_wallet_id)
       : null;
 
+    const origFromBal = fromWallet ? Number(fromWallet.balance || 0) : null;
+    const origToBal = toWallet ? Number(toWallet.balance || 0) : null;
+
     const restoredFromBalance = fromWallet
       ? targetTx.type === 'income'
-        ? Number(fromWallet.balance || 0) - amt
-        : Number(fromWallet.balance || 0) + amt
+        ? origFromBal - amt
+        : origFromBal + amt
       : null;
 
     const restoredToBalance =
       targetTx.type === 'transfer' && toWallet
-        ? Number(toWallet.balance || 0) - amt
+        ? origToBal - amt
         : null;
 
     setTransactions((prev) => prev.filter((t) => t.id !== id));
@@ -957,36 +1018,165 @@ function TapxMainApp() {
         return w;
       })
     );
-    showToast('Entry deleted');
+
+    if (editingTx?.id === id) {
+      setEditingTx(null);
+    }
 
     await supabase.from('transactions').delete().eq('id', id);
 
     if (targetTx.wallet_id && restoredFromBalance !== null) {
-      const { data: checkW } = await supabase
+      await supabase
         .from('wallets')
-        .select('balance')
-        .eq('id', targetTx.wallet_id)
-        .maybeSingle();
-      if (checkW && Number(checkW.balance) !== restoredFromBalance) {
-        await supabase
-          .from('wallets')
-          .update({ balance: restoredFromBalance })
-          .eq('id', targetTx.wallet_id);
-      }
+        .update({ balance: restoredFromBalance })
+        .eq('id', targetTx.wallet_id);
     }
 
     if (targetTx.type === 'transfer' && targetTx.to_wallet_id && restoredToBalance !== null) {
-      const { data: checkToW } = await supabase
+      await supabase
         .from('wallets')
-        .select('balance')
-        .eq('id', targetTx.to_wallet_id)
+        .update({ balance: restoredToBalance })
+        .eq('id', targetTx.to_wallet_id);
+    }
+
+    // Provide 1-tap Undo in toast
+    showToast('Transaction deleted', async () => {
+      setToast(null);
+      const { id: _oldId, ...reinsertPayload } = targetTx;
+      const { data: restoredRow } = await supabase
+        .from('transactions')
+        .insert([reinsertPayload])
+        .select()
         .maybeSingle();
-      if (checkToW && Number(checkToW.balance) !== restoredToBalance) {
-        await supabase
-          .from('wallets')
-          .update({ balance: restoredToBalance })
-          .eq('id', targetTx.to_wallet_id);
+
+      if (targetTx.wallet_id && origFromBal !== null) {
+        await supabase.from('wallets').update({ balance: origFromBal }).eq('id', targetTx.wallet_id);
       }
+      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && origToBal !== null) {
+        await supabase.from('wallets').update({ balance: origToBal }).eq('id', targetTx.to_wallet_id);
+      }
+
+      if (restoredRow) {
+        setTransactions((prev) =>
+          [restoredRow, ...prev].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )
+        );
+      }
+      setWallets((prev) =>
+        prev.map((w) => {
+          if (w.id === targetTx.wallet_id && origFromBal !== null) return { ...w, balance: origFromBal };
+          if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && origToBal !== null) {
+            return { ...w, balance: origToBal };
+          }
+          return w;
+        })
+      );
+      showToast('Transaction restored');
+    });
+  };
+
+  // Open Edit Transaction Sheet
+  const openEditTransaction = (tx) => {
+    setEditingTx(tx);
+    setEditTxAmount(String(tx.amount ?? ''));
+    setEditTxNote(tx.note || '');
+    setEditTxWalletId(tx.wallet_id || wallets[0]?.id || '');
+    setEditTxToWalletId(tx.to_wallet_id || wallets[1]?.id || '');
+    setEditTxCategoryId(tx.category_id || '');
+  };
+
+  const handleSaveEditedTransaction = async (e) => {
+    e.preventDefault();
+    if (!editingTx) return;
+    const newAmt = parseFloat(editTxAmount);
+    if (!newAmt || newAmt <= 0) {
+      showToast('Enter a valid amount');
+      return;
+    }
+
+    const oldTx = editingTx;
+    const oldAmt = Number(oldTx.amount) || 0;
+    const cleanNote = editTxNote.trim();
+    const nextWalletId = editTxWalletId || oldTx.wallet_id;
+    const nextToWalletId = oldTx.type === 'transfer' ? editTxToWalletId : null;
+    const nextCategoryId = oldTx.type === 'transfer' ? null : editTxCategoryId || null;
+
+    if (oldTx.type === 'transfer' && nextWalletId === nextToWalletId) {
+      showToast('Select two different accounts');
+      return;
+    }
+
+    // Compute updated wallet balances cleanly across any changed wallet or amount
+    const balanceDeltas = {};
+    const addDelta = (wId, delta) => {
+      if (!wId) return;
+      balanceDeltas[wId] = (balanceDeltas[wId] || 0) + delta;
+    };
+
+    // 1. Reverse old transaction impact
+    if (oldTx.type === 'income') {
+      addDelta(oldTx.wallet_id, -oldAmt);
+    } else if (oldTx.type === 'expense') {
+      addDelta(oldTx.wallet_id, oldAmt);
+    } else if (oldTx.type === 'transfer') {
+      addDelta(oldTx.wallet_id, oldAmt);
+      addDelta(oldTx.to_wallet_id, -oldAmt);
+    }
+
+    // 2. Apply new transaction impact
+    if (oldTx.type === 'income') {
+      addDelta(nextWalletId, newAmt);
+    } else if (oldTx.type === 'expense') {
+      addDelta(nextWalletId, -newAmt);
+    } else if (oldTx.type === 'transfer') {
+      addDelta(nextWalletId, -newAmt);
+      addDelta(nextToWalletId, newAmt);
+    }
+
+    const updatedWalletsMap = {};
+    setWallets((prev) =>
+      prev.map((w) => {
+        if (balanceDeltas[w.id]) {
+          const nextBal = Number(w.balance || 0) + balanceDeltas[w.id];
+          updatedWalletsMap[w.id] = nextBal;
+          return { ...w, balance: nextBal };
+        }
+        return w;
+      })
+    );
+
+    setTransactions((prev) =>
+      prev.map((t) =>
+        t.id === oldTx.id
+          ? {
+              ...t,
+              amount: newAmt,
+              note: cleanNote,
+              wallet_id: nextWalletId,
+              to_wallet_id: nextToWalletId,
+              category_id: nextCategoryId
+            }
+          : t
+      )
+    );
+
+    setEditingTx(null);
+    showToast('Transaction updated');
+
+    await supabase
+      .from('transactions')
+      .update({
+        amount: newAmt,
+        note: cleanNote,
+        wallet_id: nextWalletId,
+        to_wallet_id: nextToWalletId,
+        category_id: nextCategoryId
+      })
+      .eq('id', oldTx.id);
+
+    for (const [wId, nextBal] of Object.entries(updatedWalletsMap)) {
+      await supabase.from('wallets').update({ balance: nextBal }).eq('id', wId);
     }
   };
 
@@ -1005,6 +1195,7 @@ function TapxMainApp() {
     setNewWalletName('');
     setNewWalletBalance('');
     setNewWalletType('UPI / Wallet');
+    setNewWalletColor(WALLET_COLORS[1]);
     setNewWalletIcon(WALLET_ICONS[0]);
     setShowWalletModal(false);
   };
@@ -1080,6 +1271,7 @@ function TapxMainApp() {
     setConfirmDeleteId(null);
     setWallets((prev) => prev.filter((w) => w.id !== id));
     if (activityWalletFilter === id) setActivityWalletFilter('all');
+    if (editingWalletId === id) resetWalletModal();
     showToast('Account deleted');
     await supabase.from('wallets').delete().eq('id', id);
   };
@@ -1172,6 +1364,7 @@ function TapxMainApp() {
     }
     setConfirmDeleteId(null);
     setCategories((prev) => prev.filter((c) => c.id !== id));
+    if (editingCatId === id) resetCategoryModal();
     showToast('Category deleted');
     await supabase.from('categories').delete().eq('id', id);
   };
@@ -1227,15 +1420,61 @@ function TapxMainApp() {
     [categories, entryType]
   );
 
+  // Filtered and Searchable Transactions
   const visibleTransactions = useMemo(() => {
-    if (activityWalletFilter === 'all') return transactions.slice(0, 60);
+    const q = activitySearch.trim().toLowerCase();
     return transactions
-      .filter(
-        (tx) =>
-          tx.wallet_id === activityWalletFilter || tx.to_wallet_id === activityWalletFilter
-      )
-      .slice(0, 60);
-  }, [transactions, activityWalletFilter]);
+      .filter((tx) => {
+        if (
+          activityWalletFilter !== 'all' &&
+          tx.wallet_id !== activityWalletFilter &&
+          tx.to_wallet_id !== activityWalletFilter
+        ) {
+          return false;
+        }
+        if (activityTypeFilter !== 'all' && tx.type !== activityTypeFilter) {
+          return false;
+        }
+        if (!q) return true;
+        const w = wallets.find((item) => item.id === tx.wallet_id);
+        const toW = wallets.find((item) => item.id === tx.to_wallet_id);
+        const c = categories.find((item) => item.id === tx.category_id);
+        const haystack = [
+          tx.note,
+          w?.name,
+          toW?.name,
+          c?.name,
+          String(tx.amount || '')
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(q);
+      })
+      .slice(0, 80);
+  }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, wallets, categories]);
+
+  // Group visibleTransactions by Date for clean scanning
+  const groupedTransactions = useMemo(() => {
+    const groups = [];
+    const groupMap = new Map();
+
+    visibleTransactions.forEach((tx) => {
+      const label = formatDayGroupLabel(tx.created_at);
+      if (!groupMap.has(label)) {
+        const newGroup = { label, items: [], netSpend: 0 };
+        groupMap.set(label, newGroup);
+        groups.push(newGroup);
+      }
+      const group = groupMap.get(label);
+      group.items.push(tx);
+      const amt = Number(tx.amount) || 0;
+      if (tx.type === 'expense') group.netSpend -= amt;
+      else if (tx.type === 'income') group.netSpend += amt;
+    });
+
+    return groups;
+  }, [visibleTransactions]);
 
   const currentMonthSpendByCat = useMemo(() => {
     const now = new Date();
@@ -1314,6 +1553,11 @@ function TapxMainApp() {
       dayDate.setDate(dayDate.getDate() - i);
       const dayStr = dayDate.toDateString();
       const label = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
+      const fullDateLabel = dayDate.toLocaleDateString('en-IN', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short'
+      });
 
       const daySum = transactions.reduce((sum, tx) => {
         if (!tx?.created_at || tx.type !== 'expense') return sum;
@@ -1323,6 +1567,7 @@ function TapxMainApp() {
 
       last7Days.push({
         label,
+        fullDateLabel,
         isToday: i === 0,
         amount: daySum
       });
@@ -1383,6 +1628,15 @@ function TapxMainApp() {
   }, [transactions, categories, wallets, analyticsRange]);
 
   const currencySymbol = settings?.currency || '₹';
+  const formattedDisplayAmount = useMemo(() => formatDisplayAmount(amountStr), [amountStr]);
+
+  // Dynamic font size so long amounts never clip
+  const amountFontSizeClass = useMemo(() => {
+    const len = formattedDisplayAmount.length;
+    if (len > 10) return 'text-[28px]';
+    if (len > 7) return 'text-[34px]';
+    return 'text-[42px]';
+  }, [formattedDisplayAmount]);
 
   const primaryButtonClass =
     entryType === 'income'
@@ -1403,7 +1657,7 @@ function TapxMainApp() {
     );
   }
 
-  // ULTRA-CLEAN MINIMAL LOGIN SCREEN (No Clutter, Frameless Logo)
+  // ULTRA-CLEAN MINIMAL LOGIN SCREEN
   if (!session) {
     return (
       <div
@@ -1474,6 +1728,10 @@ function TapxMainApp() {
     );
   }
 
+  const selectedDayObj =
+    analyticsData.last7Days[selectedBarIdx] ||
+    analyticsData.last7Days[analyticsData.last7Days.length - 1];
+
   return (
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
@@ -1481,14 +1739,39 @@ function TapxMainApp() {
         paddingTop: 'max(env(safe-area-inset-top), 18px)'
       }}
     >
-      {/* Floating Toast Pill */}
+      {/* Self-contained UX helper styles (iOS zoom guard + sheet transitions) */}
+      <style>{`
+        @media screen and (max-width: 768px) {
+          input, select, textarea {
+            font-size: 16px !important;
+          }
+        }
+        @keyframes sheetSlideUp {
+          0% { opacity: 0; transform: translate3d(0, 100%, 0); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        .animate-sheet-up {
+          animation: sheetSlideUp 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+      `}</style>
+
+      {/* Floating Toast Pill with Optional Undo */}
       {toast && (
         <div
-          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-xl pointer-events-none animate-tab ${
+          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-xl flex items-center gap-3 animate-tab ${
             isDark ? 'bg-zinc-100 text-zinc-950' : 'bg-zinc-900 text-white'
           }`}
         >
-          {toast}
+          <span>{toast.message}</span>
+          {toast.onUndo && (
+            <button
+              type="button"
+              onClick={toast.onUndo}
+              className="px-2 py-0.5 rounded-full bg-emerald-500 text-zinc-950 font-bold text-[11px] key-press"
+            >
+              Undo
+            </button>
+          )}
         </div>
       )}
 
@@ -1496,12 +1779,22 @@ function TapxMainApp() {
       {dbError && (
         <div className="mx-5 mt-1 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center justify-between shrink-0">
           <span className="truncate">{dbError}</span>
+          <button
+            type="button"
+            onClick={() => fetchUserData(session.user.id)}
+            className="ml-2 underline font-semibold shrink-0"
+          >
+            Retry
+          </button>
         </div>
       )}
 
-      {/* Crisp Top Header (Logo Removed from Home Screen) */}
-      <header className="px-5 pt-2 pb-3 flex items-center justify-between shrink-0">
-        <div>
+      {/* Crisp Top Header */}
+      <header className="px-5 pt-1.5 pb-2.5 flex items-center justify-between shrink-0">
+        <div
+          onClick={() => handleSelectTab('wallets')}
+          className="cursor-pointer group"
+        >
           <div className="flex items-center gap-1.5">
             <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
               Total Balance
@@ -1512,21 +1805,21 @@ function TapxMainApp() {
               }`}
             />
           </div>
-          <h2 className={`text-[26px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+          <h2 className={`text-[25px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
             {currencySymbol}
             {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </h2>
         </div>
 
         <button
+          type="button"
           onClick={() => {
             resetWalletModal();
-            handleSelectTab('wallets');
             setShowWalletModal(true);
           }}
           className={`px-3.5 py-2 rounded-full border text-xs font-semibold key-press ${ui.cardElevated} ${ui.textPrimary}`}
         >
-          + Wallet
+          + Account
         </button>
       </header>
 
@@ -1534,7 +1827,7 @@ function TapxMainApp() {
       <main
         className="flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 88px)'
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 84px)'
         }}
       >
         {/* TAB 1: KEYPAD */}
@@ -1553,6 +1846,7 @@ function TapxMainApp() {
               ].map((t) => (
                 <button
                   key={t.id}
+                  type="button"
                   onClick={() => {
                     setEntryType(t.id);
                     const firstMatch = categories.find(
@@ -1578,15 +1872,16 @@ function TapxMainApp() {
                     e.preventDefault();
                     handleDigitPress('CLEAR');
                   }}
-                  className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-semibold border key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                  className={`absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border key-press ${ui.cardSubtle} ${ui.textSecondary}`}
                 >
-                  Clear
+                  Reset
                 </button>
               )}
 
               <div
-                key={popKey}
-                className={`text-[42px] leading-none font-bold tracking-tight tabular-nums animate-pop ${
+                className={`${amountFontSizeClass} leading-none font-bold tracking-tight tabular-nums transition-transform duration-100 ${
+                  amountPulse ? 'scale-[1.03]' : 'scale-100'
+                } ${
                   entryType === 'income'
                     ? 'text-emerald-500'
                     : entryType === 'transfer'
@@ -1594,25 +1889,33 @@ function TapxMainApp() {
                     : ui.textPrimary
                 }`}
               >
-                <span className={`text-2xl mr-1 font-medium ${ui.textMuted}`}>{currencySymbol}</span>
-                {amountStr}
+                <span className={`text-2xl mr-1 font-medium ${ui.textMuted}`}>
+                  {entryType === 'income' ? '+' : entryType === 'expense' && amountStr !== '0' ? '-' : ''}
+                  {currencySymbol}
+                </span>
+                {formattedDisplayAmount}
               </div>
 
               <input
+                ref={noteInputRef}
                 type="text"
+                enterKeyHint="done"
                 placeholder={
                   entryType === 'transfer'
-                    ? 'Transfer note (e.g. ATM withdrawal, top-up)...'
+                    ? 'Transfer note (e.g. ATM withdrawal)...'
                     : 'Add a note...'
                 }
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className={`mt-2 bg-transparent text-center text-xs focus:outline-none w-4/5 ${ui.textSecondary} placeholder:${ui.textMuted}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                }}
+                className={`mt-1.5 bg-transparent text-center text-xs focus:outline-none w-4/5 scale-[0.82] origin-center ${ui.textSecondary}`}
               />
 
               {/* Quick Add Chips */}
-              <div className="flex items-center gap-1.5 mt-2">
-                {[50, 100, 500].map((val) => (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                {[50, 100, 500, 1000].map((val) => (
                   <button
                     key={val}
                     type="button"
@@ -1622,7 +1925,7 @@ function TapxMainApp() {
                     }}
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border tabular-nums key-press ${ui.cardSubtle} ${ui.textSecondary}`}
                   >
-                    +{currencySymbol}{val}
+                    +{currencySymbol}{val >= 1000 ? '1k' : val}
                   </button>
                 ))}
               </div>
@@ -1630,7 +1933,7 @@ function TapxMainApp() {
               {selectedWalletObj && (
                 <div className={`mt-2 pt-2 border-t w-full flex items-center justify-center gap-1.5 text-[11px] ${ui.divider} ${ui.textMuted}`}>
                   <span>{selectedWalletObj.icon}</span>
-                  <span>{selectedWalletObj.name}</span>
+                  <span className="font-medium">{selectedWalletObj.name}</span>
                   <span>·</span>
                   <span className="tabular-nums">
                     {currencySymbol}
@@ -1644,25 +1947,37 @@ function TapxMainApp() {
             <div className="space-y-2 shrink-0">
               {/* Wallet Row */}
               <div className="space-y-1">
-                <span className={`text-[10px] uppercase tracking-wider font-semibold px-0.5 ${ui.textMuted}`}>
-                  {entryType === 'transfer' ? 'From Account → To Account' : 'Account'}
-                </span>
+                <div className="flex items-center justify-between px-0.5">
+                  <span className={`text-[10px] uppercase tracking-wider font-semibold ${ui.textMuted}`}>
+                    {entryType === 'transfer' ? 'From Account → To Account' : 'Account'}
+                  </span>
+                  {entryType === 'transfer' && wallets.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={handleSwapTransferWallets}
+                      className="text-[10px] font-semibold text-blue-400 key-press"
+                    >
+                      ⇄ Swap
+                    </button>
+                  )}
+                </div>
                 <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                   {wallets.length === 0 ? (
                     <button
+                      type="button"
                       onClick={() => {
                         resetWalletModal();
-                        handleSelectTab('wallets');
                         setShowWalletModal(true);
                       }}
                       className={`px-3.5 py-2 rounded-full text-xs font-medium border shrink-0 key-press ${ui.pillIdle}`}
                     >
-                      + Add your first wallet
+                      + Add your first account
                     </button>
                   ) : (
                     wallets.map((w) => (
                       <button
                         key={w.id}
+                        type="button"
                         onClick={() => setSelectedWalletId(w.id)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-colors duration-150 key-press ${
                           selectedWalletId === w.id ? ui.pillActive : ui.pillIdle
@@ -1687,6 +2002,7 @@ function TapxMainApp() {
                       .map((w) => (
                         <button
                           key={w.id}
+                          type="button"
                           onClick={() => setToWalletId(w.id)}
                           className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 shrink-0 border transition-colors duration-150 key-press ${
                             toWalletId === w.id ? ui.pillActive : ui.pillIdle
@@ -1702,13 +2018,27 @@ function TapxMainApp() {
               {/* Category Row */}
               {entryType !== 'transfer' && (
                 <div className="space-y-1">
-                  <span className={`text-[10px] uppercase tracking-wider font-semibold px-0.5 ${ui.textMuted}`}>
-                    {entryType === 'income' ? 'Income Category' : 'Expense Category'}
-                  </span>
+                  <div className="flex items-center justify-between px-0.5">
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${ui.textMuted}`}>
+                      {entryType === 'income' ? 'Income Category' : 'Expense Category'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetCategoryModal();
+                        setNewCatType(entryType === 'income' ? 'income' : 'expense');
+                        setShowCategoryModal(true);
+                      }}
+                      className={`text-[10px] font-semibold ${ui.textSecondary} key-press`}
+                    >
+                      + Custom
+                    </button>
+                  </div>
                   <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                     {filteredCategories.map((c) => (
                       <button
                         key={c.id}
+                        type="button"
                         onClick={() => setSelectedCategoryId(c.id)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-colors duration-150 key-press ${
                           selectedCategoryId === c.id ? ui.pillActive : ui.pillIdle
@@ -1723,7 +2053,7 @@ function TapxMainApp() {
               )}
             </div>
 
-            {/* Zero-Latency Tactile Numpad */}
+            {/* Zero-Latency Tactile Numpad (Hold DEL to Clear) */}
             <div className="grid grid-cols-3 gap-2 pt-2 shrink-0">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
                 <button
@@ -1732,6 +2062,22 @@ function TapxMainApp() {
                   onPointerDown={(e) => {
                     e.preventDefault();
                     handleDigitPress(key);
+                    if (key === 'DEL') {
+                      if (delHoldTimerRef.current) clearTimeout(delHoldTimerRef.current);
+                      delHoldTimerRef.current = setTimeout(() => {
+                        handleDigitPress('CLEAR');
+                      }, 420);
+                    }
+                  }}
+                  onPointerUp={() => {
+                    if (key === 'DEL' && delHoldTimerRef.current) {
+                      clearTimeout(delHoldTimerRef.current);
+                    }
+                  }}
+                  onPointerLeave={() => {
+                    if (key === 'DEL' && delHoldTimerRef.current) {
+                      clearTimeout(delHoldTimerRef.current);
+                    }
                   }}
                   className={`h-11 rounded-2xl border text-lg font-semibold tabular-nums flex items-center justify-center key-press ${ui.numpadKey}`}
                 >
@@ -1748,6 +2094,7 @@ function TapxMainApp() {
 
             {/* Submit Button */}
             <button
+              type="button"
               onClick={handleLogTransaction}
               className={`w-full py-3.5 mt-2 rounded-2xl font-semibold text-sm key-press shrink-0 shadow-sm ${primaryButtonClass}`}
             >
@@ -1756,98 +2103,28 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 2: WALLETS & ACTIVITY */}
+        {/* TAB 2: ACCOUNTS & ACTIVITY (Unified Single-Scroll Layout, Horizontal Account Cards, Date Groups) */}
         {activeTab === 'wallets' && (
-          <div key="tab-wallets" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
-            <div className="flex items-center justify-between shrink-0">
-              <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
-                Accounts ({wallets.length})
-              </h3>
-              <button
-                onClick={() => {
-                  if (showWalletModal) {
-                    resetWalletModal();
-                  } else {
-                    resetWalletModal();
-                    setShowWalletModal(true);
-                  }
-                }}
-                className={`text-xs px-3 py-1 rounded-full border font-medium key-press ${ui.cardElevated} ${ui.textPrimary}`}
-              >
-                {showWalletModal ? 'Cancel' : '+ New'}
-              </button>
-            </div>
-
-            {showWalletModal && (
-              <form
-                onSubmit={handleSaveWallet}
-                className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 animate-tab ${ui.cardElevated}`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-[11px] font-semibold ${ui.textSecondary}`}>
-                    {editingWalletId ? 'Edit Account & Balance' : 'Create New Account'}
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Account Name (e.g. HDFC, Cash, FamPay)"
-                  value={newWalletName}
-                  onChange={(e) => setNewWalletName(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
-                  required
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={newWalletType}
-                    onChange={(e) => setNewWalletType(e.target.value)}
-                    className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
+          <div key="tab-wallets" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
+            {/* Horizontal Account Strip (Eliminates competing vertical scrollbars) */}
+            <div className="shrink-0 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
+                  Accounts ({wallets.length})
+                </h3>
+                {activityWalletFilter !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setActivityWalletFilter('all')}
+                    className="text-[11px] text-blue-400 font-semibold key-press"
                   >
-                    <option>UPI / Wallet</option>
-                    <option>Cash</option>
-                    <option>Bank</option>
-                    <option>Card</option>
-                    <option>Savings</option>
-                  </select>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="Current Balance"
-                    value={newWalletBalance}
-                    onChange={(e) => setNewWalletBalance(e.target.value)}
-                    className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
-                  />
-                </div>
-                <div className="flex gap-1.5 justify-between">
-                  {WALLET_ICONS.map((ic) => (
-                    <button
-                      type="button"
-                      key={ic}
-                      onClick={() => setNewWalletIcon(ic)}
-                      className={`p-2 rounded-xl border text-sm key-press ${
-                        newWalletIcon === ic ? ui.pillActive : ui.pillIdle
-                      }`}
-                    >
-                      {ic}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="submit"
-                  className={`w-full py-2.5 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
-                >
-                  {editingWalletId ? 'Save Changes' : 'Create Account'}
-                </button>
-              </form>
-            )}
+                    Clear Account Filter
+                  </button>
+                )}
+              </div>
 
-            {/* Scrollable Wallets Container */}
-            <div className="max-h-[34%] custom-scroll space-y-2 pr-0.5 shrink-0">
-              {wallets.length === 0 ? (
-                <div className={`p-4 rounded-2xl border text-center text-xs ${ui.card} ${ui.textMuted}`}>
-                  No accounts added yet. Tap + New to add Cash, Bank, or FamPay.
-                </div>
-              ) : (
-                wallets.map((w) => {
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                {wallets.map((w) => {
                   const isFiltered = activityWalletFilter === w.id;
                   return (
                     <div
@@ -1855,138 +2132,182 @@ function TapxMainApp() {
                       onClick={() =>
                         setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id))
                       }
-                      className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-colors ${
-                        isFiltered ? ui.cardElevated : ui.card
+                      className={`min-w-[152px] p-3 rounded-2xl border flex flex-col justify-between cursor-pointer transition-all shrink-0 key-press ${
+                        isFiltered
+                          ? 'border-blue-500/70 bg-blue-500/10'
+                          : ui.card
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-9 h-9 rounded-xl border flex items-center justify-center text-base shrink-0 ${ui.cardSubtle}`}>
-                          {w.icon}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-base">{w.icon}</span>
+                          <span className={`font-semibold text-xs truncate ${ui.textPrimary}`}>
+                            {w.name}
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className={`font-semibold text-sm truncate ${ui.textPrimary}`}>{w.name}</p>
-                            {isFiltered && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-semibold">
-                                Filtered
-                              </span>
-                            )}
-                          </div>
-                          <p className={`text-[11px] ${ui.textMuted}`}>{w.type}</p>
-                        </div>
-                      </div>
-                      <div
-                        className="flex items-center gap-1.5 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className={`font-semibold text-sm tabular-nums mr-1 ${ui.textPrimary}`}>
-                          {currencySymbol}
-                          {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </span>
                         <button
-                          onClick={() => openEditWallet(w)}
-                          className={`px-2 py-1 rounded-lg border text-[10px] font-medium key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditWallet(w);
+                          }}
+                          className={`px-1.5 py-0.5 rounded-md border text-[10px] font-medium ${ui.cardSubtle} ${ui.textSecondary}`}
                         >
                           Edit
                         </button>
-                        <button
-                          onClick={() => handleDeleteWallet(w.id)}
-                          className={`px-2 py-1 rounded-lg text-[10px] font-semibold key-press ${
-                            confirmDeleteId === w.id
-                              ? 'bg-rose-500 text-white'
-                              : `${ui.textMuted} hover:text-rose-500`
-                          }`}
-                        >
-                          {confirmDeleteId === w.id ? 'Sure?' : '✕'}
-                        </button>
+                      </div>
+                      <div className="mt-2">
+                        <p className={`font-bold text-sm tabular-nums ${ui.textPrimary}`}>
+                          {currencySymbol}
+                          {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className={`text-[10px] ${ui.textMuted}`}>{w.type}</p>
                       </div>
                     </div>
                   );
-                })
-              )}
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetWalletModal();
+                    setShowWalletModal(true);
+                  }}
+                  className={`min-w-[110px] p-3 rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                >
+                  <span className="text-lg font-medium">+</span>
+                  <span className="text-[11px] font-semibold">New Account</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1 shrink-0">
-              <div className="flex items-center gap-2">
-                <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
-                  Recent Activity
-                </h3>
-                {activityWalletFilter !== 'all' && (
+            {/* Search + Type Filter Pills */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className={`flex-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${ui.input}`}>
+                <svg className={`w-3.5 h-3.5 shrink-0 ${ui.textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search note, category, amount..."
+                  value={activitySearch}
+                  onChange={(e) => setActivitySearch(e.target.value)}
+                  className="w-full bg-transparent text-xs focus:outline-none scale-[0.85] origin-left"
+                />
+                {activitySearch && (
                   <button
-                    onClick={() => setActivityWalletFilter('all')}
-                    className="text-[10px] text-blue-400 font-semibold"
+                    type="button"
+                    onClick={() => setActivitySearch('')}
+                    className={`text-[11px] ${ui.textMuted}`}
                   >
-                    Show All
+                    ✕
                   </button>
                 )}
               </div>
-              <span className={`text-[11px] ${ui.textMuted}`}>{visibleTransactions.length} entries</span>
+
+              <div className={`flex p-0.5 rounded-xl border shrink-0 ${ui.segmentedBg}`}>
+                {[
+                  { id: 'all', label: 'All' },
+                  { id: 'expense', label: 'Out' },
+                  { id: 'income', label: 'In' }
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setActivityTypeFilter(f.id)}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                      activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Scrollable Transactions Container */}
-            <div className="flex-1 min-h-0 custom-scroll space-y-1.5 pr-0.5">
-              {visibleTransactions.length === 0 ? (
+            {/* Full-Height Date-Grouped Transactions Feed */}
+            <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
+              {groupedTransactions.length === 0 ? (
                 <div className={`p-6 rounded-2xl border text-center text-xs ${ui.card} ${ui.textMuted}`}>
-                  No transactions recorded yet.
+                  No matching transactions found.
                 </div>
               ) : (
-                visibleTransactions.map((tx) => {
-                  const w = wallets.find((item) => item.id === tx.wallet_id);
-                  const toW = wallets.find((item) => item.id === tx.to_wallet_id);
-                  const c = categories.find((item) => item.id === tx.category_id);
-                  return (
-                    <div
-                      key={tx.id}
-                      className={`p-3 rounded-2xl border flex items-center justify-between ${ui.card}`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-sm shrink-0 ${ui.cardSubtle}`}>
-                          {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
-                              {tx.type === 'transfer'
-                                ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
-                                : c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
-                            </p>
-                            {tx.source === 'shortcut' && (
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${ui.cardSubtle} ${ui.textSecondary}`}>
-                                Back Tap
-                              </span>
-                            )}
-                          </div>
-                          <p className={`text-[10px] truncate ${ui.textMuted}`}>
-                            {w?.name || 'Account'}
-                            {tx.note ? ` · ${tx.note}` : ''}
-                            {tx.created_at ? ` · ${formatRelativeDateTime(tx.created_at)}` : ''}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={`text-xs font-semibold tabular-nums ${
-                            tx.type === 'income'
-                              ? 'text-emerald-500'
-                              : tx.type === 'transfer'
-                              ? 'text-blue-500'
-                              : ui.textPrimary
-                          }`}
-                        >
-                          {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                          {currencySymbol}
-                          {Number(tx.amount || 0).toLocaleString('en-IN')}
-                        </span>
-                        <button
-                          onClick={() => handleDeleteTransaction(tx.id)}
-                          className={`px-1 text-xs key-press ${ui.textMuted} hover:text-rose-500`}
-                        >
-                          ✕
-                        </button>
-                      </div>
+                groupedTransactions.map((group) => (
+                  <div key={group.label} className="space-y-1.5">
+                    <div className={`sticky top-0 z-10 py-1 px-1 flex items-center justify-between text-[11px] font-semibold ${ui.stickyHeader}`}>
+                      <span className={ui.textSecondary}>{group.label}</span>
+                      <span className={`tabular-nums ${group.netSpend > 0 ? 'text-emerald-500' : ui.textMuted}`}>
+                        {group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}
+                        {currencySymbol}
+                        {Math.abs(group.netSpend).toLocaleString('en-IN')}
+                      </span>
                     </div>
-                  );
-                })
+
+                    {group.items.map((tx) => {
+                      const w = wallets.find((item) => item.id === tx.wallet_id);
+                      const toW = wallets.find((item) => item.id === tx.to_wallet_id);
+                      const c = categories.find((item) => item.id === tx.category_id);
+                      return (
+                        <div
+                          key={tx.id}
+                          onClick={() => openEditTransaction(tx)}
+                          className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer key-press ${ui.card}`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center text-base shrink-0 ${ui.cardSubtle}`}>
+                              {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
+                                  {tx.type === 'transfer'
+                                    ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
+                                    : tx.note || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
+                                </p>
+                                {tx.source === 'shortcut' && (
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${ui.cardSubtle} ${ui.textSecondary}`}>
+                                    Back Tap
+                                  </span>
+                                )}
+                              </div>
+                              <p className={`text-[10px] truncate ${ui.textMuted}`}>
+                                {w?.name || 'Account'}
+                                {tx.note && c?.name ? ` · ${c.name}` : ''}
+                                {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span
+                              className={`text-xs font-semibold tabular-nums ${
+                                tx.type === 'income'
+                                  ? 'text-emerald-500'
+                                  : tx.type === 'transfer'
+                                  ? 'text-blue-500'
+                                  : ui.textPrimary
+                              }`}
+                            >
+                              {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
+                              {currencySymbol}
+                              {Number(tx.amount || 0).toLocaleString('en-IN')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTransaction(tx.id);
+                              }}
+                              className={`p-1 rounded-lg text-xs key-press ${ui.textMuted} hover:text-rose-500`}
+                              title="Delete"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -1997,7 +2318,7 @@ function TapxMainApp() {
           <div key="tab-analytics" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
             <div className="flex items-center justify-between shrink-0">
               <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
-                Overview
+                Insights
               </h3>
               <div className={`flex p-0.5 rounded-xl border ${ui.segmentedBg}`}>
                 {[
@@ -2007,6 +2328,7 @@ function TapxMainApp() {
                 ].map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setAnalyticsRange(tab.id)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
                       analyticsRange === tab.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
@@ -2047,33 +2369,57 @@ function TapxMainApp() {
 
             {/* Inner Scrollable Analytics Cards */}
             <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
+              {/* Interactive 7-Day Bar Chart */}
               <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
-                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Last 7 Days</h4>
+                  <div>
+                    <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Last 7 Days</h4>
+                    {selectedDayObj && (
+                      <p className={`text-[10px] tabular-nums ${ui.textSecondary}`}>
+                        {selectedDayObj.fullDateLabel}:{' '}
+                        <span className={`font-semibold ${ui.textPrimary}`}>
+                          {currencySymbol}
+                          {selectedDayObj.amount.toLocaleString('en-IN')}
+                        </span>
+                      </p>
+                    )}
+                  </div>
                   <span className={`text-[10px] font-medium ${ui.textMuted}`}>
-                    {analyticsData.shortcutPct}% logged via Back Tap
+                    {analyticsData.shortcutPct}% via Back Tap
                   </span>
                 </div>
 
                 <div className="grid grid-cols-7 gap-2 items-end h-28 pt-2">
                   {analyticsData.last7Days.map((day, idx) => {
+                    const isSelected = selectedBarIdx === idx;
                     const heightPct =
                       day.amount > 0
                         ? Math.max(14, Math.round((day.amount / analyticsData.maxDaySpend) * 100))
                         : 6;
                     return (
-                      <div key={idx} className="flex flex-col items-center justify-end h-full gap-1">
-                        <span className={`text-[9px] font-mono tabular-nums truncate max-w-full ${ui.textMuted}`}>
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedBarIdx(idx)}
+                        className="flex flex-col items-center justify-end h-full gap-1 key-press"
+                      >
+                        <span className={`text-[9px] font-mono tabular-nums truncate max-w-full ${isSelected ? ui.textPrimary : ui.textMuted}`}>
                           {day.amount > 0
                             ? day.amount >= 1000
                               ? `${(day.amount / 1000).toFixed(1)}k`
                               : Math.round(day.amount)
                             : ''}
                         </span>
-                        <div className={`w-full rounded-lg h-16 flex items-end p-0.5 border ${ui.cardSubtle}`}>
+                        <div
+                          className={`w-full rounded-lg h-16 flex items-end p-0.5 border transition-colors ${
+                            isSelected ? 'border-blue-500/60' : ''
+                          } ${ui.cardSubtle}`}
+                        >
                           <div
                             className={`w-full rounded-md transition-all duration-500 ios-spring ${
-                              day.isToday
+                              isSelected
+                                ? 'bg-emerald-500'
+                                : day.isToday
                                 ? isDark
                                   ? 'bg-zinc-100'
                                   : 'bg-zinc-900'
@@ -2086,12 +2432,12 @@ function TapxMainApp() {
                         </div>
                         <span
                           className={`text-[10px] font-medium ${
-                            day.isToday ? ui.textPrimary : ui.textMuted
+                            isSelected || day.isToday ? ui.textPrimary : ui.textMuted
                           }`}
                         >
                           {day.isToday ? 'Today' : day.label}
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -2179,7 +2525,7 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 4: SETTINGS (Appearance + Back Tap + Categories) */}
+        {/* TAB 4: SETTINGS */}
         {activeTab === 'settings' && (
           <div key="tab-settings" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
             {/* Appearance Mode Selector */}
@@ -2196,6 +2542,7 @@ function TapxMainApp() {
                 ].map((m) => (
                   <button
                     key={m.id}
+                    type="button"
                     onClick={() => setThemePref(m.id)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
                       themePref === m.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
@@ -2214,6 +2561,7 @@ function TapxMainApp() {
                 style={{ transform: `translate3d(${settingsSubIndex * 100}%, 0, 0)` }}
               />
               <button
+                type="button"
                 onClick={() => setSettingsSection('shortcut')}
                 className={`relative z-10 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-200 ${
                   settingsSection === 'shortcut' ? ui.textPrimary : ui.textSecondary
@@ -2222,6 +2570,7 @@ function TapxMainApp() {
                 Back Tap Setup
               </button>
               <button
+                type="button"
                 onClick={() => setSettingsSection('budgets')}
                 className={`relative z-10 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-200 ${
                   settingsSection === 'budgets' ? ui.textPrimary : ui.textSecondary
@@ -2259,6 +2608,7 @@ function TapxMainApp() {
                         className={`flex-1 border rounded-xl px-2.5 py-2 text-[11px] font-mono ${ui.input}`}
                       />
                       <button
+                        type="button"
                         onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
                         className={`px-3 py-2 rounded-xl text-xs font-semibold shrink-0 key-press ${ui.cardSubtle} ${ui.textPrimary} border`}
                       >
@@ -2268,6 +2618,7 @@ function TapxMainApp() {
                   </div>
 
                   <button
+                    type="button"
                     onClick={handleOneTapShortcut}
                     className={`w-full py-3 px-4 rounded-xl font-semibold text-xs key-press ${ui.primaryBtnExpense}`}
                   >
@@ -2297,12 +2648,14 @@ function TapxMainApp() {
                       className={`flex-1 border rounded-xl px-3 py-1.5 text-xs font-mono ${ui.input}`}
                     />
                     <button
+                      type="button"
                       onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
                       className={`px-3 py-1.5 rounded-xl border text-xs font-semibold key-press ${ui.cardSubtle} ${ui.textPrimary}`}
                     >
                       {copiedField === 'token' ? 'Copied' : 'Copy'}
                     </button>
                     <button
+                      type="button"
                       onClick={handleRegenerateToken}
                       className={`px-3 py-1.5 rounded-xl border text-xs font-semibold key-press ${ui.cardSubtle} ${ui.textPrimary}`}
                       title="Regenerate Token"
@@ -2322,75 +2675,16 @@ function TapxMainApp() {
                     {categories.length} Categories
                   </span>
                   <button
+                    type="button"
                     onClick={() => {
-                      if (showCategoryModal) {
-                        resetCategoryModal();
-                      } else {
-                        resetCategoryModal();
-                        setShowCategoryModal(true);
-                      }
+                      resetCategoryModal();
+                      setShowCategoryModal(true);
                     }}
                     className={`text-xs px-3 py-1 rounded-full border font-semibold key-press ${ui.cardElevated} ${ui.textPrimary}`}
                   >
-                    {showCategoryModal ? 'Close' : '+ Add Category'}
+                    + Add Category
                   </button>
                 </div>
-
-                {showCategoryModal && (
-                  <form
-                    onSubmit={handleSaveCategory}
-                    className={`p-3.5 rounded-2xl border space-y-2.5 shrink-0 animate-tab ${ui.cardElevated}`}
-                  >
-                    <span className={`text-[11px] font-semibold ${ui.textSecondary}`}>
-                      {editingCatId ? 'Edit Category' : 'New Category'}
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Category Name"
-                      value={newCatName}
-                      onChange={(e) => setNewCatName(e.target.value)}
-                      className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
-                      required
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={newCatType}
-                        onChange={(e) => setNewCatType(e.target.value)}
-                        className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
-                      >
-                        <option value="expense">Expense</option>
-                        <option value="income">Income</option>
-                      </select>
-                      <input
-                        type="number"
-                        placeholder="Monthly Limit (Optional)"
-                        value={newCatBudget}
-                        onChange={(e) => setNewCatBudget(e.target.value)}
-                        className={`border rounded-xl px-3 py-2 text-xs focus:outline-none ${ui.input}`}
-                      />
-                    </div>
-                    <div className="flex gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
-                      {CATEGORY_ICONS.map((ic) => (
-                        <button
-                          type="button"
-                          key={ic}
-                          onClick={() => setNewCatIcon(ic)}
-                          className={`p-2 rounded-xl border shrink-0 text-sm key-press ${
-                            newCatIcon === ic ? ui.pillActive : ui.pillIdle
-                          }`}
-                        >
-                          {ic}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      type="submit"
-                      className={`w-full py-2 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
-                    >
-                      {editingCatId ? 'Update Category' : 'Save Category'}
-                    </button>
-                  </form>
-                )}
 
                 <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5">
                   {categories.map((c) => {
@@ -2401,7 +2695,8 @@ function TapxMainApp() {
                     return (
                       <div
                         key={c.id}
-                        className={`p-3 rounded-2xl border space-y-2 ${ui.card}`}
+                        onClick={() => openEditCategory(c)}
+                        className={`p-3 rounded-2xl border space-y-2 cursor-pointer key-press ${ui.card}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -2413,7 +2708,10 @@ function TapxMainApp() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5 tabular-nums shrink-0">
+                          <div
+                            className="flex items-center gap-1.5 tabular-nums shrink-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {c.type === 'expense' && (
                               <span className={`text-xs font-semibold mr-1 ${ui.textPrimary}`}>
                                 {currencySymbol}
@@ -2422,12 +2720,14 @@ function TapxMainApp() {
                               </span>
                             )}
                             <button
+                              type="button"
                               onClick={() => openEditCategory(c)}
                               className={`px-2 py-1 rounded-lg border text-[10px] font-medium key-press ${ui.cardSubtle} ${ui.textSecondary}`}
                             >
                               Edit
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleDeleteCategory(c.id)}
                               className={`px-2 py-1 rounded-lg text-[10px] font-semibold key-press ${
                                 confirmDeleteId === c.id
@@ -2463,6 +2763,7 @@ function TapxMainApp() {
               </span>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => {
                     fetchUserData(session.user.id);
                     showToast('Synced');
@@ -2472,6 +2773,7 @@ function TapxMainApp() {
                   Sync
                 </button>
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-semibold key-press"
                 >
@@ -2483,7 +2785,326 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* iOS PHONE APP LIQUID GLASS TAB BAR WITH SMOOTH GLIDE & OPTICAL MAGNIFICATION */}
+      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT */}
+      {showWalletModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-3"
+          onClick={resetWalletModal}
+        >
+          <form
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleSaveWallet}
+            className={`w-full max-w-md rounded-3xl border p-5 space-y-3.5 shadow-2xl animate-sheet-up ${ui.sheetBg}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+          >
+            <div className="w-10 h-1 rounded-full bg-zinc-500/30 mx-auto" />
+            <div className="flex items-center justify-between">
+              <h3 className={`text-sm font-bold ${ui.textPrimary}`}>
+                {editingWalletId ? 'Edit Account' : 'New Account'}
+              </h3>
+              <button
+                type="button"
+                onClick={resetWalletModal}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${ui.cardSubtle} ${ui.textSecondary}`}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Account Name</label>
+              <input
+                type="text"
+                placeholder="e.g. UPI, Cash, FamPay, HDFC"
+                value={newWalletName}
+                onChange={(e) => setNewWalletName(e.target.value)}
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Type</label>
+                <select
+                  value={newWalletType}
+                  onChange={(e) => setNewWalletType(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                >
+                  <option>UPI / Wallet</option>
+                  <option>Cash</option>
+                  <option>Bank</option>
+                  <option>Card</option>
+                  <option>Savings</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Current Balance</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={newWalletBalance}
+                  onChange={(e) => setNewWalletBalance(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Icon</label>
+              <div className="flex gap-1.5 justify-between">
+                {WALLET_ICONS.map((ic) => (
+                  <button
+                    type="button"
+                    key={ic}
+                    onClick={() => setNewWalletIcon(ic)}
+                    className={`p-2.5 rounded-xl border text-base key-press ${
+                      newWalletIcon === ic ? ui.pillActive : ui.pillIdle
+                    }`}
+                  >
+                    {ic}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              {editingWalletId && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteWallet(editingWalletId)}
+                  className={`px-4 py-3 rounded-xl text-xs font-semibold border key-press ${
+                    confirmDeleteId === editingWalletId
+                      ? 'bg-rose-500 text-white border-rose-500'
+                      : 'border-rose-500/30 text-rose-500 bg-rose-500/10'
+                  }`}
+                >
+                  {confirmDeleteId === editingWalletId ? 'Tap to Confirm' : 'Delete'}
+                </button>
+              )}
+              <button
+                type="submit"
+                className={`flex-1 py-3 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
+              >
+                {editingWalletId ? 'Save Changes' : 'Create Account'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* BOTTOM SHEET 2: CREATE / EDIT CATEGORY */}
+      {showCategoryModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-3"
+          onClick={resetCategoryModal}
+        >
+          <form
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleSaveCategory}
+            className={`w-full max-w-md rounded-3xl border p-5 space-y-3.5 shadow-2xl animate-sheet-up ${ui.sheetBg}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+          >
+            <div className="w-10 h-1 rounded-full bg-zinc-500/30 mx-auto" />
+            <div className="flex items-center justify-between">
+              <h3 className={`text-sm font-bold ${ui.textPrimary}`}>
+                {editingCatId ? 'Edit Category' : 'New Category'}
+              </h3>
+              <button
+                type="button"
+                onClick={resetCategoryModal}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${ui.cardSubtle} ${ui.textSecondary}`}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Category Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Dining Out, Subscriptions"
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Type</label>
+                <select
+                  value={newCatType}
+                  onChange={(e) => setNewCatType(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                >
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Monthly Limit (Optional)</label>
+                <input
+                  type="number"
+                  placeholder="No limit"
+                  value={newCatBudget}
+                  onChange={(e) => setNewCatBudget(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Icon</label>
+              <div className="flex gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
+                {CATEGORY_ICONS.map((ic) => (
+                  <button
+                    type="button"
+                    key={ic}
+                    onClick={() => setNewCatIcon(ic)}
+                    className={`p-2.5 rounded-xl border shrink-0 text-base key-press ${
+                      newCatIcon === ic ? ui.pillActive : ui.pillIdle
+                    }`}
+                  >
+                    {ic}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className={`w-full py-3 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
+            >
+              {editingCatId ? 'Update Category' : 'Save Category'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* BOTTOM SHEET 3: EDIT TRANSACTION */}
+      {editingTx && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-3"
+          onClick={() => setEditingTx(null)}
+        >
+          <form
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleSaveEditedTransaction}
+            className={`w-full max-w-md rounded-3xl border p-5 space-y-3.5 shadow-2xl animate-sheet-up ${ui.sheetBg}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+          >
+            <div className="w-10 h-1 rounded-full bg-zinc-500/30 mx-auto" />
+            <div className="flex items-center justify-between">
+              <h3 className={`text-sm font-bold capitalize ${ui.textPrimary}`}>
+                Edit {editingTx.type}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingTx(null)}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${ui.cardSubtle} ${ui.textSecondary}`}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Amount ({currencySymbol})</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editTxAmount}
+                  onChange={(e) => setEditTxAmount(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm font-semibold tabular-nums focus:outline-none ${ui.input}`}
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Account</label>
+                <select
+                  value={editTxWalletId}
+                  onChange={(e) => setEditTxWalletId(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                >
+                  {wallets.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.icon} {w.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {editingTx.type === 'transfer' ? (
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>To Account</label>
+                <select
+                  value={editTxToWalletId}
+                  onChange={(e) => setEditTxToWalletId(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                >
+                  {wallets
+                    .filter((w) => w.id !== editTxWalletId)
+                    .map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.icon} {w.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Category</label>
+                <select
+                  value={editTxCategoryId}
+                  onChange={(e) => setEditTxCategoryId(e.target.value)}
+                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                >
+                  {categories
+                    .filter((c) => c.type === editingTx.type)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.icon} {c.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Note</label>
+              <input
+                type="text"
+                placeholder="Optional note"
+                value={editTxNote}
+                onChange={(e) => setEditTxNote(e.target.value)}
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none ${ui.input}`}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleDeleteTransaction(editingTx.id)}
+                className="px-4 py-3 rounded-xl text-xs font-semibold border border-rose-500/30 text-rose-500 bg-rose-500/10 key-press"
+              >
+                Delete
+              </button>
+              <button
+                type="submit"
+                className={`flex-1 py-3 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* iOS LIQUID GLASS TAB BAR WITH REFINED GLIDE & SCRUBBING */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
@@ -2496,8 +3117,8 @@ function TapxMainApp() {
           onPointerMove={handleNavPointerMove}
           onPointerUp={handleNavPointerUpOrCancel}
           onPointerCancel={handleNavPointerUpOrCancel}
-          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[66px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
-            lensBulge ? 'scale-[1.015]' : 'scale-100'
+          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[64px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
+            lensBulge ? 'scale-[1.012]' : 'scale-100'
           } ${ui.islandBar}`}
         >
           {/* Optical Crystal Magnifying Bubble Lens */}
@@ -2506,11 +3127,11 @@ function TapxMainApp() {
             style={{
               transition:
                 scrubProgress !== null
-                  ? 'transform 260ms cubic-bezier(0.22, 1, 0.36, 1)'
-                  : 'transform 480ms cubic-bezier(0.22, 1.18, 0.36, 1)',
+                  ? 'transform 120ms cubic-bezier(0.22, 1, 0.36, 1)'
+                  : 'transform 380ms cubic-bezier(0.22, 1.08, 0.36, 1)',
               transform: `translate3d(${visualLensIndex * 100}%, 0, 0) scale3d(${
-                lensBulge ? 1.22 : 1.03
-              }, ${lensBulge ? 1.28 : 1.04}, 1)`
+                scrubProgress !== null ? 1.12 : lensBulge ? 1.06 : 1.0
+              }, ${scrubProgress !== null ? 1.16 : lensBulge ? 1.08 : 1.0}, 1)`
             }}
           />
 
@@ -2518,9 +3139,7 @@ function TapxMainApp() {
             const active = activeTab === item.id;
             const distance = Math.abs(visualLensIndex - idx);
             const proximity = Math.max(0, 1 - distance);
-            const baseScale = 0.9 + proximity * 0.22;
-            const activeBoost = active && lensBulge ? 0.12 : 0;
-            const totalScale = baseScale + activeBoost;
+            const totalScale = 0.94 + proximity * 0.1 + (active && lensBulge ? 0.04 : 0);
 
             return (
               <button
@@ -2536,11 +3155,11 @@ function TapxMainApp() {
                   style={{
                     transition:
                       scrubProgress !== null
-                        ? 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)'
-                        : 'transform 440ms cubic-bezier(0.22, 1.18, 0.36, 1)',
+                        ? 'transform 120ms cubic-bezier(0.22, 1, 0.36, 1)'
+                        : 'transform 360ms cubic-bezier(0.22, 1.08, 0.36, 1)',
                     transform: `scale3d(${totalScale.toFixed(3)}, ${totalScale.toFixed(
                       3
-                    )}, 1) translate3d(0, ${active ? '-1px' : '0px'}, 0)`
+                    )}, 1) translate3d(0, ${active ? '-0.5px' : '0px'}, 0)`
                   }}
                 >
                   <NavIcon id={item.id} active={active} />
