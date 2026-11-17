@@ -1,5 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
+const DEFAULT_CATEGORIES_LIST = [
+  'Food & Drinks',
+  'Groceries',
+  'Transport',
+  'Shopping',
+  'Entertainment',
+  'Bills & Recharge',
+  'Health & Fitness',
+  'Income & Allowance'
+];
+
 // Read raw request body stream in case Vercel does not auto-parse Apple Shortcuts payload
 async function getRawBody(req) {
   if (req.body !== undefined && req.body !== null && req.body !== '') {
@@ -160,49 +171,147 @@ function cleanForCompare(str) {
     .toLowerCase();
 }
 
-function findItemInDbList(preferredValue, allPayloadValues, dbList) {
-  const unwrappedPref = unwrapShortcutValue(preferredValue);
+// Build complete category list combining DB categories with the 8 standard defaults
+function buildKnownCategories(metaCategories) {
+  const rawList = Array.isArray(metaCategories)
+    ? metaCategories.map((c) => (typeof c === 'object' && c !== null ? c.name : String(c))).filter(Boolean)
+    : [];
 
-  if (!Array.isArray(dbList) || dbList.length === 0) {
-    return Array.isArray(unwrappedPref) ? '' : String(unwrappedPref || '').trim();
+  const merged = [...rawList];
+  const seen = new Set(rawList.map((c) => cleanForCompare(c)));
+
+  for (const defCat of DEFAULT_CATEGORIES_LIST) {
+    if (!seen.has(cleanForCompare(defCat))) {
+      merged.push(defCat);
+      seen.add(cleanForCompare(defCat));
+    }
   }
+  return merged;
+}
 
-  if (
-    unwrappedPref &&
-    !Array.isArray(unwrappedPref) &&
-    !String(unwrappedPref).includes('\n')
-  ) {
-    const cleanPref = cleanForCompare(unwrappedPref);
-    if (cleanPref) {
-      const exact = dbList.find((item) => cleanForCompare(item) === cleanPref);
-      if (exact) return exact;
+function isSingleValueCandidate(val) {
+  const unwrapped = unwrapShortcutValue(val);
+  if (unwrapped === undefined || unwrapped === null) return false;
+  if (Array.isArray(unwrapped)) return false;
+  const s = String(unwrapped).trim();
+  if (!s || s.includes('\n')) return false;
+  // Reject comma-separated dumps of the full category menu
+  if (s.includes('Food & Drinks') && s.includes('Groceries')) return false;
+  return true;
+}
 
-      const partial = dbList.find(
-        (item) =>
-          cleanForCompare(item).includes(cleanPref) ||
-          cleanPref.includes(cleanForCompare(item))
-      );
-      if (partial) return partial;
+function matchAgainstDbList(candidateStr, dbList) {
+  const cleanCand = cleanForCompare(candidateStr);
+  if (!cleanCand || !Array.isArray(dbList) || dbList.length === 0) return '';
+
+  // 1. Exact match
+  const exact = dbList.find((item) => cleanForCompare(item) === cleanCand);
+  if (exact) return exact;
+
+  // 2. First-word or substring match (e.g. "Transport" or "Bills")
+  const partial = dbList.find((item) => {
+    const cleanDb = cleanForCompare(item);
+    const firstWord = cleanDb.split(/[\s&/]+/)[0];
+    return (
+      cleanDb.includes(cleanCand) ||
+      cleanCand.includes(cleanDb) ||
+      (firstWord.length >= 3 && cleanCand === firstWord)
+    );
+  });
+  return partial || '';
+}
+
+function resolveWalletFromPayload(payload, allValues, dbWallets) {
+  const walletKeys = [
+    'wallet',
+    'selectedwallet',
+    'selected_wallet',
+    'account',
+    'selectedaccount',
+    'selected_account',
+    'wallets'
+  ];
+
+  for (const k of walletKeys) {
+    if (isSingleValueCandidate(payload[k])) {
+      const matched = matchAgainstDbList(payload[k], dbWallets);
+      if (matched) return matched;
+      return String(unwrapShortcutValue(payload[k])).trim();
     }
   }
 
-  for (const rawVal of allPayloadValues) {
-    const val = unwrapShortcutValue(rawVal);
-    if (Array.isArray(val) || String(val).includes('\n')) continue;
-    const cleanVal = cleanForCompare(val);
-    if (!cleanVal) continue;
-    const exactMatch = dbList.find((item) => cleanForCompare(item) === cleanVal);
-    if (exactMatch) return exactMatch;
+  for (const rawVal of allValues) {
+    if (!isSingleValueCandidate(rawVal)) continue;
+    const matched = matchAgainstDbList(rawVal, dbWallets);
+    if (matched) return matched;
   }
 
-  return '';
+  return dbWallets[0] || 'UPI';
+}
+
+function resolveCategoryFromPayload(payload, allValues, dbCategories, matchedWallet, resolvedType) {
+  const categoryKeys = [
+    'category',
+    'selectedcategory',
+    'selected_category',
+    'chosencategory',
+    'chosen_category',
+    'cat',
+    'subcategory',
+    'expense_category',
+    'income_category',
+    'chosenitem',
+    'chosen item',
+    'menuresult',
+    'menu result',
+    'item',
+    'categories'
+  ];
+
+  // 1. Check all explicit category keys first (ignoring multi-item arrays/lists)
+  for (const k of categoryKeys) {
+    if (isSingleValueCandidate(payload[k])) {
+      const valStr = String(unwrapShortcutValue(payload[k])).trim();
+      if (cleanForCompare(valStr) === cleanForCompare(matchedWallet)) continue;
+      if (/^(expense|spent|spend|income|earned|earn|\+|-)$/i.test(valStr)) continue;
+
+      const matched = matchAgainstDbList(valStr, dbCategories);
+      if (matched) return matched;
+      return valStr;
+    }
+  }
+
+  // 2. Scan all payload values for any known category match
+  for (const rawVal of allValues) {
+    if (!isSingleValueCandidate(rawVal)) continue;
+    const valStr = String(unwrapShortcutValue(rawVal)).trim();
+    if (cleanForCompare(valStr) === cleanForCompare(matchedWallet)) continue;
+    if (/^(expense|spent|spend|income|earned|earn|\+|-)$/i.test(valStr)) continue;
+    if (/^[₹$€£]?\s*\d+(\.\d+)?$/.test(valStr)) continue;
+
+    const matched = matchAgainstDbList(valStr, dbCategories);
+    if (matched) return matched;
+  }
+
+  // 3. Fallback based on transaction type
+  if (resolvedType === 'income') {
+    return (
+      dbCategories.find((c) => /income|allowance|salary/i.test(String(c))) ||
+      'Income & Allowance'
+    );
+  }
+  return (
+    dbCategories.find((c) => !/income|allowance|salary/i.test(String(c))) ||
+    dbCategories[0] ||
+    'Food & Drinks'
+  );
 }
 
 function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategory, type = 'expense') {
+function formatCleanBanner(data, fallbackAmount, fallbackWallet, selectedCategory, type = 'expense') {
   let payload = data;
   if (typeof payload === 'string') {
     try {
@@ -226,8 +335,10 @@ function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategor
   const walletName = String(
     payload?.wallet_name || payload?.wallet || fallbackWallet || 'Wallet'
   ).trim();
+
+  // Always prefer the user's selectedCategory over any stale default returned by SQL
   const categoryName = String(
-    payload?.category_name || payload?.category || fallbackCategory || ''
+    selectedCategory || payload?.category_name || payload?.category || ''
   ).trim();
   const newBalance = payload?.new_balance ?? payload?.balance;
 
@@ -242,10 +353,6 @@ function formatCleanBanner(data, fallbackAmount, fallbackWallet, fallbackCategor
       maximumFractionDigits: 2
     });
     return `${statusIcon} ${actionSign}${currency}${formattedAmt}${catLabel}\n💳 ${walletName}: ${currency}${formattedBal}`;
-  }
-
-  if (payload?.message && typeof payload.message === 'string') {
-    return payload.message;
   }
 
   return `${statusIcon} ${actionSign}${currency}${formattedAmt} logged to ${walletName}${catLabel}`;
@@ -277,24 +384,10 @@ export default async function handler(req, res) {
   const cleanToken = String(token).trim();
 
   const extractedAmount = extractAmount(payload);
-  const rawWalletArg =
-    payload.wallet ??
-    payload.selectedwallet ??
-    payload.account ??
-    payload.selectedaccount ??
-    payload.wallets ??
-    '';
-  const rawCategoryArg =
-    payload.category ??
-    payload.selectedcategory ??
-    payload.cat ??
-    payload.chosenitem ??
-    payload['chosen item'] ??
-    payload.categories ??
-    '';
   const rawTypeArg =
     payload.type ??
     payload.selectedtype ??
+    payload.selected_type ??
     payload.kind ??
     payload.types ??
     '';
@@ -316,36 +409,40 @@ export default async function handler(req, res) {
       p_token: cleanToken
     });
 
-    const dbWallets = Array.isArray(meta?.wallets) ? meta.wallets : [];
-    const dbCategories = Array.isArray(meta?.categories) ? meta.categories : [];
+    const dbWallets =
+      Array.isArray(meta?.wallets) && meta.wallets.length > 0
+        ? meta.wallets
+        : ['UPI', 'Cash'];
+    const dbCategories = buildKnownCategories(meta?.categories);
 
     let resolvedType = normalizeTxType(rawTypeArg);
-    if (!rawTypeArg) {
+    if (!isSingleValueCandidate(rawTypeArg)) {
       const singleExpense = allValues.some(
-        (v) => !Array.isArray(v) && /^(expense|spent|spend|-)$/i.test(String(v).trim())
+        (v) => isSingleValueCandidate(v) && /^(expense|spent|spend|-)$/i.test(String(unwrapShortcutValue(v)).trim())
       );
       const singleIncome = allValues.some(
-        (v) => !Array.isArray(v) && /^(income|earned|earn|\+)$/i.test(String(v).trim())
+        (v) => isSingleValueCandidate(v) && /^(income|earned|earn|\+)$/i.test(String(unwrapShortcutValue(v)).trim())
       );
       if (singleExpense) resolvedType = 'expense';
       else if (singleIncome) resolvedType = 'income';
     }
 
-    const defaultCategoryForType =
-      resolvedType === 'income'
-        ? dbCategories.find((c) => /income|allowance|salary/i.test(String(c))) || 'Income & Allowance'
-        : dbCategories.find((c) => !/income|allowance|salary/i.test(String(c))) || dbCategories[0] || '';
+    const matchedWallet = resolveWalletFromPayload(payload, allValues, dbWallets);
+    const matchedCategory = resolveCategoryFromPayload(
+      payload,
+      allValues,
+      dbCategories,
+      matchedWallet,
+      resolvedType
+    );
 
-    const matchedWallet =
-      findItemInDbList(rawWalletArg, allValues, dbWallets) ||
-      (Array.isArray(rawWalletArg) ? '' : String(rawWalletArg || '').trim()) ||
-      dbWallets[0] ||
-      '';
-
-    const matchedCategory =
-      findItemInDbList(rawCategoryArg, allValues, dbCategories) ||
-      (Array.isArray(rawCategoryArg) ? '' : String(rawCategoryArg || '').trim()) ||
-      defaultCategoryForType;
+    // Embed [cat:CategoryName] tag so App.jsx can auto-heal the category_id even if
+    // the Supabase `shortcut_quick_log` SQL function defaults to Food & Drinks
+    const taggedNote = matchedCategory
+      ? noteArg
+        ? `${noteArg} [cat:${matchedCategory}]`
+        : `[cat:${matchedCategory}]`
+      : noteArg;
 
     const { data, error } = await supabase.rpc('shortcut_quick_log', {
       p_token: cleanToken,
@@ -353,7 +450,7 @@ export default async function handler(req, res) {
       p_wallet_name: matchedWallet,
       p_category_name: matchedCategory,
       p_type: resolvedType,
-      p_note: noteArg
+      p_note: taggedNote
     });
 
     if (error) {
@@ -370,7 +467,7 @@ export default async function handler(req, res) {
     return res.status(200).send(bannerText);
   }
 
-  // MODE 2: Smart 1-Line Quick Input via GET (?token=xxx&q=150 cash food)
+  // MODE 2: Smart 1-Line Quick Input via GET (?token=xxx&q=150 cash transport)
   if (req.method === 'GET' && payload.q !== undefined && String(payload.q).trim() !== '') {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
@@ -394,52 +491,59 @@ export default async function handler(req, res) {
       p_token: cleanToken
     });
 
-    let matchedWallet = Array.isArray(rawWalletArg) ? '' : String(rawWalletArg).trim();
-    let matchedCategory = Array.isArray(rawCategoryArg) ? '' : String(rawCategoryArg).trim();
+    const dbWallets =
+      Array.isArray(meta?.wallets) && meta.wallets.length > 0
+        ? meta.wallets
+        : ['UPI', 'Cash'];
+    const dbCategories = buildKnownCategories(meta?.categories);
+
+    let matchedWallet = '';
+    let matchedCategory = '';
 
     const lowerRemaining = remainingText.toLowerCase();
 
-    if (!matchedWallet && meta && Array.isArray(meta.wallets) && meta.wallets.length > 0) {
-      const sortedWallets = [...meta.wallets].sort((a, b) => String(b).length - String(a).length);
-      const foundWallet = sortedWallets.find((w) =>
-        lowerRemaining.includes(String(w).trim().toLowerCase())
-      );
-      if (foundWallet) {
-        matchedWallet = foundWallet;
-        remainingText = remainingText
-          .replace(new RegExp(escapeRegex(String(foundWallet).trim()), 'ig'), '')
-          .trim();
-      } else {
-        matchedWallet = meta.wallets[0];
-      }
+    const sortedWallets = [...dbWallets].sort((a, b) => String(b).length - String(a).length);
+    const foundWallet = sortedWallets.find((w) =>
+      lowerRemaining.includes(String(w).trim().toLowerCase())
+    );
+    if (foundWallet) {
+      matchedWallet = foundWallet;
+      remainingText = remainingText
+        .replace(new RegExp(escapeRegex(String(foundWallet).trim()), 'ig'), '')
+        .trim();
+    } else {
+      matchedWallet = dbWallets[0];
     }
 
-    if (!matchedCategory && meta && Array.isArray(meta.categories) && meta.categories.length > 0) {
-      const sortedCats = [...meta.categories].sort((a, b) => String(b).length - String(a).length);
-      const foundCategory = sortedCats.find((c) => {
-        const fullCat = String(c).trim().toLowerCase();
-        const firstWord = fullCat.split(/[\s&/]+/)[0];
-        return (
-          lowerRemaining.includes(fullCat) ||
-          (firstWord.length >= 3 && lowerRemaining.includes(firstWord))
-        );
-      });
-      if (foundCategory) {
-        matchedCategory = foundCategory;
-        const firstWord = String(foundCategory).trim().split(/[\s&/]+/)[0];
-        remainingText = remainingText
-          .replace(new RegExp(escapeRegex(String(foundCategory).trim()), 'ig'), '')
-          .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'ig'), '')
-          .trim();
-      } else {
-        matchedCategory =
-          resolvedType === 'income'
-            ? meta.categories.find((c) => /income|allowance|salary/i.test(String(c))) || 'Income & Allowance'
-            : meta.categories[0];
-      }
+    const sortedCats = [...dbCategories].sort((a, b) => String(b).length - String(a).length);
+    const foundCategory = sortedCats.find((c) => {
+      const fullCat = cleanForCompare(c);
+      const firstWord = fullCat.split(/[\s&/]+/)[0];
+      return (
+        remainingText.toLowerCase().includes(fullCat) ||
+        (firstWord.length >= 3 && remainingText.toLowerCase().includes(firstWord))
+      );
+    });
+    if (foundCategory) {
+      matchedCategory = foundCategory;
+      const firstWord = cleanForCompare(foundCategory).split(/[\s&/]+/)[0];
+      remainingText = remainingText
+        .replace(new RegExp(escapeRegex(String(foundCategory).trim()), 'ig'), '')
+        .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'ig'), '')
+        .trim();
+    } else {
+      matchedCategory =
+        resolvedType === 'income'
+          ? dbCategories.find((c) => /income|allowance|salary/i.test(String(c))) || 'Income & Allowance'
+          : dbCategories[0];
     }
 
     const cleanNote = remainingText.replace(/\s+/g, ' ').trim();
+    const taggedNote = matchedCategory
+      ? cleanNote
+        ? `${cleanNote} [cat:${matchedCategory}]`
+        : `[cat:${matchedCategory}]`
+      : cleanNote;
 
     const { data, error } = await supabase.rpc('shortcut_quick_log', {
       p_token: cleanToken,
@@ -447,7 +551,7 @@ export default async function handler(req, res) {
       p_wallet_name: matchedWallet,
       p_category_name: matchedCategory,
       p_type: resolvedType,
-      p_note: cleanNote
+      p_note: taggedNote
     });
 
     if (error) {
@@ -481,19 +585,7 @@ export default async function handler(req, res) {
         ? data.wallets
         : ['UPI', 'Cash'];
 
-    const categoriesList =
-      Array.isArray(data?.categories) && data.categories.length > 0
-        ? data.categories
-        : [
-            'Food & Drinks',
-            'Groceries',
-            'Transport',
-            'Shopping',
-            'Entertainment',
-            'Bills & Recharge',
-            'Health & Fitness',
-            'Income & Allowance'
-          ];
+    const categoriesList = buildKnownCategories(data?.categories);
 
     const expenseCats = categoriesList.filter(
       (c) => !/income|allowance|salary/i.test(String(c))

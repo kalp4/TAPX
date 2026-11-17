@@ -35,6 +35,89 @@ const NAV_TABS = [
 const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
+const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
+
+// Read Supabase's localStorage token or TAPX local cache synchronously on frame 0
+// so the Login screen NEVER flashes when opening the app while already signed in.
+function getInitialSyncSession(cachedData) {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const sessionObj = parsed?.currentSession || parsed?.session || parsed;
+          if (sessionObj?.user?.id) {
+            return sessionObj;
+          }
+        }
+      }
+    }
+  } catch {
+    // Ignore storage read errors
+  }
+
+  if (cachedData?.userId) {
+    return {
+      user: {
+        id: cachedData.userId,
+        email: cachedData.userEmail || '',
+        user_metadata: cachedData.userMetadata || {}
+      }
+    };
+  }
+
+  return null;
+}
+
+function hasOAuthParamsInUrl() {
+  if (typeof window === 'undefined') return false;
+  const search = window.location.search || '';
+  const hash = window.location.hash || '';
+  return (
+    search.includes('code=') ||
+    hash.includes('access_token=') ||
+    hash.includes('error_description=')
+  );
+}
+
+// Parse embedded [cat:CategoryName] tag from Back Tap transaction notes
+function parseShortcutCategoryTag(rawNote) {
+  const str = String(rawNote || '');
+  const match = str.match(/\[cat:([^\]]+)\]/i);
+  if (!match) {
+    return { cleanNote: str, tagCategoryName: null };
+  }
+  return {
+    cleanNote: str.replace(/\[cat:[^\]]+\]/gi, '').replace(/\s+/g, ' ').trim(),
+    tagCategoryName: match[1].trim()
+  };
+}
+
+function cleanCategoryString(str) {
+  return String(str || '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+    .trim()
+    .toLowerCase();
+}
+
+function findMatchingCategoryObj(categoryName, categoriesList) {
+  if (!categoryName || !Array.isArray(categoriesList) || categoriesList.length === 0) {
+    return null;
+  }
+  const target = cleanCategoryString(categoryName);
+  if (!target) return null;
+
+  const exact = categoriesList.find((c) => cleanCategoryString(c.name) === target);
+  if (exact) return exact;
+
+  const partial = categoriesList.find((c) => {
+    const cleanDb = cleanCategoryString(c.name);
+    return cleanDb.includes(target) || target.includes(cleanDb);
+  });
+  return partial || null;
+}
 
 // Format raw numeric string into Indian locale commas while preserving trailing dot/zeros
 function formatDisplayAmount(rawStr) {
@@ -309,6 +392,18 @@ function TapxMainApp() {
     }
   }, []);
 
+  const initialSyncSession = useMemo(() => getInitialSyncSession(cachedData), [cachedData]);
+
+  // Saved Google Accounts for 1-Tap Account Picker on Login Screen
+  const [savedAccounts, setSavedAccounts] = useState(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_ACCOUNTS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Theme Mode: 'system' | 'dark' | 'light'
   const [themePref, setThemePref] = useState(() => {
     return localStorage.getItem(THEME_KEY) || 'system';
@@ -393,8 +488,10 @@ function TapxMainApp() {
     };
   }, [isDark]);
 
-  const [session, setSession] = useState(null);
-  const [initialBoot, setInitialBoot] = useState(!cachedData);
+  // Initialize session synchronously from localStorage/cache so we NEVER flash the login screen
+  const [session, setSession] = useState(() => initialSyncSession);
+  const [isAuthChecking, setIsAuthChecking] = useState(() => !initialSyncSession);
+  const [isLoggingIn, setIsLoggingIn] = useState(() => hasOAuthParamsInUrl());
   const [isSyncingBg, setIsSyncingBg] = useState(false);
   const [dbError, setDbError] = useState('');
   const seedingRef = useRef(false);
@@ -412,7 +509,7 @@ function TapxMainApp() {
 
   const [settingsSection, setSettingsSection] = useState('shortcut');
   const [analyticsRange, setAnalyticsRange] = useState('month');
-  const [selectedBarIdx, setSelectedBarIdx] = useState(6); // Default to Today (index 6)
+  const [selectedBarIdx, setSelectedBarIdx] = useState(6);
   const [amountPulse, setAmountPulse] = useState(false);
   const pulseTimerRef = useRef(null);
   const delHoldTimerRef = useRef(null);
@@ -546,7 +643,7 @@ function TapxMainApp() {
   const [note, setNote] = useState('');
 
   // Toast + Undo State
-  const [toast, setToast] = useState(null); // { message, onUndo }
+  const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
   // Activity Filter & Search State
@@ -591,7 +688,32 @@ function TapxMainApp() {
     }
   }, [selectedWalletId, toWalletId, wallets]);
 
-  // Cache state automatically
+  // Remember signed-in Google account on device for the 1-Tap Account Chooser
+  useEffect(() => {
+    const user = session?.user;
+    if (!user?.id || !user?.email) return;
+
+    const meta = user.user_metadata || {};
+    const profileEntry = {
+      id: user.id,
+      email: user.email,
+      name: meta.full_name || meta.name || user.email.split('@')[0],
+      avatar: meta.avatar_url || meta.picture || ''
+    };
+
+    setSavedAccounts((prev) => {
+      const filtered = prev.filter((a) => a.email.toLowerCase() !== profileEntry.email.toLowerCase());
+      const next = [profileEntry, ...filtered].slice(0, 5);
+      try {
+        localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore storage errors
+      }
+      return next;
+    });
+  }, [session?.user]);
+
+  // Cache state automatically (including userEmail & userMetadata for instant zero-flash boot)
   useEffect(() => {
     if (!session?.user?.id) return;
     try {
@@ -599,6 +721,8 @@ function TapxMainApp() {
         CACHE_KEY,
         JSON.stringify({
           userId: session.user.id,
+          userEmail: session.user.email || '',
+          userMetadata: session.user.user_metadata || {},
           settings,
           wallets,
           categories,
@@ -608,7 +732,7 @@ function TapxMainApp() {
     } catch {
       // Ignore storage quota errors
     }
-  }, [session?.user?.id, settings, wallets, categories, transactions]);
+  }, [session?.user?.id, session?.user?.email, session?.user?.user_metadata, settings, wallets, categories, transactions]);
 
   const showToast = useCallback((message, onUndo = null, duration = 2200) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -661,7 +785,7 @@ function TapxMainApp() {
 
       let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
       let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
-      const fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
+      let fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
 
       const alreadyCleanedBudgets = localStorage.getItem(BUDGET_CLEANUP_KEY);
       if (!alreadyCleanedBudgets && fetchedCategories.some((c) => c.monthly_budget !== null)) {
@@ -713,6 +837,51 @@ function TapxMainApp() {
         }
       }
 
+      // Auto-heal Back Tap transactions whose category was tagged in `note` ([cat:CategoryName])
+      // or where the note itself matches a category name while category_id defaulted to Food & Drinks
+      const defaultFirstCatId = fetchedCategories[0]?.id;
+      const txUpdatesToSync = [];
+
+      fetchedTx = fetchedTx.map((tx) => {
+        const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
+
+        if (tagCategoryName) {
+          const matchedCat = findMatchingCategoryObj(tagCategoryName, fetchedCategories);
+          const nextCatId = matchedCat ? matchedCat.id : tx.category_id;
+          if (nextCatId !== tx.category_id || cleanNote !== tx.note) {
+            txUpdatesToSync.push({ id: tx.id, category_id: nextCatId, note: cleanNote });
+            return { ...tx, category_id: nextCatId, note: cleanNote };
+          }
+        } else if (
+          tx.source === 'shortcut' &&
+          tx.category_id === defaultFirstCatId &&
+          cleanNote
+        ) {
+          const noteCatMatch = findMatchingCategoryObj(cleanNote, fetchedCategories);
+          if (noteCatMatch && noteCatMatch.id !== defaultFirstCatId) {
+            const strippedNote =
+              cleanCategoryString(cleanNote) === cleanCategoryString(noteCatMatch.name)
+                ? ''
+                : cleanNote;
+            txUpdatesToSync.push({ id: tx.id, category_id: noteCatMatch.id, note: strippedNote });
+            return { ...tx, category_id: noteCatMatch.id, note: strippedNote };
+          }
+        }
+
+        return tx;
+      });
+
+      if (txUpdatesToSync.length > 0) {
+        Promise.all(
+          txUpdatesToSync.map((u) =>
+            supabase
+              .from('transactions')
+              .update({ category_id: u.category_id, note: u.note })
+              .eq('id', u.id)
+          )
+        ).catch(() => {});
+      }
+
       setWallets(fetchedWallets);
       setCategories(fetchedCategories);
       setTransactions(fetchedTx);
@@ -735,35 +904,51 @@ function TapxMainApp() {
     } catch (err) {
       setDbError(String(err?.message || 'Database connection error'));
     } finally {
-      setInitialBoot(false);
       setIsSyncingBg(false);
     }
   }, []);
 
   useEffect(() => {
     let mounted = true;
+    const oauthRedirectInFlight = hasOAuthParamsInUrl();
 
     supabase.auth
       .getSession()
       .then((res) => {
         if (!mounted) return;
         const currentSession = res?.data?.session || null;
-        setSession(currentSession);
-        if (!currentSession) setInitialBoot(false);
+        if (currentSession) {
+          setSession(currentSession);
+          setIsAuthChecking(false);
+          setIsLoggingIn(false);
+        } else if (!oauthRedirectInFlight) {
+          setSession(null);
+          localStorage.removeItem(CACHE_KEY);
+          setIsAuthChecking(false);
+          setIsLoggingIn(false);
+        }
       })
       .catch(() => {
-        if (mounted) setInitialBoot(false);
+        if (mounted) {
+          setIsAuthChecking(false);
+          setIsLoggingIn(false);
+        }
       });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
-      setSession(newSession || null);
-      if (!newSession) {
+      if (newSession) {
+        setSession(newSession);
+        setIsAuthChecking(false);
+        setIsLoggingIn(false);
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null);
         setWallets([]);
         setCategories([]);
         setTransactions([]);
         localStorage.removeItem(CACHE_KEY);
-        setInitialBoot(false);
+        setIsAuthChecking(false);
+        setIsLoggingIn(false);
       }
     });
 
@@ -795,17 +980,46 @@ function TapxMainApp() {
     };
   }, [session?.user?.id, fetchUserData]);
 
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
+  // Trigger Google OAuth with Account Chooser (`select_account`) or pre-selected `login_hint`
+  const handleGoogleLogin = async (loginHintEmail = '') => {
+    setIsLoggingIn(true);
+    const queryParams = {
+      access_type: 'offline',
+      ...(loginHintEmail
+        ? { login_hint: loginHintEmail }
+        : { prompt: 'select_account' })
+    };
+
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: window.location.origin,
+        queryParams
       }
+    });
+
+    if (error) {
+      setIsLoggingIn(false);
+      showToast(error.message || 'Sign-in failed');
+    }
+  };
+
+  const handleRemoveSavedAccount = (emailToRemove, e) => {
+    e.stopPropagation();
+    setSavedAccounts((prev) => {
+      const next = prev.filter((a) => a.email.toLowerCase() !== emailToRemove.toLowerCase());
+      try {
+        localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore storage errors
+      }
+      return next;
     });
   };
 
   const handleLogout = async () => {
     localStorage.removeItem(CACHE_KEY);
+    setSession(null);
     await supabase.auth.signOut();
   };
 
@@ -1039,7 +1253,6 @@ function TapxMainApp() {
         .eq('id', targetTx.to_wallet_id);
     }
 
-    // Provide 1-tap Undo in toast
     showToast('Transaction deleted', async () => {
       setToast(null);
       const { id: _oldId, ...reinsertPayload } = targetTx;
@@ -1078,12 +1291,17 @@ function TapxMainApp() {
 
   // Open Edit Transaction Sheet
   const openEditTransaction = (tx) => {
+    const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
+    const resolvedCat =
+      (tagCategoryName && findMatchingCategoryObj(tagCategoryName, categories)) ||
+      categories.find((c) => c.id === tx.category_id);
+
     setEditingTx(tx);
     setEditTxAmount(String(tx.amount ?? ''));
-    setEditTxNote(tx.note || '');
+    setEditTxNote(cleanNote || '');
     setEditTxWalletId(tx.wallet_id || wallets[0]?.id || '');
     setEditTxToWalletId(tx.to_wallet_id || wallets[1]?.id || '');
-    setEditTxCategoryId(tx.category_id || '');
+    setEditTxCategoryId(resolvedCat?.id || tx.category_id || '');
   };
 
   const handleSaveEditedTransaction = async (e) => {
@@ -1107,14 +1325,12 @@ function TapxMainApp() {
       return;
     }
 
-    // Compute updated wallet balances cleanly across any changed wallet or amount
     const balanceDeltas = {};
     const addDelta = (wId, delta) => {
       if (!wId) return;
       balanceDeltas[wId] = (balanceDeltas[wId] || 0) + delta;
     };
 
-    // 1. Reverse old transaction impact
     if (oldTx.type === 'income') {
       addDelta(oldTx.wallet_id, -oldAmt);
     } else if (oldTx.type === 'expense') {
@@ -1124,7 +1340,6 @@ function TapxMainApp() {
       addDelta(oldTx.to_wallet_id, -oldAmt);
     }
 
-    // 2. Apply new transaction impact
     if (oldTx.type === 'income') {
       addDelta(nextWalletId, newAmt);
     } else if (oldTx.type === 'expense') {
@@ -1420,6 +1635,20 @@ function TapxMainApp() {
     [categories, entryType]
   );
 
+  // Resolve transaction category cleanly even if Back Tap stored [cat:...] in note
+  const resolveTxCategory = useCallback(
+    (tx) => {
+      const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx?.note);
+      if (tagCategoryName) {
+        const byTag = findMatchingCategoryObj(tagCategoryName, categories);
+        if (byTag) return { category: byTag, cleanNote };
+      }
+      const byId = categories.find((item) => item.id === tx?.category_id) || null;
+      return { category: byId, cleanNote };
+    },
+    [categories]
+  );
+
   // Filtered and Searchable Transactions
   const visibleTransactions = useMemo(() => {
     const q = activitySearch.trim().toLowerCase();
@@ -1438,9 +1667,9 @@ function TapxMainApp() {
         if (!q) return true;
         const w = wallets.find((item) => item.id === tx.wallet_id);
         const toW = wallets.find((item) => item.id === tx.to_wallet_id);
-        const c = categories.find((item) => item.id === tx.category_id);
+        const { category: c, cleanNote } = resolveTxCategory(tx);
         const haystack = [
-          tx.note,
+          cleanNote,
           w?.name,
           toW?.name,
           c?.name,
@@ -1452,9 +1681,9 @@ function TapxMainApp() {
         return haystack.includes(q);
       })
       .slice(0, 80);
-  }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, wallets, categories]);
+  }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, wallets, resolveTxCategory]);
 
-  // Group visibleTransactions by Date for clean scanning
+  // Group visibleTransactions by Date
   const groupedTransactions = useMemo(() => {
     const groups = [];
     const groupMap = new Map();
@@ -1482,17 +1711,19 @@ function TapxMainApp() {
     transactions.forEach((tx) => {
       if (!tx?.created_at) return;
       const d = new Date(tx.created_at);
+      const { category: c } = resolveTxCategory(tx);
+      const catId = c?.id || tx.category_id;
       if (
         tx.type === 'expense' &&
-        tx.category_id &&
+        catId &&
         d.getMonth() === now.getMonth() &&
         d.getFullYear() === now.getFullYear()
       ) {
-        map[tx.category_id] = (map[tx.category_id] || 0) + (Number(tx.amount) || 0);
+        map[catId] = (map[catId] || 0) + (Number(tx.amount) || 0);
       }
     });
     return map;
-  }, [transactions]);
+  }, [transactions, resolveTxCategory]);
 
   const analyticsData = useMemo(() => {
     const now = new Date();
@@ -1526,7 +1757,8 @@ function TapxMainApp() {
       if (tx.type === 'expense') {
         totalExpense += amt;
         expenseCount += 1;
-        const catKey = tx.category_id || 'uncategorized';
+        const { category: c } = resolveTxCategory(tx);
+        const catKey = c?.id || tx.category_id || 'uncategorized';
         categoryTotals[catKey] = (categoryTotals[catKey] || 0) + amt;
         categoryCounts[catKey] = (categoryCounts[catKey] || 0) + 1;
 
@@ -1625,12 +1857,11 @@ function TapxMainApp() {
       categoryBreakdown,
       walletBreakdown
     };
-  }, [transactions, categories, wallets, analyticsRange]);
+  }, [transactions, categories, wallets, analyticsRange, resolveTxCategory]);
 
   const currencySymbol = settings?.currency || '₹';
   const formattedDisplayAmount = useMemo(() => formatDisplayAmount(amountStr), [amountStr]);
 
-  // Dynamic font size so long amounts never clip
   const amountFontSizeClass = useMemo(() => {
     const len = formattedDisplayAmount.length;
     if (len > 10) return 'text-[28px]';
@@ -1648,7 +1879,8 @@ function TapxMainApp() {
   const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
   const settingsSubIndex = settingsSection === 'shortcut' ? 0 : 1;
 
-  if (initialBoot) {
+  // Show boot screen while verifying initial auth or completing an OAuth redirect
+  if ((isAuthChecking && !session) || (isLoggingIn && !session)) {
     return (
       <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
         <TapxLogo className="w-16 h-16 animate-pulse" />
@@ -1657,7 +1889,7 @@ function TapxMainApp() {
     );
   }
 
-  // ULTRA-CLEAN MINIMAL LOGIN SCREEN
+  // LOGIN SCREEN WITH 1-TAP SAVED GOOGLE ACCOUNT PICKER
   if (!session) {
     return (
       <div
@@ -1680,8 +1912,57 @@ function TapxMainApp() {
         </div>
 
         <div className="space-y-3">
+          {savedAccounts.length > 0 && (
+            <div className="space-y-2 pb-1">
+              <p className={`text-[11px] font-semibold uppercase tracking-wider px-1 ${ui.textMuted}`}>
+                Choose an account
+              </p>
+              <div className="space-y-2">
+                {savedAccounts.map((acc) => (
+                  <div
+                    key={acc.email}
+                    onClick={() => handleGoogleLogin(acc.email)}
+                    className={`w-full p-3 rounded-2xl border flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {acc.avatar ? (
+                        <img
+                          src={acc.avatar}
+                          alt={acc.name}
+                          className="w-9 h-9 rounded-full object-cover shrink-0 border border-white/10"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-sm flex items-center justify-center shrink-0">
+                          {String(acc.name || acc.email || 'U').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 text-left">
+                        <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
+                          {acc.name}
+                        </p>
+                        <p className={`text-[11px] truncate ${ui.textSecondary}`}>
+                          {acc.email}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => handleRemoveSavedAccount(acc.email, e)}
+                      className={`p-1.5 text-xs rounded-lg ${ui.textMuted} hover:text-rose-500`}
+                      title="Remove saved account"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button
-            onClick={handleGoogleLogin}
+            type="button"
+            onClick={() => handleGoogleLogin('')}
             className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 key-press ${
               isDark ? 'bg-white text-zinc-950' : 'bg-zinc-900 text-white'
             }`}
@@ -1704,7 +1985,7 @@ function TapxMainApp() {
                 d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"
               />
             </svg>
-            Continue with Google
+            {savedAccounts.length > 0 ? 'Use another Google Account' : 'Continue with Google'}
           </button>
 
           <p className={`text-[11px] text-center leading-relaxed ${ui.textMuted}`}>
@@ -2103,10 +2384,10 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 2: ACCOUNTS & ACTIVITY (Unified Single-Scroll Layout, Horizontal Account Cards, Date Groups) */}
+        {/* TAB 2: ACCOUNTS & ACTIVITY */}
         {activeTab === 'wallets' && (
           <div key="tab-wallets" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
-            {/* Horizontal Account Strip (Eliminates competing vertical scrollbars) */}
+            {/* Horizontal Account Strip */}
             <div className="shrink-0 space-y-1.5">
               <div className="flex items-center justify-between">
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
@@ -2246,7 +2527,7 @@ function TapxMainApp() {
                     {group.items.map((tx) => {
                       const w = wallets.find((item) => item.id === tx.wallet_id);
                       const toW = wallets.find((item) => item.id === tx.to_wallet_id);
-                      const c = categories.find((item) => item.id === tx.category_id);
+                      const { category: c, cleanNote } = resolveTxCategory(tx);
                       return (
                         <div
                           key={tx.id}
@@ -2262,7 +2543,7 @@ function TapxMainApp() {
                                 <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
                                   {tx.type === 'transfer'
                                     ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
-                                    : tx.note || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
+                                    : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
                                 </p>
                                 {tx.source === 'shortcut' && (
                                   <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${ui.cardSubtle} ${ui.textSecondary}`}>
@@ -2272,7 +2553,7 @@ function TapxMainApp() {
                               </div>
                               <p className={`text-[10px] truncate ${ui.textMuted}`}>
                                 {w?.name || 'Account'}
-                                {tx.note && c?.name ? ` · ${c.name}` : ''}
+                                {cleanNote && c?.name ? ` · ${c.name}` : ''}
                                 {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
                               </p>
                             </div>
