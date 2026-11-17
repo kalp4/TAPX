@@ -2260,10 +2260,10 @@ import { supabase } from './supabaseClient';
 // Shared iCloud Shortcut Link for 1-Tap Setup
 const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/e2b04fe336ae49af8df883fccb1370f2';
 
-const WALLET_COLORS = ['#18181b', '#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2'];
+const WALLET_COLORS = ['#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2', '#3f3f46'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
 const CATEGORY_ICONS = ['🍔', '🛒', '⛽', '🛍️', '🎬', '⚡', '💊', '☕', '📚', '🏠', '💰', '✈️'];
-const CHART_COLORS = ['#2563eb', '#e11d48', '#d97706', '#059669', '#7c3aed', '#0891b2', '#db2777', '#4f46e5'];
+const CHART_COLORS = ['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899', '#6366f1'];
 
 const DEFAULT_WALLETS_TEMPLATE = [
   { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#2563eb', icon: '⚡' },
@@ -2271,14 +2271,14 @@ const DEFAULT_WALLETS_TEMPLATE = [
 ];
 
 const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#e11d48', monthly_budget: null },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#059669', monthly_budget: null },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#d97706', monthly_budget: null },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#7c3aed', monthly_budget: null },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#db2777', monthly_budget: null },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#0891b2', monthly_budget: null },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#2563eb', monthly_budget: null },
-  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#059669', monthly_budget: null }
+  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#f43f5e', monthly_budget: null },
+  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#10b981', monthly_budget: null },
+  { name: 'Transport', type: 'expense', icon: '⛽', color: '#f59e0b', monthly_budget: null },
+  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#8b5cf6', monthly_budget: null },
+  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#ec4899', monthly_budget: null },
+  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#06b6d4', monthly_budget: null },
+  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#3b82f6', monthly_budget: null },
+  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#10b981', monthly_budget: null }
 ];
 
 const NAV_TABS = [
@@ -2292,6 +2292,7 @@ const CACHE_KEY = 'tapx_local_cache_v4';
 const THEME_KEY = 'tapx_theme_pref';
 const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
+const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
 
 // Read Supabase's localStorage token or TAPX local cache synchronously on frame 0
 // so the Login screen NEVER flashes when opening the app while already signed in.
@@ -2375,6 +2376,21 @@ function findMatchingCategoryObj(categoryName, categoriesList) {
   return partial || null;
 }
 
+// Assign a semantic accent hex for any category
+function getCategoryAccentColor(cat, index = 0) {
+  if (cat?.color) return cat.color;
+  const name = String(cat?.name || '').toLowerCase();
+  if (name.includes('food') || name.includes('drink') || name.includes('dining')) return '#f43f5e';
+  if (name.includes('grocer')) return '#10b981';
+  if (name.includes('transport') || name.includes('fuel') || name.includes('cab')) return '#f59e0b';
+  if (name.includes('shop')) return '#8b5cf6';
+  if (name.includes('entertain') || name.includes('movie')) return '#ec4899';
+  if (name.includes('bill') || name.includes('recharge')) return '#06b6d4';
+  if (name.includes('health') || name.includes('fitness')) return '#3b82f6';
+  if (name.includes('income') || name.includes('allowance') || name.includes('salary')) return '#10b981';
+  return CHART_COLORS[index % CHART_COLORS.length];
+}
+
 // Format raw numeric string into Indian locale commas while preserving trailing dot/zeros
 function formatDisplayAmount(rawStr) {
   if (!rawStr || rawStr === '0') return '0';
@@ -2415,6 +2431,12 @@ function formatTimeOnly(isoString) {
     minute: '2-digit',
     hour12: true
   });
+}
+
+// Escape CSV cell safely
+function escapeCsvCell(val) {
+  const str = String(val ?? '').replace(/"/g, '""');
+  return `"${str}"`;
 }
 
 // Frameless, 100% Transparent-Cutout Vector Logo
@@ -2660,6 +2682,20 @@ function TapxMainApp() {
     }
   });
 
+  // Persistent Offline Sync Queue
+  const [offlineQueue, setOfflineQueue] = useState(() => {
+    try {
+      const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  const flushingQueueRef = useRef(false);
+
   // Theme Mode: 'system' | 'dark' | 'light'
   const [themePref, setThemePref] = useState(() => {
     return localStorage.getItem(THEME_KEY) || 'system';
@@ -2681,28 +2717,28 @@ function TapxMainApp() {
   // Sync theme color with iOS Status Bar
   useEffect(() => {
     localStorage.setItem(THEME_KEY, themePref);
-    const bgHex = isDark ? '#09090b' : '#f5f5f7';
+    const bgHex = isDark ? '#09090b' : '#f4f4f8';
     document.documentElement.style.backgroundColor = bgHex;
     document.body.style.backgroundColor = bgHex;
     const meta = document.getElementById('theme-color-meta');
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Refined Apple-Grade Palette
+  // Tactile, Dimensional Fintech Surface System (Glass Depth, Specular Top Edges, Semantic Glows)
   const ui = useMemo(() => {
     if (isDark) {
       return {
         bg: 'bg-[#09090b] text-zinc-100',
-        sheetBg: 'bg-[#141418] border-[#27272f] text-zinc-100',
-        card: 'bg-[#131316] border-[#232329]',
-        cardElevated: 'bg-[#18181c] border-[#292930]',
-        cardSubtle: 'bg-[#1c1c21] border-[#27272e]',
-        input: 'bg-[#131316] border-[#27272e] text-zinc-100 placeholder-zinc-500',
-        pillIdle: 'bg-[#141418] border-[#24242b] text-zinc-400',
-        pillActive: 'bg-zinc-100 border-zinc-100 text-zinc-950 shadow-sm',
-        numpadKey: 'bg-[#151519] border-[#24242b] text-zinc-100 shadow-[0_1px_0_rgba(255,255,255,0.04)] active:bg-[#222228]',
-        segmentedBg: 'bg-[#131316] border-[#222228]',
-        segmentedThumb: 'bg-[#26262d] shadow-sm',
+        sheetBg: 'bg-[#121217]/95 backdrop-blur-2xl border-[#282833] text-zinc-100',
+        card: 'bg-gradient-to-b from-[#17171d] to-[#121216] border-[#24242d] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_20px_-6px_rgba(0,0,0,0.55)]',
+        cardElevated: 'bg-gradient-to-b from-[#1e1e26] to-[#15151b] border-[#2e2e3a] shadow-[inset_0_1px_0_rgba(255,255,255,0.09),0_10px_24px_-6px_rgba(0,0,0,0.65)]',
+        cardSubtle: 'bg-[#1b1b22]/90 border-[#282832] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+        input: 'bg-[#121216] border-[#292933] text-zinc-100 placeholder-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)]',
+        pillIdle: 'bg-[#15151b] border-[#262630] text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+        pillActive: 'bg-zinc-100 border-white text-zinc-950 shadow-[0_4px_14px_rgba(255,255,255,0.14)]',
+        numpadKey: 'bg-gradient-to-b from-[#1a1a22] to-[#14141a] border-[#262630] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_3px_6px_rgba(0,0,0,0.4)] active:from-[#24242f] active:to-[#1d1d26]',
+        segmentedBg: 'bg-[#121216] border-[#23232c] shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]',
+        segmentedThumb: 'bg-gradient-to-b from-[#2b2b36] to-[#23232c] border border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.45)]',
         textPrimary: 'text-zinc-50',
         textSecondary: 'text-zinc-400',
         textMuted: 'text-zinc-500',
@@ -2710,25 +2746,25 @@ function TapxMainApp() {
         islandLens: 'ios-magnifying-lens-dark',
         islandTextActive: 'text-white drop-shadow-[0_1px_8px_rgba(255,255,255,0.28)]',
         islandTextIdle: 'text-zinc-400/80',
-        primaryBtnExpense: 'bg-zinc-100 text-zinc-950',
-        primaryBtnIncome: 'bg-emerald-500 text-zinc-950',
-        primaryBtnTransfer: 'bg-blue-500 text-white',
-        divider: 'border-[#1e1e24]',
-        stickyHeader: 'bg-[#09090b]/90 backdrop-blur-md'
+        primaryBtnExpense: 'bg-gradient-to-b from-white to-zinc-200 text-zinc-950 shadow-[0_6px_20px_-4px_rgba(255,255,255,0.22)]',
+        primaryBtnIncome: 'bg-gradient-to-b from-emerald-400 to-emerald-500 text-zinc-950 shadow-[0_6px_20px_-4px_rgba(16,185,129,0.38)]',
+        primaryBtnTransfer: 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-[0_6px_20px_-4px_rgba(59,130,246,0.4)]',
+        divider: 'border-[#22222b]',
+        stickyHeader: 'bg-[#09090b]/85 backdrop-blur-md'
       };
     }
     return {
-      bg: 'bg-[#f5f5f7] text-zinc-900',
-      sheetBg: 'bg-white border-zinc-200 text-zinc-900',
-      card: 'bg-white border-zinc-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]',
-      cardElevated: 'bg-white border-zinc-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.04)]',
-      cardSubtle: 'bg-zinc-100 border-zinc-200/70',
-      input: 'bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400',
-      pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
-      pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-sm',
-      numpadKey: 'bg-white border-zinc-200/90 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:bg-zinc-100',
-      segmentedBg: 'bg-zinc-200/80 border-zinc-300/40',
-      segmentedThumb: 'bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]',
+      bg: 'bg-[#f4f4f8] text-zinc-900',
+      sheetBg: 'bg-white/95 backdrop-blur-2xl border-zinc-200 text-zinc-900',
+      card: 'bg-gradient-to-b from-white to-[#fafafa] border-zinc-200/85 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_4px_14px_-4px_rgba(0,0,0,0.05)]',
+      cardElevated: 'bg-white border-zinc-200 shadow-[0_8px_22px_-6px_rgba(0,0,0,0.07)]',
+      cardSubtle: 'bg-zinc-100/90 border-zinc-200/75',
+      input: 'bg-white border-zinc-200/90 text-zinc-900 placeholder-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]',
+      pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 shadow-[0_1px_3px_rgba(0,0,0,0.03)]',
+      pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-[0_4px_12px_rgba(0,0,0,0.16)]',
+      numpadKey: 'bg-gradient-to-b from-white to-zinc-50/90 border-zinc-200/90 text-zinc-900 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_2px_4px_rgba(0,0,0,0.05)] active:bg-zinc-100',
+      segmentedBg: 'bg-zinc-200/75 border-zinc-300/50 shadow-inner',
+      segmentedThumb: 'bg-white shadow-[0_2px_6px_rgba(0,0,0,0.09)]',
       textPrimary: 'text-zinc-900',
       textSecondary: 'text-zinc-500',
       textMuted: 'text-zinc-400',
@@ -2736,11 +2772,11 @@ function TapxMainApp() {
       islandLens: 'ios-magnifying-lens-light',
       islandTextActive: 'text-[#007AFF] drop-shadow-[0_1px_4px_rgba(0,122,255,0.18)]',
       islandTextIdle: 'text-zinc-500/85',
-      primaryBtnExpense: 'bg-zinc-900 text-white',
-      primaryBtnIncome: 'bg-emerald-600 text-white',
-      primaryBtnTransfer: 'bg-blue-600 text-white',
-      divider: 'border-zinc-200',
-      stickyHeader: 'bg-[#f5f5f7]/90 backdrop-blur-md'
+      primaryBtnExpense: 'bg-gradient-to-b from-zinc-800 to-zinc-950 text-white shadow-[0_6px_18px_-4px_rgba(0,0,0,0.25)]',
+      primaryBtnIncome: 'bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_6px_18px_-4px_rgba(16,185,129,0.35)]',
+      primaryBtnTransfer: 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-[0_6px_18px_-4px_rgba(37,99,235,0.35)]',
+      divider: 'border-zinc-200/80',
+      stickyHeader: 'bg-[#f4f4f8]/85 backdrop-blur-md'
     };
   }, [isDark]);
 
@@ -2766,6 +2802,7 @@ function TapxMainApp() {
   const [settingsSection, setSettingsSection] = useState('shortcut');
   const [analyticsRange, setAnalyticsRange] = useState('month');
   const [selectedBarIdx, setSelectedBarIdx] = useState(6);
+  const [selectedDonutCatId, setSelectedDonutCatId] = useState(null);
   const [amountPulse, setAmountPulse] = useState(false);
   const pulseTimerRef = useRef(null);
   const delHoldTimerRef = useRef(null);
@@ -2913,7 +2950,7 @@ function TapxMainApp() {
   const [newWalletName, setNewWalletName] = useState('');
   const [newWalletType, setNewWalletType] = useState('UPI / Wallet');
   const [newWalletBalance, setNewWalletBalance] = useState('');
-  const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[1]);
+  const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[0]);
   const [newWalletIcon, setNewWalletIcon] = useState(WALLET_ICONS[0]);
 
   // Bottom Sheet State: New / Edit Category
@@ -2944,6 +2981,15 @@ function TapxMainApp() {
     }
   }, [selectedWalletId, toWalletId, wallets]);
 
+  // Persist Offline Sync Queue to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(offlineQueue));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [offlineQueue]);
+
   // Remember signed-in Google account on device for the 1-Tap Account Chooser
   useEffect(() => {
     const user = session?.user;
@@ -2969,7 +3015,7 @@ function TapxMainApp() {
     });
   }, [session?.user]);
 
-  // Cache state automatically (including userEmail & userMetadata for instant zero-flash boot)
+  // Cache state automatically
   useEffect(() => {
     if (!session?.user?.id) return;
     try {
@@ -2998,171 +3044,268 @@ function TapxMainApp() {
     }, onUndo ? 4000 : duration);
   }, []);
 
-  const fetchUserData = useCallback(async (userId) => {
-    if (!userId) return;
-    setIsSyncingBg(true);
-    setDbError('');
-    try {
-      let { data: userSettings, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+  // Flush Offline Sync Queue when back online
+  const flushOfflineQueue = useCallback(
+    async (userId) => {
+      if (!userId || flushingQueueRef.current) return;
+      let currentQueue = [];
+      try {
+        const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+        currentQueue = raw ? JSON.parse(raw) : [];
+      } catch {
+        currentQueue = [];
+      }
 
-      if (settingsError) throw settingsError;
+      if (!Array.isArray(currentQueue) || currentQueue.length === 0) return;
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
 
-      if (!userSettings) {
-        const { data: insertedSettings, error: insertError } = await supabase
+      flushingQueueRef.current = true;
+      setIsSyncingBg(true);
+
+      const remaining = [];
+
+      for (const item of currentQueue) {
+        try {
+          if (item.action === 'insert_tx') {
+            const { data: insertedRow, error } = await supabase
+              .from('transactions')
+              .insert([item.payload])
+              .select()
+              .maybeSingle();
+
+            if (error) throw error;
+
+            // Update wallet balances in Supabase
+            if (item.fromWalletId && item.expectedFromBalance !== undefined) {
+              await supabase
+                .from('wallets')
+                .update({ balance: item.expectedFromBalance })
+                .eq('id', item.fromWalletId);
+            }
+            if (item.toWalletId && item.expectedToBalance !== undefined && item.expectedToBalance !== null) {
+              await supabase
+                .from('wallets')
+                .update({ balance: item.expectedToBalance })
+                .eq('id', item.toWalletId);
+            }
+
+            if (insertedRow) {
+              setTransactions((prev) =>
+                prev.map((tx) => (tx.id === item.tempId ? insertedRow : tx))
+              );
+            }
+          }
+        } catch {
+          remaining.push(item);
+        }
+      }
+
+      setOfflineQueue(remaining);
+      flushingQueueRef.current = false;
+      setIsSyncingBg(false);
+
+      if (remaining.length === 0 && currentQueue.length > 0) {
+        showToast(`Synced ${currentQueue.length} offline ${currentQueue.length === 1 ? 'entry' : 'entries'}`);
+      }
+    },
+    [showToast]
+  );
+
+  const fetchUserData = useCallback(
+    async (userId) => {
+      if (!userId) return;
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setIsOnline(false);
+        return;
+      }
+
+      setIsSyncingBg(true);
+      setDbError('');
+      try {
+        // First flush any pending offline transactions before pulling fresh state
+        await flushOfflineQueue(userId);
+
+        let { data: userSettings, error: settingsError } = await supabase
           .from('user_settings')
-          .insert([{ user_id: userId, currency: '₹' }])
-          .select()
+          .select('*')
+          .eq('user_id', userId)
           .maybeSingle();
 
-        if (insertError) throw insertError;
-        userSettings = insertedSettings;
-      }
+        if (settingsError) throw settingsError;
 
-      if (userSettings) {
-        setSettings({
-          currency: userSettings.currency || '₹',
-          shortcut_token: userSettings.shortcut_token || ''
-        });
-      }
+        if (!userSettings) {
+          const { data: insertedSettings, error: insertError } = await supabase
+            .from('user_settings')
+            .insert([{ user_id: userId, currency: '₹' }])
+            .select()
+            .maybeSingle();
 
-      const [walletsRes, categoriesRes, txRes] = await Promise.all([
-        supabase.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-        supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-        supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(500)
-      ]);
-
-      if (walletsRes.error) throw walletsRes.error;
-      if (categoriesRes.error) throw categoriesRes.error;
-      if (txRes.error) throw txRes.error;
-
-      let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
-      let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
-      let fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
-
-      const alreadyCleanedBudgets = localStorage.getItem(BUDGET_CLEANUP_KEY);
-      if (!alreadyCleanedBudgets && fetchedCategories.some((c) => c.monthly_budget !== null)) {
-        await supabase
-          .from('categories')
-          .update({ monthly_budget: null })
-          .eq('user_id', userId);
-        fetchedCategories = fetchedCategories.map((c) => ({ ...c, monthly_budget: null }));
-        localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
-      } else if (!alreadyCleanedBudgets) {
-        localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
-      }
-
-      if (!seedingRef.current) {
-        seedingRef.current = true;
-
-        if (fetchedWallets.length === 0 && fetchedTx.length === 0) {
-          const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({
-            ...w,
-            user_id: userId
-          }));
-          const { data: seededWallets } = await supabase
-            .from('wallets')
-            .insert(starterWallets)
-            .select();
-          if (Array.isArray(seededWallets) && seededWallets.length > 0) {
-            fetchedWallets = seededWallets;
-          }
+          if (insertError) throw insertError;
+          userSettings = insertedSettings;
         }
 
-        if (fetchedCategories.length < 7) {
-          const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
-          const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
-            (item) => !existingNames.has(item.name.toLowerCase())
-          ).map((item) => ({
-            ...item,
-            user_id: userId
-          }));
+        if (userSettings) {
+          setSettings({
+            currency: userSettings.currency || '₹',
+            shortcut_token: userSettings.shortcut_token || ''
+          });
+        }
 
-          if (missingDefaults.length > 0) {
-            const { data: seededCats } = await supabase
-              .from('categories')
-              .insert(missingDefaults)
+        const [walletsRes, categoriesRes, txRes] = await Promise.all([
+          supabase.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+          supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+          supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(500)
+        ]);
+
+        if (walletsRes.error) throw walletsRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+        if (txRes.error) throw txRes.error;
+
+        let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
+        let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
+        let fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
+
+        const alreadyCleanedBudgets = localStorage.getItem(BUDGET_CLEANUP_KEY);
+        if (!alreadyCleanedBudgets && fetchedCategories.some((c) => c.monthly_budget !== null)) {
+          await supabase
+            .from('categories')
+            .update({ monthly_budget: null })
+            .eq('user_id', userId);
+          fetchedCategories = fetchedCategories.map((c) => ({ ...c, monthly_budget: null }));
+          localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
+        } else if (!alreadyCleanedBudgets) {
+          localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
+        }
+
+        if (!seedingRef.current) {
+          seedingRef.current = true;
+
+          if (fetchedWallets.length === 0 && fetchedTx.length === 0) {
+            const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({
+              ...w,
+              user_id: userId
+            }));
+            const { data: seededWallets } = await supabase
+              .from('wallets')
+              .insert(starterWallets)
               .select();
-            if (Array.isArray(seededCats)) {
-              fetchedCategories = [...fetchedCategories, ...seededCats];
+            if (Array.isArray(seededWallets) && seededWallets.length > 0) {
+              fetchedWallets = seededWallets;
+            }
+          }
+
+          if (fetchedCategories.length < 7) {
+            const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
+            const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
+              (item) => !existingNames.has(item.name.toLowerCase())
+            ).map((item) => ({
+              ...item,
+              user_id: userId
+            }));
+
+            if (missingDefaults.length > 0) {
+              const { data: seededCats } = await supabase
+                .from('categories')
+                .insert(missingDefaults)
+                .select();
+              if (Array.isArray(seededCats)) {
+                fetchedCategories = [...fetchedCategories, ...seededCats];
+              }
             }
           }
         }
-      }
 
-      // Auto-heal Back Tap transactions whose category was tagged in `note` ([cat:CategoryName])
-      // or where the note itself matches a category name while category_id defaulted to Food & Drinks
-      const defaultFirstCatId = fetchedCategories[0]?.id;
-      const txUpdatesToSync = [];
+        // Auto-heal Back Tap transactions whose category was tagged in `note` ([cat:CategoryName])
+        const defaultFirstCatId = fetchedCategories[0]?.id;
+        const txUpdatesToSync = [];
 
-      fetchedTx = fetchedTx.map((tx) => {
-        const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
+        fetchedTx = fetchedTx.map((tx) => {
+          const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
 
-        if (tagCategoryName) {
-          const matchedCat = findMatchingCategoryObj(tagCategoryName, fetchedCategories);
-          const nextCatId = matchedCat ? matchedCat.id : tx.category_id;
-          if (nextCatId !== tx.category_id || cleanNote !== tx.note) {
-            txUpdatesToSync.push({ id: tx.id, category_id: nextCatId, note: cleanNote });
-            return { ...tx, category_id: nextCatId, note: cleanNote };
+          if (tagCategoryName) {
+            const matchedCat = findMatchingCategoryObj(tagCategoryName, fetchedCategories);
+            const nextCatId = matchedCat ? matchedCat.id : tx.category_id;
+            if (nextCatId !== tx.category_id || cleanNote !== tx.note) {
+              txUpdatesToSync.push({ id: tx.id, category_id: nextCatId, note: cleanNote });
+              return { ...tx, category_id: nextCatId, note: cleanNote };
+            }
+          } else if (
+            tx.source === 'shortcut' &&
+            tx.category_id === defaultFirstCatId &&
+            cleanNote
+          ) {
+            const noteCatMatch = findMatchingCategoryObj(cleanNote, fetchedCategories);
+            if (noteCatMatch && noteCatMatch.id !== defaultFirstCatId) {
+              const strippedNote =
+                cleanCategoryString(cleanNote) === cleanCategoryString(noteCatMatch.name)
+                  ? ''
+                  : cleanNote;
+              txUpdatesToSync.push({ id: tx.id, category_id: noteCatMatch.id, note: strippedNote });
+              return { ...tx, category_id: noteCatMatch.id, note: strippedNote };
+            }
           }
-        } else if (
-          tx.source === 'shortcut' &&
-          tx.category_id === defaultFirstCatId &&
-          cleanNote
-        ) {
-          const noteCatMatch = findMatchingCategoryObj(cleanNote, fetchedCategories);
-          if (noteCatMatch && noteCatMatch.id !== defaultFirstCatId) {
-            const strippedNote =
-              cleanCategoryString(cleanNote) === cleanCategoryString(noteCatMatch.name)
-                ? ''
-                : cleanNote;
-            txUpdatesToSync.push({ id: tx.id, category_id: noteCatMatch.id, note: strippedNote });
-            return { ...tx, category_id: noteCatMatch.id, note: strippedNote };
-          }
+
+          return tx;
+        });
+
+        if (txUpdatesToSync.length > 0) {
+          Promise.all(
+            txUpdatesToSync.map((u) =>
+              supabase
+                .from('transactions')
+                .update({ category_id: u.category_id, note: u.note })
+                .eq('id', u.id)
+            )
+          ).catch(() => {});
         }
 
-        return tx;
-      });
+        setWallets(fetchedWallets);
+        setCategories(fetchedCategories);
+        setTransactions(fetchedTx);
 
-      if (txUpdatesToSync.length > 0) {
-        Promise.all(
-          txUpdatesToSync.map((u) =>
-            supabase
-              .from('transactions')
-              .update({ category_id: u.category_id, note: u.note })
-              .eq('id', u.id)
-          )
-        ).catch(() => {});
+        setSelectedWalletId((prev) => {
+          if (prev && fetchedWallets.some((w) => w.id === prev)) return prev;
+          return fetchedWallets[0]?.id || '';
+        });
+
+        setToWalletId((prev) => {
+          if (prev && fetchedWallets.some((w) => w.id === prev)) return prev;
+          return fetchedWallets[1]?.id || fetchedWallets[0]?.id || '';
+        });
+
+        setSelectedCategoryId((prev) => {
+          if (prev && fetchedCategories.some((c) => c.id === prev)) return prev;
+          const firstExpenseCat = fetchedCategories.find((c) => c.type === 'expense');
+          return firstExpenseCat?.id || '';
+        });
+      } catch (err) {
+        setDbError(String(err?.message || 'Database connection error'));
+      } finally {
+        setIsSyncingBg(false);
       }
+    },
+    [flushOfflineQueue]
+  );
 
-      setWallets(fetchedWallets);
-      setCategories(fetchedCategories);
-      setTransactions(fetchedTx);
+  // Track online/offline status & auto-flush queue on reconnect
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (session?.user?.id) {
+        fetchUserData(session.user.id);
+      }
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
 
-      setSelectedWalletId((prev) => {
-        if (prev && fetchedWallets.some((w) => w.id === prev)) return prev;
-        return fetchedWallets[0]?.id || '';
-      });
-
-      setToWalletId((prev) => {
-        if (prev && fetchedWallets.some((w) => w.id === prev)) return prev;
-        return fetchedWallets[1]?.id || fetchedWallets[0]?.id || '';
-      });
-
-      setSelectedCategoryId((prev) => {
-        if (prev && fetchedCategories.some((c) => c.id === prev)) return prev;
-        const firstExpenseCat = fetchedCategories.find((c) => c.type === 'expense');
-        return firstExpenseCat?.id || '';
-      });
-    } catch (err) {
-      setDbError(String(err?.message || 'Database connection error'));
-    } finally {
-      setIsSyncingBg(false);
-    }
-  }, []);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [session?.user?.id, fetchUserData]);
 
   useEffect(() => {
     let mounted = true;
@@ -3365,9 +3508,9 @@ function TapxMainApp() {
         ? Number(toWalletObj.balance || 0) + numericAmount
         : null;
 
+    const nowIso = new Date().toISOString();
     const tempId = `temp-${Date.now()}`;
-    const optimisticTx = {
-      id: tempId,
+    const insertPayload = {
       user_id: session.user.id,
       wallet_id: fromId,
       to_wallet_id: destId,
@@ -3376,7 +3519,15 @@ function TapxMainApp() {
       amount: numericAmount,
       note: cleanNote,
       source: 'app',
-      created_at: new Date().toISOString()
+      created_at: nowIso
+    };
+
+    const currentlyOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+
+    const optimisticTx = {
+      id: tempId,
+      ...insertPayload,
+      pendingSync: currentlyOffline
     };
 
     setTransactions((prev) => [optimisticTx, ...prev]);
@@ -3392,29 +3543,41 @@ function TapxMainApp() {
 
     setAmountStr('0');
     setNote('');
+
+    const enqueueOfflineItem = () => {
+      const queueEntry = {
+        tempId,
+        action: 'insert_tx',
+        payload: insertPayload,
+        fromWalletId: fromId,
+        expectedFromBalance,
+        toWalletId: destId,
+        expectedToBalance
+      };
+      setOfflineQueue((prev) => [...prev, queueEntry]);
+      setTransactions((prev) =>
+        prev.map((tx) => (tx.id === tempId ? { ...tx, pendingSync: true } : tx))
+      );
+      showToast('Saved offline · Will sync when online');
+    };
+
+    if (currentlyOffline) {
+      enqueueOfflineItem();
+      return;
+    }
+
     const actionPrefix = currentType === 'income' ? '+' : currentType === 'expense' ? '-' : '⇄ ';
     showToast(`${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} saved`);
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
-      .insert([
-        {
-          user_id: session.user.id,
-          wallet_id: fromId,
-          to_wallet_id: destId,
-          category_id: catId,
-          type: currentType,
-          amount: numericAmount,
-          note: cleanNote,
-          source: 'app'
-        }
-      ])
+      .insert([insertPayload])
       .select()
       .maybeSingle();
 
     if (error) {
-      showToast(`Sync error: ${error.message}`);
-      fetchUserData(session.user.id);
+      // Queue offline instead of losing the user's transaction
+      enqueueOfflineItem();
       return;
     }
 
@@ -3477,6 +3640,7 @@ function TapxMainApp() {
         : null;
 
     setTransactions((prev) => prev.filter((t) => t.id !== id));
+    setOfflineQueue((prev) => prev.filter((item) => item.tempId !== id));
     setWallets((prev) =>
       prev.map((w) => {
         if (w.id === targetTx.wallet_id && restoredFromBalance !== null) {
@@ -3493,25 +3657,27 @@ function TapxMainApp() {
       setEditingTx(null);
     }
 
-    await supabase.from('transactions').delete().eq('id', id);
+    if (!String(id).startsWith('temp-')) {
+      await supabase.from('transactions').delete().eq('id', id);
 
-    if (targetTx.wallet_id && restoredFromBalance !== null) {
-      await supabase
-        .from('wallets')
-        .update({ balance: restoredFromBalance })
-        .eq('id', targetTx.wallet_id);
-    }
+      if (targetTx.wallet_id && restoredFromBalance !== null) {
+        await supabase
+          .from('wallets')
+          .update({ balance: restoredFromBalance })
+          .eq('id', targetTx.wallet_id);
+      }
 
-    if (targetTx.type === 'transfer' && targetTx.to_wallet_id && restoredToBalance !== null) {
-      await supabase
-        .from('wallets')
-        .update({ balance: restoredToBalance })
-        .eq('id', targetTx.to_wallet_id);
+      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && restoredToBalance !== null) {
+        await supabase
+          .from('wallets')
+          .update({ balance: restoredToBalance })
+          .eq('id', targetTx.to_wallet_id);
+      }
     }
 
     showToast('Transaction deleted', async () => {
       setToast(null);
-      const { id: _oldId, ...reinsertPayload } = targetTx;
+      const { id: _oldId, pendingSync: _ps, ...reinsertPayload } = targetTx;
       const { data: restoredRow } = await supabase
         .from('transactions')
         .insert([reinsertPayload])
@@ -3635,19 +3801,21 @@ function TapxMainApp() {
     setEditingTx(null);
     showToast('Transaction updated');
 
-    await supabase
-      .from('transactions')
-      .update({
-        amount: newAmt,
-        note: cleanNote,
-        wallet_id: nextWalletId,
-        to_wallet_id: nextToWalletId,
-        category_id: nextCategoryId
-      })
-      .eq('id', oldTx.id);
+    if (!String(oldTx.id).startsWith('temp-')) {
+      await supabase
+        .from('transactions')
+        .update({
+          amount: newAmt,
+          note: cleanNote,
+          wallet_id: nextWalletId,
+          to_wallet_id: nextToWalletId,
+          category_id: nextCategoryId
+        })
+        .eq('id', oldTx.id);
 
-    for (const [wId, nextBal] of Object.entries(updatedWalletsMap)) {
-      await supabase.from('wallets').update({ balance: nextBal }).eq('id', wId);
+      for (const [wId, nextBal] of Object.entries(updatedWalletsMap)) {
+        await supabase.from('wallets').update({ balance: nextBal }).eq('id', wId);
+      }
     }
   };
 
@@ -3656,7 +3824,7 @@ function TapxMainApp() {
     setNewWalletName(wallet.name || '');
     setNewWalletType(wallet.type || 'UPI / Wallet');
     setNewWalletBalance(String(wallet.balance ?? 0));
-    setNewWalletColor(wallet.color || WALLET_COLORS[1]);
+    setNewWalletColor(wallet.color || WALLET_COLORS[0]);
     setNewWalletIcon(wallet.icon || WALLET_ICONS[0]);
     setShowWalletModal(true);
   };
@@ -3666,7 +3834,7 @@ function TapxMainApp() {
     setNewWalletName('');
     setNewWalletBalance('');
     setNewWalletType('UPI / Wallet');
-    setNewWalletColor(WALLET_COLORS[1]);
+    setNewWalletColor(WALLET_COLORS[0]);
     setNewWalletIcon(WALLET_ICONS[0]);
     setShowWalletModal(false);
   };
@@ -3981,11 +4149,13 @@ function TapxMainApp() {
     return map;
   }, [transactions, resolveTxCategory]);
 
+  // Rich Analytics Engine (Donut Segments, Cashflow Ratio, Pacing, Top Spends, 7D Trend)
   const analyticsData = useMemo(() => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const sevenDaysAgo = new Date(startOfToday);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
     const filteredTx = transactions.filter((tx) => {
       if (!tx?.created_at) return false;
@@ -4005,6 +4175,7 @@ function TapxMainApp() {
     const categoryTotals = {};
     const categoryCounts = {};
     const walletTotals = {};
+    const expenseTxList = [];
 
     filteredTx.forEach((tx) => {
       const amt = Number(tx.amount) || 0;
@@ -4013,6 +4184,7 @@ function TapxMainApp() {
       if (tx.type === 'expense') {
         totalExpense += amt;
         expenseCount += 1;
+        expenseTxList.push(tx);
         const { category: c } = resolveTxCategory(tx);
         const catKey = c?.id || tx.category_id || 'uncategorized';
         categoryTotals[catKey] = (categoryTotals[catKey] || 0) + amt;
@@ -4034,6 +4206,11 @@ function TapxMainApp() {
         : Math.max(1, new Set(filteredTx.map((t) => new Date(t.created_at).toDateString())).size);
 
     const dailyAvgExpense = totalExpense / daysDivisor;
+    const projectedMonthSpend = Math.round(dailyAvgExpense * daysInCurrentMonth);
+    const savingsRate =
+      totalIncome > 0
+        ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100)
+        : null;
 
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
@@ -4062,26 +4239,32 @@ function TapxMainApp() {
     }
 
     const maxDaySpend = Math.max(...last7Days.map((d) => d.amount), 1);
+    const sevenDayAvg =
+      last7Days.reduce((acc, d) => acc + d.amount, 0) / 7;
 
     const categoryBreakdown = Object.keys(categoryTotals)
       .map((catId, index) => {
         const catObj = categories.find((c) => c.id === catId);
         const amount = categoryTotals[catId];
+        const count = categoryCounts[catId] || 0;
         const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
+        const exactShare = totalExpense > 0 ? amount / totalExpense : 0;
         return {
           id: catId,
           name: catObj?.name || 'Other',
           icon: catObj?.icon || '💸',
           amount,
-          count: categoryCounts[catId] || 0,
+          count,
+          avgTicket: count > 0 ? Math.round(amount / count) : 0,
           pct,
-          color: CHART_COLORS[index % CHART_COLORS.length]
+          exactShare,
+          color: getCategoryAccentColor(catObj, index)
         };
       })
       .sort((a, b) => b.amount - a.amount);
 
     const walletBreakdown = Object.keys(walletTotals)
-      .map((wId) => {
+      .map((wId, idx) => {
         const wObj = wallets.find((w) => w.id === wId);
         const amount = walletTotals[wId];
         const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
@@ -4089,31 +4272,108 @@ function TapxMainApp() {
           id: wId,
           name: wObj?.name || 'Wallet',
           icon: wObj?.icon || '💳',
-          color: wObj?.color || '#2563eb',
+          color: wObj?.color || WALLET_COLORS[idx % WALLET_COLORS.length],
           amount,
           pct
         };
       })
       .sort((a, b) => b.amount - a.amount);
 
+    const topExpenses = [...expenseTxList]
+      .sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0))
+      .slice(0, 3);
+
     const shortcutPct =
       filteredTx.length > 0 ? Math.round((shortcutCount / filteredTx.length) * 100) : 0;
 
     return {
+      filteredTx,
       totalExpense,
       totalIncome,
       netFlow: totalIncome - totalExpense,
+      savingsRate,
       dailyAvgExpense,
+      projectedMonthSpend,
       expenseCount,
       totalTxCount: filteredTx.length,
       shortcutCount,
       shortcutPct,
       last7Days,
       maxDaySpend,
+      sevenDayAvg,
       categoryBreakdown,
-      walletBreakdown
+      walletBreakdown,
+      topExpenses
     };
   }, [transactions, categories, wallets, analyticsRange, resolveTxCategory]);
+
+  // 1-Tap CSV Export Handler (Exports current analytics period or full monthly ledger)
+  const handleExportCsv = useCallback(() => {
+    const sourceRows = analyticsData.filteredTx.length > 0 ? analyticsData.filteredTx : transactions;
+    if (sourceRows.length === 0) {
+      showToast('No transactions to export');
+      return;
+    }
+
+    const headers = [
+      'Date',
+      'Time',
+      'Type',
+      'Category',
+      'Account',
+      'To Account',
+      'Amount',
+      'Currency',
+      'Note',
+      'Source'
+    ];
+
+    const csvLines = [headers.map(escapeCsvCell).join(',')];
+
+    sourceRows.forEach((tx) => {
+      const d = tx.created_at ? new Date(tx.created_at) : new Date();
+      const dateStr = !isNaN(d.getTime())
+        ? d.toLocaleDateString('en-CA') // YYYY-MM-DD
+        : '';
+      const timeStr = !isNaN(d.getTime())
+        ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
+        : '';
+      const w = wallets.find((item) => item.id === tx.wallet_id);
+      const toW = wallets.find((item) => item.id === tx.to_wallet_id);
+      const { category: c, cleanNote } = resolveTxCategory(tx);
+
+      const row = [
+        dateStr,
+        timeStr,
+        tx.type || 'expense',
+        tx.type === 'transfer' ? 'Transfer' : c?.name || 'Uncategorized',
+        w?.name || '',
+        toW?.name || '',
+        Number(tx.amount || 0).toFixed(2),
+        settings?.currency || '₹',
+        cleanNote || '',
+        tx.source || 'app'
+      ];
+      csvLines.push(row.map(escapeCsvCell).join(','));
+    });
+
+    const csvString = '\uFEFF' + csvLines.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const now = new Date();
+    const monthTag = now.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).replace(/\s+/g, '-');
+    const fileName = `TAPX-${analyticsRange === 'month' ? monthTag : analyticsRange.toUpperCase()}-Ledger.csv`;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+    showToast(`Exported ${sourceRows.length} entries to CSV`);
+  }, [analyticsData.filteredTx, transactions, wallets, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
 
   const currencySymbol = settings?.currency || '₹';
   const formattedDisplayAmount = useMemo(() => formatDisplayAmount(amountStr), [amountStr]);
@@ -4135,6 +4395,44 @@ function TapxMainApp() {
   const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
   const settingsSubIndex = settingsSection === 'shortcut' ? 0 : 1;
 
+  // Dynamic ambient top light color reactive to active tab & entry mode
+  const ambientGlowStyle = useMemo(() => {
+    if (!isDark) {
+      return {
+        background:
+          'radial-gradient(120% 90% at 50% 0%, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.04) 45%, transparent 80%)'
+      };
+    }
+    if (activeTab === 'pad') {
+      if (entryType === 'income') {
+        return {
+          background:
+            'radial-gradient(110% 85% at 50% 0%, rgba(16, 185, 129, 0.16) 0%, rgba(13, 148, 136, 0.05) 48%, transparent 80%)'
+        };
+      }
+      if (entryType === 'transfer') {
+        return {
+          background:
+            'radial-gradient(110% 85% at 50% 0%, rgba(59, 130, 246, 0.16) 0%, rgba(99, 102, 241, 0.05) 48%, transparent 80%)'
+        };
+      }
+      return {
+        background:
+          'radial-gradient(110% 85% at 50% 0%, rgba(244, 63, 94, 0.12) 0%, rgba(245, 158, 11, 0.04) 48%, transparent 80%)'
+      };
+    }
+    if (activeTab === 'analytics') {
+      return {
+        background:
+          'radial-gradient(110% 85% at 50% 0%, rgba(56, 189, 248, 0.14) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)'
+      };
+    }
+    return {
+      background:
+        'radial-gradient(110% 85% at 50% 0%, rgba(37, 99, 235, 0.13) 0%, rgba(16, 185, 129, 0.04) 50%, transparent 80%)'
+    };
+  }, [isDark, activeTab, entryType]);
+
   // Show boot screen while verifying initial auth or completing an OAuth redirect
   if ((isAuthChecking && !session) || (isLoggingIn && !session)) {
     return (
@@ -4149,16 +4447,23 @@ function TapxMainApp() {
   if (!session) {
     return (
       <div
-        className={`h-full w-full ${ui.bg} flex flex-col justify-between px-7 max-w-md mx-auto overflow-hidden select-none`}
+        className={`h-full w-full ${ui.bg} flex flex-col justify-between px-7 max-w-md mx-auto overflow-hidden select-none relative`}
         style={{
           paddingTop: 'max(env(safe-area-inset-top), 24px)',
           paddingBottom: 'max(env(safe-area-inset-bottom), 28px)'
         }}
       >
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-72 transition-all duration-700"
+          style={{
+            background:
+              'radial-gradient(100% 80% at 50% 0%, rgba(16, 185, 129, 0.16) 0%, rgba(37, 99, 235, 0.06) 50%, transparent 85%)'
+          }}
+        />
         <div />
 
-        <div className="flex flex-col items-center text-center space-y-3">
-          <TapxLogo className="w-24 h-24 mb-1" />
+        <div className="relative z-10 flex flex-col items-center text-center space-y-3">
+          <TapxLogo className="w-24 h-24 mb-1 drop-shadow-[0_12px_28px_rgba(16,185,129,0.22)]" />
           <h1 className={`text-3xl font-bold tracking-tight ${ui.textPrimary}`}>
             TAPX
           </h1>
@@ -4167,7 +4472,7 @@ function TapxMainApp() {
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="relative z-10 space-y-3">
           {savedAccounts.length > 0 && (
             <div className="space-y-2 pb-1">
               <p className={`text-[11px] font-semibold uppercase tracking-wider px-1 ${ui.textMuted}`}>
@@ -4220,7 +4525,7 @@ function TapxMainApp() {
             type="button"
             onClick={() => handleGoogleLogin('')}
             className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 key-press ${
-              isDark ? 'bg-white text-zinc-950' : 'bg-zinc-900 text-white'
+              isDark ? 'bg-white text-zinc-950 shadow-lg' : 'bg-zinc-900 text-white shadow-lg'
             }`}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -4269,6 +4574,16 @@ function TapxMainApp() {
     analyticsData.last7Days[selectedBarIdx] ||
     analyticsData.last7Days[analyticsData.last7Days.length - 1];
 
+  const activeDonutCat =
+    analyticsData.categoryBreakdown.find((c) => c.id === selectedDonutCatId) ||
+    analyticsData.categoryBreakdown[0] ||
+    null;
+
+  // SVG Donut geometry
+  const donutRadius = 46;
+  const donutCircumference = 2 * Math.PI * donutRadius;
+  let donutCumulativeShare = 0;
+
   return (
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
@@ -4276,7 +4591,13 @@ function TapxMainApp() {
         paddingTop: 'max(env(safe-area-inset-top), 18px)'
       }}
     >
-      {/* Self-contained UX helper styles (iOS zoom guard + sheet transitions) */}
+      {/* Dynamic Ambient Top Glow */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 transition-all duration-500"
+        style={ambientGlowStyle}
+      />
+
+      {/* Self-contained UX helper styles */}
       <style>{`
         @media screen and (max-width: 768px) {
           input, select, textarea {
@@ -4295,7 +4616,7 @@ function TapxMainApp() {
       {/* Floating Toast Pill with Optional Undo */}
       {toast && (
         <div
-          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-xl flex items-center gap-3 animate-tab ${
+          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-3 animate-tab ${
             isDark ? 'bg-zinc-100 text-zinc-950' : 'bg-zinc-900 text-white'
           }`}
         >
@@ -4314,7 +4635,7 @@ function TapxMainApp() {
 
       {/* Database Error Banner */}
       {dbError && (
-        <div className="mx-5 mt-1 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center justify-between shrink-0">
+        <div className="relative z-10 mx-5 mt-1 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center justify-between shrink-0">
           <span className="truncate">{dbError}</span>
           <button
             type="button"
@@ -4326,23 +4647,44 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Crisp Top Header */}
-      <header className="px-5 pt-1.5 pb-2.5 flex items-center justify-between shrink-0">
+      {/* Crisp Top Header with Live Offline Queue & Sync Badge */}
+      <header className="relative z-10 px-5 pt-1.5 pb-2.5 flex items-center justify-between shrink-0">
         <div
           onClick={() => handleSelectTab('wallets')}
           className="cursor-pointer group"
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
               Total Balance
             </span>
-            <span
-              className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                isSyncingBg ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
-              }`}
-            />
+            {!isOnline ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Offline{offlineQueue.length > 0 ? ` · ${offlineQueue.length} queued` : ''}
+              </span>
+            ) : offlineQueue.length > 0 ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  flushOfflineQueue(session.user.id);
+                }}
+                className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center gap-1"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />
+                Syncing {offlineQueue.length}
+              </button>
+            ) : (
+              <span
+                className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                  isSyncingBg
+                    ? 'bg-amber-400 animate-pulse'
+                    : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]'
+                }`}
+              />
+            )}
           </div>
-          <h2 className={`text-[25px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+          <h2 className={`text-[26px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
             {currencySymbol}
             {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </h2>
@@ -4362,7 +4704,7 @@ function TapxMainApp() {
 
       {/* MAIN VIEWPORT */}
       <main
-        className="flex-1 min-h-0 flex flex-col overflow-hidden px-5"
+        className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
           paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 84px)'
         }}
@@ -4400,8 +4742,22 @@ function TapxMainApp() {
               ))}
             </div>
 
-            {/* Center Amount Hero Card */}
-            <div className={`my-auto py-3 px-4 rounded-3xl border flex flex-col items-center justify-center relative shrink-0 ${ui.card}`}>
+            {/* Center Amount Hero Card with Mode-Tinted Specular Glow */}
+            <div
+              className={`my-auto py-3.5 px-4 rounded-3xl border flex flex-col items-center justify-center relative shrink-0 overflow-hidden ${ui.card}`}
+            >
+              <div
+                className="pointer-events-none absolute -top-12 inset-x-0 h-24 opacity-40 blur-2xl"
+                style={{
+                  background:
+                    entryType === 'income'
+                      ? 'radial-gradient(circle, #10b981 0%, transparent 70%)'
+                      : entryType === 'transfer'
+                      ? 'radial-gradient(circle, #3b82f6 0%, transparent 70%)'
+                      : 'radial-gradient(circle, #f43f5e 0%, transparent 70%)'
+                }}
+              />
+
               {amountStr !== '0' && (
                 <button
                   type="button"
@@ -4417,12 +4773,12 @@ function TapxMainApp() {
 
               <div
                 className={`${amountFontSizeClass} leading-none font-bold tracking-tight tabular-nums transition-transform duration-100 ${
-                  amountPulse ? 'scale-[1.03]' : 'scale-100'
+                  amountPulse ? 'scale-[1.035]' : 'scale-100'
                 } ${
                   entryType === 'income'
-                    ? 'text-emerald-500'
+                    ? 'text-emerald-400'
                     : entryType === 'transfer'
-                    ? 'text-blue-500'
+                    ? 'text-blue-400'
                     : ui.textPrimary
                 }`}
               >
@@ -4468,9 +4824,9 @@ function TapxMainApp() {
               </div>
 
               {selectedWalletObj && (
-                <div className={`mt-2 pt-2 border-t w-full flex items-center justify-center gap-1.5 text-[11px] ${ui.divider} ${ui.textMuted}`}>
+                <div className={`mt-2.5 pt-2 border-t w-full flex items-center justify-center gap-1.5 text-[11px] ${ui.divider} ${ui.textMuted}`}>
                   <span>{selectedWalletObj.icon}</span>
-                  <span className="font-medium">{selectedWalletObj.name}</span>
+                  <span className={`font-medium ${ui.textSecondary}`}>{selectedWalletObj.name}</span>
                   <span>·</span>
                   <span className="tabular-nums">
                     {currencySymbol}
@@ -4511,23 +4867,37 @@ function TapxMainApp() {
                       + Add your first account
                     </button>
                   ) : (
-                    wallets.map((w) => (
-                      <button
-                        key={w.id}
-                        type="button"
-                        onClick={() => setSelectedWalletId(w.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-colors duration-150 key-press ${
-                          selectedWalletId === w.id ? ui.pillActive : ui.pillIdle
-                        }`}
-                      >
-                        <span>{w.icon}</span>
-                        <span>{w.name}</span>
-                        <span className="text-[10px] opacity-70 tabular-nums">
-                          {currencySymbol}
-                          {Number(w.balance || 0).toLocaleString('en-IN')}
-                        </span>
-                      </button>
-                    ))
+                    wallets.map((w, idx) => {
+                      const active = selectedWalletId === w.id;
+                      const wColor = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => setSelectedWalletId(w.id)}
+                          style={
+                            active
+                              ? {
+                                  backgroundColor: wColor,
+                                  borderColor: wColor,
+                                  color: '#ffffff',
+                                  boxShadow: `0 4px 14px -2px ${wColor}55`
+                                }
+                              : undefined
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 border transition-all duration-150 key-press ${
+                            active ? '' : ui.pillIdle
+                          }`}
+                        >
+                          <span>{w.icon}</span>
+                          <span>{w.name}</span>
+                          <span className={`text-[10px] tabular-nums ${active ? 'opacity-90' : 'opacity-70'}`}>
+                            {currencySymbol}
+                            {Number(w.balance || 0).toLocaleString('en-IN')}
+                          </span>
+                        </button>
+                      );
+                    })
                   )}
                 </div>
 
@@ -4552,7 +4922,7 @@ function TapxMainApp() {
                 )}
               </div>
 
-              {/* Category Row */}
+              {/* Category Row with Semantic Color Accents */}
               {entryType !== 'transfer' && (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between px-0.5">
@@ -4572,19 +4942,33 @@ function TapxMainApp() {
                     </button>
                   </div>
                   <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-                    {filteredCategories.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setSelectedCategoryId(c.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-colors duration-150 key-press ${
-                          selectedCategoryId === c.id ? ui.pillActive : ui.pillIdle
-                        }`}
-                      >
-                        <span>{c.icon}</span>
-                        <span>{c.name}</span>
-                      </button>
-                    ))}
+                    {filteredCategories.map((c, idx) => {
+                      const active = selectedCategoryId === c.id;
+                      const accent = getCategoryAccentColor(c, idx);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setSelectedCategoryId(c.id)}
+                          style={
+                            active
+                              ? {
+                                  backgroundColor: `${accent}24`,
+                                  borderColor: accent,
+                                  color: isDark ? '#ffffff' : '#18181b',
+                                  boxShadow: `0 4px 12px -2px ${accent}35`
+                                }
+                              : undefined
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-all duration-150 key-press ${
+                            active ? 'font-semibold' : ui.pillIdle
+                          }`}
+                        >
+                          <span>{c.icon}</span>
+                          <span>{c.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -4633,7 +5017,7 @@ function TapxMainApp() {
             <button
               type="button"
               onClick={handleLogTransaction}
-              className={`w-full py-3.5 mt-2 rounded-2xl font-semibold text-sm key-press shrink-0 shadow-sm ${primaryButtonClass}`}
+              className={`w-full py-3.5 mt-2 rounded-2xl font-semibold text-sm key-press shrink-0 ${primaryButtonClass}`}
             >
               Save {entryType === 'transfer' ? 'Transfer' : entryType === 'income' ? 'Income' : 'Expense'}
             </button>
@@ -4643,7 +5027,7 @@ function TapxMainApp() {
         {/* TAB 2: ACCOUNTS & ACTIVITY */}
         {activeTab === 'wallets' && (
           <div key="tab-wallets" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
-            {/* Horizontal Account Strip */}
+            {/* Apple-Wallet Style Tinted Account Cards */}
             <div className="shrink-0 space-y-1.5">
               <div className="flex items-center justify-between">
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
@@ -4655,29 +5039,46 @@ function TapxMainApp() {
                     onClick={() => setActivityWalletFilter('all')}
                     className="text-[11px] text-blue-400 font-semibold key-press"
                   >
-                    Clear Account Filter
+                    Show All Accounts
                   </button>
                 )}
               </div>
 
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
-                {wallets.map((w) => {
+              <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-0.5">
+                {wallets.map((w, idx) => {
                   const isFiltered = activityWalletFilter === w.id;
+                  const cardAccent = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
                   return (
                     <div
                       key={w.id}
                       onClick={() =>
                         setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id))
                       }
-                      className={`min-w-[152px] p-3 rounded-2xl border flex flex-col justify-between cursor-pointer transition-all shrink-0 key-press ${
-                        isFiltered
-                          ? 'border-blue-500/70 bg-blue-500/10'
-                          : ui.card
+                      style={{
+                        background: isDark
+                          ? `linear-gradient(145deg, ${cardAccent}28 0%, #141419 75%)`
+                          : `linear-gradient(145deg, ${cardAccent}18 0%, #ffffff 78%)`,
+                        borderColor: isFiltered ? cardAccent : isDark ? `${cardAccent}45` : `${cardAccent}35`
+                      }}
+                      className={`min-w-[162px] p-3.5 rounded-2xl border flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
+                        isFiltered ? 'ring-1 ring-white/30 shadow-lg' : 'shadow-sm'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div
+                        className="pointer-events-none absolute -right-4 -bottom-4 w-16 h-16 rounded-full opacity-20 blur-xl"
+                        style={{ backgroundColor: cardAccent }}
+                      />
+                      <div className="flex items-center justify-between gap-2 relative z-10">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-base">{w.icon}</span>
+                          <span
+                            className="w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0"
+                            style={{
+                              backgroundColor: `${cardAccent}25`,
+                              border: `1px solid ${cardAccent}40`
+                            }}
+                          >
+                            {w.icon}
+                          </span>
                           <span className={`font-semibold text-xs truncate ${ui.textPrimary}`}>
                             {w.name}
                           </span>
@@ -4693,12 +5094,22 @@ function TapxMainApp() {
                           Edit
                         </button>
                       </div>
-                      <div className="mt-2">
-                        <p className={`font-bold text-sm tabular-nums ${ui.textPrimary}`}>
-                          {currencySymbol}
-                          {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className={`text-[10px] ${ui.textMuted}`}>{w.type}</p>
+                      <div className="mt-3 relative z-10 flex items-baseline justify-between gap-2">
+                        <div>
+                          <p className={`font-bold text-sm tabular-nums ${ui.textPrimary}`}>
+                            {currencySymbol}
+                            {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </p>
+                          <p className={`text-[10px] ${ui.textMuted}`}>{w.type}</p>
+                        </div>
+                        {isFiltered && (
+                          <span
+                            className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                            style={{ backgroundColor: `${cardAccent}30`, color: isDark ? '#fff' : cardAccent }}
+                          >
+                            Active
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -4710,7 +5121,7 @@ function TapxMainApp() {
                     resetWalletModal();
                     setShowWalletModal(true);
                   }}
-                  className={`min-w-[110px] p-3 rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                  className={`min-w-[114px] p-3 rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.cardSubtle} ${ui.textSecondary}`}
                 >
                   <span className="text-lg font-medium">+</span>
                   <span className="text-[11px] font-semibold">New Account</span>
@@ -4762,7 +5173,7 @@ function TapxMainApp() {
               </div>
             </div>
 
-            {/* Full-Height Date-Grouped Transactions Feed */}
+            {/* Full-Height Date-Grouped Transactions Feed with Colored Category Icon Wells */}
             <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
               {groupedTransactions.length === 0 ? (
                 <div className={`p-6 rounded-2xl border text-center text-xs ${ui.card} ${ui.textMuted}`}>
@@ -4780,10 +5191,17 @@ function TapxMainApp() {
                       </span>
                     </div>
 
-                    {group.items.map((tx) => {
+                    {group.items.map((tx, idx) => {
                       const w = wallets.find((item) => item.id === tx.wallet_id);
                       const toW = wallets.find((item) => item.id === tx.to_wallet_id);
                       const { category: c, cleanNote } = resolveTxCategory(tx);
+                      const catAccent =
+                        tx.type === 'transfer'
+                          ? '#3b82f6'
+                          : tx.type === 'income'
+                          ? '#10b981'
+                          : getCategoryAccentColor(c, idx);
+
                       return (
                         <div
                           key={tx.id}
@@ -4791,7 +5209,13 @@ function TapxMainApp() {
                           className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer key-press ${ui.card}`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center text-base shrink-0 ${ui.cardSubtle}`}>
+                            <div
+                              className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+                              style={{
+                                backgroundColor: `${catAccent}1f`,
+                                border: `1px solid ${catAccent}3d`
+                              }}
+                            >
                               {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
                             </div>
                             <div className="min-w-0">
@@ -4801,6 +5225,11 @@ function TapxMainApp() {
                                     ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
                                     : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
                                 </p>
+                                {tx.pendingSync && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold shrink-0">
+                                    Queued
+                                  </span>
+                                )}
                                 {tx.source === 'shortcut' && (
                                   <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${ui.cardSubtle} ${ui.textSecondary}`}>
                                     Back Tap
@@ -4818,9 +5247,9 @@ function TapxMainApp() {
                             <span
                               className={`text-xs font-semibold tabular-nums ${
                                 tx.type === 'income'
-                                  ? 'text-emerald-500'
+                                  ? 'text-emerald-400'
                                   : tx.type === 'transfer'
-                                  ? 'text-blue-500'
+                                  ? 'text-blue-400'
                                   : ui.textPrimary
                               }`}
                             >
@@ -4850,18 +5279,16 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 3: ANALYTICS */}
+        {/* TAB 3: UPGRADED ANALYTICS & 1-TAP CSV EXPORT */}
         {activeTab === 'analytics' && (
-          <div key="tab-analytics" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
-            <div className="flex items-center justify-between shrink-0">
-              <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
-                Insights
-              </h3>
+          <div key="tab-analytics" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
+            {/* Top Bar: Period Selector + 1-Tap CSV Export */}
+            <div className="flex items-center justify-between gap-2 shrink-0">
               <div className={`flex p-0.5 rounded-xl border ${ui.segmentedBg}`}>
                 {[
                   { id: 'week', label: '7D' },
-                  { id: 'month', label: 'Month' },
-                  { id: 'all', label: 'All' }
+                  { id: 'month', label: 'This Month' },
+                  { id: 'all', label: 'All Time' }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -4875,42 +5302,261 @@ function TapxMainApp() {
                   </button>
                 ))}
               </div>
+
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold flex items-center gap-1.5 key-press ${ui.cardElevated} ${ui.textPrimary}`}
+              >
+                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export CSV
+              </button>
             </div>
 
-            {/* KPI Row */}
-            <div className="grid grid-cols-3 gap-2 shrink-0">
-              <div className={`p-3 rounded-2xl border ${ui.card}`}>
-                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Total Spent</p>
-                <p className={`text-sm font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
-                  {currencySymbol}
-                  {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
-              </div>
-
-              <div className={`p-3 rounded-2xl border ${ui.card}`}>
-                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Daily Avg</p>
-                <p className={`text-sm font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
-                  {currencySymbol}
-                  {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
-              </div>
-
-              <div className={`p-3 rounded-2xl border ${ui.card}`}>
-                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Income</p>
-                <p className="text-sm font-bold tabular-nums text-emerald-500 mt-0.5 truncate">
-                  +{currencySymbol}
-                  {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
-              </div>
-            </div>
-
-            {/* Inner Scrollable Analytics Cards */}
+            {/* Scrollable Rich Insights Cards */}
             <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
-              {/* Interactive 7-Day Bar Chart */}
-              <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
+              {/* Hero Cashflow & Pacing Card */}
+              <div className={`p-4 rounded-3xl border space-y-3 relative overflow-hidden ${ui.card}`}>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <p className={`text-[10px] font-medium uppercase tracking-wider ${ui.textMuted}`}>Spent</p>
+                    <p className={`text-base font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
+                      {currencySymbol}
+                      {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    </p>
+                    <p className={`text-[10px] tabular-nums ${ui.textMuted}`}>
+                      {currencySymbol}
+                      {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/day
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className={`text-[10px] font-medium uppercase tracking-wider ${ui.textMuted}`}>Income</p>
+                    <p className="text-base font-bold tabular-nums text-emerald-400 mt-0.5 truncate">
+                      +{currencySymbol}
+                      {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    </p>
+                    <p className={`text-[10px] tabular-nums ${ui.textMuted}`}>
+                      {analyticsData.savingsRate !== null
+                        ? `${analyticsData.savingsRate}% saved`
+                        : `${analyticsData.expenseCount} txns`}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className={`text-[10px] font-medium uppercase tracking-wider ${ui.textMuted}`}>
+                      {analyticsRange === 'month' ? 'Est. Month' : 'Net Flow'}
+                    </p>
+                    <p
+                      className={`text-base font-bold tabular-nums mt-0.5 truncate ${
+                        analyticsRange === 'month'
+                          ? ui.textPrimary
+                          : analyticsData.netFlow >= 0
+                          ? 'text-emerald-400'
+                          : 'text-rose-400'
+                      }`}
+                    >
+                      {analyticsRange === 'month' ? (
+                        <>
+                          {currencySymbol}
+                          {analyticsData.projectedMonthSpend.toLocaleString('en-IN')}
+                        </>
+                      ) : (
+                        <>
+                          {analyticsData.netFlow >= 0 ? '+' : '-'}
+                          {currencySymbol}
+                          {Math.abs(analyticsData.netFlow).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                        </>
+                      )}
+                    </p>
+                    <p className={`text-[10px] ${ui.textMuted}`}>
+                      {analyticsRange === 'month' ? 'Projected pace' : `${analyticsData.shortcutPct}% Back Tap`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Cashflow Ratio Bar */}
+                {(analyticsData.totalExpense > 0 || analyticsData.totalIncome > 0) && (
+                  <div className="space-y-1 pt-1">
+                    <div className="w-full h-2 rounded-full overflow-hidden flex bg-zinc-800/60 p-0.5 gap-0.5">
+                      {analyticsData.totalIncome > 0 && (
+                        <div
+                          className="h-full rounded-l-full bg-emerald-500 transition-all duration-500"
+                          style={{
+                            width: `${Math.max(
+                              8,
+                              Math.round(
+                                (analyticsData.totalIncome /
+                                  (analyticsData.totalIncome + analyticsData.totalExpense)) *
+                                  100
+                              )
+                            )}%`
+                          }}
+                        />
+                      )}
+                      {analyticsData.totalExpense > 0 && (
+                        <div
+                          className="h-full rounded-r-full bg-rose-500 transition-all duration-500"
+                          style={{
+                            width: `${Math.max(
+                              8,
+                              Math.round(
+                                (analyticsData.totalExpense /
+                                  (analyticsData.totalIncome + analyticsData.totalExpense)) *
+                                  100
+                              )
+                            )}%`
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Interactive SVG Category Donut + Breakdown Card */}
+              <div className={`p-4 rounded-3xl border space-y-3.5 ${ui.card}`}>
+                <div className="flex items-center justify-between">
+                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Category Breakdown</h4>
+                  <span className={`text-[10px] ${ui.textMuted}`}>Tap category to inspect</span>
+                </div>
+
+                {analyticsData.categoryBreakdown.length === 0 ? (
+                  <p className={`text-xs py-3 text-center ${ui.textMuted}`}>
+                    No expenses recorded in this period.
+                  </p>
+                ) : (
+                  <>
+                    {/* Interactive Donut Ring + Focused Category Callout */}
+                    <div className="flex items-center gap-4 py-1">
+                      <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+                        <svg className="w-28 h-28 -rotate-90" viewBox="0 0 112 112">
+                          <circle
+                            cx="56"
+                            cy="56"
+                            r={donutRadius}
+                            fill="none"
+                            stroke={isDark ? '#22222a' : '#e4e4e7'}
+                            strokeWidth="12"
+                          />
+                          {analyticsData.categoryBreakdown.map((item) => {
+                            const strokeLen = Math.max(
+                              0,
+                              item.exactShare * donutCircumference - (analyticsData.categoryBreakdown.length > 1 ? 2.5 : 0)
+                            );
+                            const dashOffset = -donutCumulativeShare * donutCircumference;
+                            donutCumulativeShare += item.exactShare;
+                            const isFocused = activeDonutCat?.id === item.id;
+
+                            return (
+                              <circle
+                                key={item.id}
+                                cx="56"
+                                cy="56"
+                                r={donutRadius}
+                                fill="none"
+                                stroke={item.color}
+                                strokeWidth={isFocused ? '14.5' : '11.5'}
+                                strokeDasharray={`${strokeLen} ${donutCircumference}`}
+                                strokeDashoffset={dashOffset}
+                                strokeLinecap="round"
+                                className="transition-all duration-300 cursor-pointer"
+                                onClick={() => setSelectedDonutCatId(item.id)}
+                              />
+                            );
+                          })}
+                        </svg>
+                        {activeDonutCat && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-2">
+                            <span className="text-base leading-none">{activeDonutCat.icon}</span>
+                            <span className={`text-xs font-bold tabular-nums mt-0.5 ${ui.textPrimary}`}>
+                              {activeDonutCat.pct}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {activeDonutCat && (
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: activeDonutCat.color }}
+                            />
+                            <p className={`text-xs font-bold truncate ${ui.textPrimary}`}>
+                              {activeDonutCat.name}
+                            </p>
+                          </div>
+                          <p className={`text-lg font-bold tabular-nums leading-tight ${ui.textPrimary}`}>
+                            {currencySymbol}
+                            {activeDonutCat.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                          </p>
+                          <div className={`text-[10px] space-y-0.5 ${ui.textSecondary}`}>
+                            <p>{activeDonutCat.count} {activeDonutCat.count === 1 ? 'transaction' : 'transactions'}</p>
+                            <p className="tabular-nums">
+                              Avg {currencySymbol}{activeDonutCat.avgTicket.toLocaleString('en-IN')}/entry
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Interactive Category Rows */}
+                    <div className="space-y-1.5 pt-1">
+                      {analyticsData.categoryBreakdown.map((item) => {
+                        const isFocused = activeDonutCat?.id === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSelectedDonutCatId(item.id)}
+                            className={`w-full p-2 rounded-xl border flex items-center justify-between text-xs transition-all key-press ${
+                              isFocused ? ui.cardElevated : 'border-transparent hover:border-zinc-800/40'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span
+                                className="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0"
+                                style={{
+                                  backgroundColor: `${item.color}22`,
+                                  border: `1px solid ${item.color}44`
+                                }}
+                              >
+                                {item.icon}
+                              </span>
+                              <span className={`font-medium truncate ${ui.textPrimary}`}>{item.name}</span>
+                              <span className={`text-[10px] ${ui.textMuted}`}>({item.count})</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 tabular-nums">
+                              <span className={`font-semibold ${ui.textPrimary}`}>
+                                {currencySymbol}
+                                {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                              </span>
+                              <span
+                                className="text-[10px] px-1.5 py-0.5 rounded-md font-mono w-10 text-right font-semibold"
+                                style={{
+                                  backgroundColor: `${item.color}20`,
+                                  color: item.color
+                                }}
+                              >
+                                {item.pct}%
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Interactive 7-Day Trend Bar Chart */}
+              <div className={`p-4 rounded-3xl border space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Last 7 Days</h4>
+                    <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Last 7 Days Rhythm</h4>
                     {selectedDayObj && (
                       <p className={`text-[10px] tabular-nums ${ui.textSecondary}`}>
                         {selectedDayObj.fullDateLabel}:{' '}
@@ -4921,8 +5567,9 @@ function TapxMainApp() {
                       </p>
                     )}
                   </div>
-                  <span className={`text-[10px] font-medium ${ui.textMuted}`}>
-                    {analyticsData.shortcutPct}% via Back Tap
+                  <span className={`text-[10px] font-medium tabular-nums ${ui.textMuted}`}>
+                    7D Avg: {currencySymbol}
+                    {Math.round(analyticsData.sevenDayAvg).toLocaleString('en-IN')}
                   </span>
                 </div>
 
@@ -4948,20 +5595,20 @@ function TapxMainApp() {
                             : ''}
                         </span>
                         <div
-                          className={`w-full rounded-lg h-16 flex items-end p-0.5 border transition-colors ${
-                            isSelected ? 'border-blue-500/60' : ''
+                          className={`w-full rounded-xl h-16 flex items-end p-0.5 border transition-colors ${
+                            isSelected ? 'border-emerald-500/60' : ''
                           } ${ui.cardSubtle}`}
                         >
                           <div
-                            className={`w-full rounded-md transition-all duration-500 ios-spring ${
+                            className={`w-full rounded-lg transition-all duration-500 ios-spring ${
                               isSelected
-                                ? 'bg-emerald-500'
+                                ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.45)]'
                                 : day.isToday
                                 ? isDark
                                   ? 'bg-zinc-100'
                                   : 'bg-zinc-900'
                                 : day.amount > 0
-                                ? 'bg-blue-500/75'
+                                ? 'bg-gradient-to-t from-blue-600/80 to-sky-400/80'
                                 : 'bg-transparent'
                             }`}
                             style={{ height: `${heightPct}%` }}
@@ -4980,61 +5627,11 @@ function TapxMainApp() {
                 </div>
               </div>
 
-              <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
-                <div className="flex items-center justify-between">
-                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Spending by Category</h4>
-                  <span className={`text-[10px] ${ui.textMuted}`}>{analyticsData.expenseCount} items</span>
-                </div>
-
-                {analyticsData.categoryBreakdown.length === 0 ? (
-                  <p className={`text-xs py-2 ${ui.textMuted}`}>No expenses in this period.</p>
-                ) : (
-                  <>
-                    <div className={`w-full h-2.5 rounded-full overflow-hidden flex gap-0.5 p-0.5 border ${ui.cardSubtle}`}>
-                      {analyticsData.categoryBreakdown.map((item) => (
-                        <div
-                          key={item.id}
-                          style={{
-                            width: `${Math.max(item.pct, 4)}%`,
-                            backgroundColor: item.color
-                          }}
-                          className="h-full first:rounded-l-full last:rounded-r-full transition-all duration-500 ios-spring"
-                        />
-                      ))}
-                    </div>
-
-                    <div className="space-y-2 pt-1">
-                      {analyticsData.categoryBreakdown.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span
-                              className="w-2 h-2 rounded-full shrink-0"
-                              style={{ backgroundColor: item.color }}
-                            />
-                            <span>{item.icon}</span>
-                            <span className={`font-medium truncate ${ui.textPrimary}`}>{item.name}</span>
-                            <span className={`text-[10px] ${ui.textMuted}`}>({item.count})</span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0 tabular-nums">
-                            <span className={`font-semibold ${ui.textPrimary}`}>
-                              {currencySymbol}
-                              {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                            </span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono w-10 text-right ${ui.cardSubtle} ${ui.textSecondary}`}>
-                              {item.pct}%
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
+              {/* Account Share Breakdown */}
               {analyticsData.walletBreakdown.length > 0 && (
-                <div className={`p-4 rounded-2xl border space-y-2.5 ${ui.card}`}>
+                <div className={`p-4 rounded-3xl border space-y-2.5 ${ui.card}`}>
                   <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Account Share</h4>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {analyticsData.walletBreakdown.map((w) => (
                       <div key={w.id} className="space-y-1">
                         <div className="flex items-center justify-between text-xs tabular-nums">
@@ -5047,14 +5644,56 @@ function TapxMainApp() {
                             <span className={`text-[10px] font-normal ${ui.textMuted}`}>({w.pct}%)</span>
                           </span>
                         </div>
-                        <div className={`w-full h-1.5 rounded-full overflow-hidden ${ui.cardSubtle}`}>
+                        <div className={`w-full h-2 rounded-full overflow-hidden ${ui.cardSubtle}`}>
                           <div
-                            className="h-full rounded-full bg-blue-500 transition-all duration-500 ios-spring"
-                            style={{ width: `${w.pct}%` }}
+                            className="h-full rounded-full transition-all duration-500 ios-spring"
+                            style={{ width: `${w.pct}%`, backgroundColor: w.color }}
                           />
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Largest Spends in Period */}
+              {analyticsData.topExpenses.length > 0 && (
+                <div className={`p-4 rounded-3xl border space-y-2.5 ${ui.card}`}>
+                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Largest Spends</h4>
+                  <div className="space-y-2">
+                    {analyticsData.topExpenses.map((tx, idx) => {
+                      const w = wallets.find((item) => item.id === tx.wallet_id);
+                      const { category: c, cleanNote } = resolveTxCategory(tx);
+                      const accent = getCategoryAccentColor(c, idx);
+                      return (
+                        <div
+                          key={tx.id}
+                          onClick={() => openEditTransaction(tx)}
+                          className={`p-2.5 rounded-2xl border flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0"
+                              style={{ backgroundColor: `${accent}25` }}
+                            >
+                              {c?.icon || '💸'}
+                            </span>
+                            <div className="min-w-0">
+                              <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
+                                {cleanNote || c?.name || 'Expense'}
+                              </p>
+                              <p className={`text-[10px] truncate ${ui.textMuted}`}>
+                                {w?.name || 'Account'} · {formatDayGroupLabel(tx.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`text-xs font-bold tabular-nums shrink-0 ${ui.textPrimary}`}>
+                            -{currencySymbol}
+                            {Number(tx.amount || 0).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -5224,10 +5863,11 @@ function TapxMainApp() {
                 </div>
 
                 <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5">
-                  {categories.map((c) => {
+                  {categories.map((c, idx) => {
                     const spent = currentMonthSpendByCat[c.id] || 0;
                     const budget = Number(c.monthly_budget) || 0;
                     const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+                    const accent = getCategoryAccentColor(c, idx);
 
                     return (
                       <div
@@ -5237,7 +5877,15 @@ function TapxMainApp() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-base shrink-0">{c.icon}</span>
+                            <span
+                              className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
+                              style={{
+                                backgroundColor: `${accent}20`,
+                                border: `1px solid ${accent}40`
+                              }}
+                            >
+                              {c.icon}
+                            </span>
                             <div className="min-w-0">
                               <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>{c.name}</p>
                               <p className={`text-[10px] capitalize ${ui.textMuted}`}>
@@ -5280,7 +5928,7 @@ function TapxMainApp() {
                           <div className={`w-full h-1.5 rounded-full overflow-hidden ${ui.cardSubtle}`}>
                             <div
                               className={`h-full rounded-full transition-all duration-500 ios-spring ${
-                                pct >= 90 ? 'bg-rose-500' : pct >= 75 ? 'bg-amber-500' : 'bg-blue-500'
+                                pct >= 90 ? 'bg-rose-500' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500'
                               }`}
                               style={{ width: `${pct}%` }}
                             />
@@ -5322,7 +5970,7 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT */}
+      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT (With Accent Color Picker) */}
       {showWalletModal && (
         <div
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-3"
@@ -5385,6 +6033,23 @@ function TapxMainApp() {
                   onChange={(e) => setNewWalletBalance(e.target.value)}
                   className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
                 />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Card Color</label>
+              <div className="flex items-center gap-2">
+                {WALLET_COLORS.map((hex) => (
+                  <button
+                    type="button"
+                    key={hex}
+                    onClick={() => setNewWalletColor(hex)}
+                    style={{ backgroundColor: hex }}
+                    className={`w-7 h-7 rounded-full transition-transform key-press ${
+                      newWalletColor === hex ? 'scale-110 ring-2 ring-white' : 'opacity-70'
+                    }`}
+                  />
+                ))}
               </div>
             </div>
 
