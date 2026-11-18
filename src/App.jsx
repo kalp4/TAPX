@@ -32,7 +32,12 @@ import {
   CategoryModal,
   EditTransactionModal
 } from './components/Modals';
-import { KeypadTab, AccountsTab, InsightsTab, SettingsTab } from './components/Tabs';
+import {
+  KeypadTab,
+  AccountsTab,
+  InsightsTab,
+  SettingsTab
+} from './components/Tabs';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -101,6 +106,7 @@ function TapxMainApp() {
       return [];
     }
   });
+
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -122,10 +128,14 @@ function TapxMainApp() {
   const isDark = themePref === 'system' ? systemIsDark : themePref === 'dark';
 
   useEffect(() => {
-    localStorage.setItem(THEME_KEY, themePref);
+    try {
+      localStorage.setItem(THEME_KEY, themePref);
+    } catch {}
     const bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
     document.documentElement.style.backgroundColor = bgHex;
     document.body.style.backgroundColor = bgHex;
+    const rootEl = document.getElementById('root');
+    if (rootEl) rootEl.style.backgroundColor = bgHex;
     const meta = document.getElementById('theme-color-meta');
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
@@ -221,9 +231,7 @@ function TapxMainApp() {
       isScrubbingRef.current = true;
       try {
         e.currentTarget.setPointerCapture(e.pointerId);
-      } catch {
-        // Ignore capture errors
-      }
+      } catch {}
     }
 
     if (isScrubbingRef.current) {
@@ -323,9 +331,7 @@ function TapxMainApp() {
   useEffect(() => {
     try {
       localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(offlineQueue));
-    } catch {
-      // Ignore storage errors
-    }
+    } catch {}
   }, [offlineQueue]);
 
   useEffect(() => {
@@ -345,9 +351,7 @@ function TapxMainApp() {
       const next = [profileEntry, ...filtered].slice(0, 5);
       try {
         localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage errors
-      }
+      } catch {}
       return next;
     });
   }, [session?.user]);
@@ -367,9 +371,7 @@ function TapxMainApp() {
           transactions
         })
       );
-    } catch {
-      // Ignore storage quota errors
-    }
+    } catch {}
   }, [
     session?.user?.id,
     session?.user?.email,
@@ -716,9 +718,7 @@ function TapxMainApp() {
       const next = prev.filter((a) => a.email.toLowerCase() !== emailToRemove.toLowerCase());
       try {
         localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage errors
-      }
+      } catch {}
       return next;
     });
   };
@@ -1304,11 +1304,7 @@ function TapxMainApp() {
     navigator.clipboard.writeText(personalApiUrl);
     showToast('Personal URL copied · Opening Shortcuts');
     setTimeout(() => {
-      if (SHARED_ICLOUD_SHORTCUT_URL) {
-        window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
-      } else {
-        window.location.href = 'shortcuts://create-shortcut';
-      }
+      window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
     }, 450);
   };
 
@@ -1529,7 +1525,7 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'max(env(safe-area-inset-top), 12px)'
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)'
       }}
     >
       <style>{`
@@ -1547,6 +1543,7 @@ function TapxMainApp() {
         }
       `}</style>
 
+      {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
           className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_4px_0_#111110] flex items-center gap-3 animate-tab ${
@@ -1579,11 +1576,12 @@ function TapxMainApp() {
         </div>
       )}
 
-      <header className="relative z-10 px-5 pt-1 pb-2 flex items-center justify-between shrink-0">
+      {/* Top Header */}
+      <header className="relative z-10 px-5 pt-0.5 pb-1.5 flex items-center justify-between shrink-0">
         <div onClick={() => handleSelectTab('wallets')} className="cursor-pointer group">
           <div className="flex items-center gap-2">
             <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
-              Total Balance 
+              Total Balance
             </span>
             {!isOnline ? (
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#F4B942] text-[#1e1e1c] border border-[#111110] flex items-center gap-1">
@@ -1628,6 +1626,7 @@ function TapxMainApp() {
         </button>
       </header>
 
+      {/* MAIN VIEWPORT (Flush bottom padding matching tight dock position) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
@@ -1823,7 +1822,7 @@ function TapxMainApp() {
         />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR (Flush at bottom) */}
+      {/* CHUNKY CARTOON DOCK BAR (Anchored flush at bottom) */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
