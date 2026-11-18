@@ -1583,7 +1583,7 @@ function TapxMainApp() {
         <div onClick={() => handleSelectTab('wallets')} className="cursor-pointer group">
           <div className="flex items-center gap-2">
             <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
-              Total Stash
+              Total Balance 
             </span>
             {!isOnline ? (
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#F4B942] text-[#1e1e1c] border border-[#111110] flex items-center gap-1">

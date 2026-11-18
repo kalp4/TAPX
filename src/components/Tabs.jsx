@@ -1400,13 +1400,13 @@ export function SettingsTab({
       <div className={`p-3.5 rounded-2xl flex items-center justify-between shrink-0 ${ui.card}`}>
         <div>
           <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
-          <p className={`text-[10px] font-medium ${ui.textMuted}`}>Charcoal #1e1e1c &amp; Sand #D8CBB3</p>
+          <p className={`text-[10px] font-medium ${ui.textMuted}`}>&amp;Select your preferred theme</p>
         </div>
         <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
           {[
             { id: 'system', label: 'Auto' },
-            { id: 'light', label: 'Sand' },
-            { id: 'dark', label: 'Charcoal' }
+            { id: 'light', label: 'Light' },
+            { id: 'dark', label: 'Dark' }
           ].map((m) => (
             <button
               key={m.id}
@@ -1434,7 +1434,7 @@ export function SettingsTab({
             settingsSection === 'shortcut' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
         >
-          ⚡ Back Tap Setup
+          Shortcut Setup
         </button>
         <button
           type="button"
@@ -1443,7 +1443,7 @@ export function SettingsTab({
             settingsSection === 'budgets' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
         >
-          🏷️ Categories
+           Categories
         </button>
       </div>
 
@@ -1452,7 +1452,7 @@ export function SettingsTab({
           <div className={`p-4 rounded-2xl space-y-3 ${ui.card}`}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>1-Tap Back Tap Installer</h3>
+                <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>IOS Shortcut Installer</h3>
                 <p className={`text-[10px] font-medium ${ui.textMuted}`}>
                   Log from Lock Screen with double-tap on the back of your iPhone
                 </p>
@@ -1501,7 +1501,7 @@ export function SettingsTab({
                 </li>
                 <li>
                   Go to iPhone <strong>Settings → Accessibility → Touch → Back Tap → Double Tap</strong> and select{' '}
-                  <strong>Log to TAPX</strong>.
+                  <strong>TAPX</strong>.
                 </li>
               </ol>
             </div>

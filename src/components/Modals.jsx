@@ -197,7 +197,7 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
       >
         {filteredIcons.length === 0 ? (
           <div className={`col-span-7 py-4 text-center text-xs font-cartoon ${ui.textMuted}`}>
-            No match—type any emoji in the Custom box above!
+            No match—type Type it in the custom box above!
           </div>
         ) : (
           filteredIcons.map((item, idx) => {
@@ -388,7 +388,7 @@ export function WalletModal({
           <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Account Name</label>
           <input
             type="text"
-            placeholder="e.g. UPI, Cash, FamPay, HDFC"
+            placeholder="e.g. UPI, Cash, Bank, Etc."
             value={newWalletName}
             onChange={(e) => setNewWalletName(e.target.value)}
             className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
