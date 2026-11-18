@@ -56,21 +56,8 @@ src/
     react.svg
     vite.svg
   components/
-    AccountsTab.jsx
-    IconLibraryPicker.jsx
-    InsightsTab.jsx
-    KeypadTab.jsx
-    LoginScreen.jsx
     Modals.jsx
-    NavIcon.jsx
-    SettingsTab.jsx
     Tabs.jsx
-    TapxLogo.jsx
-  constants/
-    icons.js
-    theme.js
-  utils/
-    formatters.js
   analytics.js
   App.css
   App.jsx
@@ -89,6 +76,67 @@ vite.config.js
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="api/keepalive.js">
+import { createClient } from '@supabase/supabase-js';
+
+export default async function handler(req, res) {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ error: 'Missing Supabase environment variables on Vercel' });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const { data, error } = await supabase.rpc('keep_alive_ping');
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.status(200).json(data);
+}
+</file>
+
+<file path="public/google40e4585462743276.html">
+google-site-verification: google40e4585462743276.html
+</file>
+
+<file path="public/icons.svg">
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="bluesky-icon" viewBox="0 0 16 17">
+    <g clip-path="url(#bluesky-clip)"><path fill="#08060d" d="M7.75 7.735c-.693-1.348-2.58-3.86-4.334-5.097-1.68-1.187-2.32-.981-2.74-.79C.188 2.065.1 2.812.1 3.251s.241 3.602.398 4.13c.52 1.744 2.367 2.333 4.07 2.145-2.495.37-4.71 1.278-1.805 4.512 3.196 3.309 4.38-.71 4.987-2.746.608 2.036 1.307 5.91 4.93 2.746 2.72-2.746.747-4.143-1.747-4.512 1.702.189 3.55-.4 4.07-2.145.156-.528.397-3.691.397-4.13s-.088-1.186-.575-1.406c-.42-.19-1.06-.395-2.741.79-1.755 1.24-3.64 3.752-4.334 5.099"/></g>
+    <defs><clipPath id="bluesky-clip"><path fill="#fff" d="M.1.85h15.3v15.3H.1z"/></clipPath></defs>
+  </symbol>
+  <symbol id="discord-icon" viewBox="0 0 20 19">
+    <path fill="#08060d" d="M16.224 3.768a14.5 14.5 0 0 0-3.67-1.153c-.158.286-.343.67-.47.976a13.5 13.5 0 0 0-4.067 0c-.128-.306-.317-.69-.476-.976A14.4 14.4 0 0 0 3.868 3.77C1.546 7.28.916 10.703 1.231 14.077a14.7 14.7 0 0 0 4.5 2.306q.545-.748.965-1.587a9.5 9.5 0 0 1-1.518-.74q.191-.14.372-.293c2.927 1.369 6.107 1.369 8.999 0q.183.152.372.294-.723.437-1.52.74.418.838.963 1.588a14.6 14.6 0 0 0 4.504-2.308c.37-3.911-.63-7.302-2.644-10.309m-9.13 8.234c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.894 0 1.614.82 1.599 1.82.001 1-.705 1.82-1.6 1.82m5.91 0c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.893 0 1.614.82 1.599 1.82 0 1-.706 1.82-1.6 1.82"/>
+  </symbol>
+  <symbol id="documentation-icon" viewBox="0 0 21 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="m15.5 13.333 1.533 1.322c.645.555.967.833.967 1.178s-.322.623-.967 1.179L15.5 18.333m-3.333-5-1.534 1.322c-.644.555-.966.833-.966 1.178s.322.623.966 1.179l1.534 1.321"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M17.167 10.836v-4.32c0-1.41 0-2.117-.224-2.68-.359-.906-1.118-1.621-2.08-1.96-.599-.21-1.349-.21-2.848-.21-2.623 0-3.935 0-4.983.369-1.684.591-3.013 1.842-3.641 3.428C3 6.449 3 7.684 3 10.154v2.122c0 2.558 0 3.838.706 4.726q.306.383.713.671c.76.536 1.79.64 3.581.66"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M3 10a2.78 2.78 0 0 1 2.778-2.778c.555 0 1.209.097 1.748-.047.48-.129.854-.503.982-.982.145-.54.048-1.194.048-1.749a2.78 2.78 0 0 1 2.777-2.777"/>
+  </symbol>
+  <symbol id="github-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M9.356 1.85C5.05 1.85 1.57 5.356 1.57 9.694a7.84 7.84 0 0 0 5.324 7.44c.387.079.528-.168.528-.376 0-.182-.013-.805-.013-1.454-2.165.467-2.616-.935-2.616-.935-.349-.91-.864-1.143-.864-1.143-.71-.48.051-.48.051-.48.787.051 1.2.805 1.2.805.695 1.194 1.817.857 2.268.649.064-.507.27-.857.49-1.052-1.728-.182-3.545-.857-3.545-3.87 0-.857.31-1.558.8-2.104-.078-.195-.349-1 .077-2.078 0 0 .657-.208 2.14.805a7.5 7.5 0 0 1 1.946-.26c.657 0 1.328.092 1.946.26 1.483-1.013 2.14-.805 2.14-.805.426 1.078.155 1.883.078 2.078.502.546.799 1.247.799 2.104 0 3.013-1.818 3.675-3.558 3.87.284.247.528.714.528 1.454 0 1.052-.012 1.896-.012 2.156 0 .208.142.455.528.377a7.84 7.84 0 0 0 5.324-7.441c.013-4.338-3.48-7.844-7.773-7.844" clip-rule="evenodd"/>
+  </symbol>
+  <symbol id="social-icon" viewBox="0 0 20 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M12.5 6.667a4.167 4.167 0 1 0-8.334 0 4.167 4.167 0 0 0 8.334 0"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M2.5 16.667a5.833 5.833 0 0 1 8.75-5.053m3.837.474.513 1.035c.07.144.257.282.414.309l.93.155c.596.1.736.536.307.965l-.723.73a.64.64 0 0 0-.152.531l.207.903c.164.715-.213.991-.84.618l-.872-.52a.63.63 0 0 0-.577 0l-.872.52c-.624.373-1.003.094-.84-.618l.207-.903a.64.64 0 0 0-.152-.532l-.723-.729c-.426-.43-.289-.864.306-.964l.93-.156a.64.64 0 0 0 .412-.31l.513-1.034c.28-.562.735-.562 1.012 0"/>
+  </symbol>
+  <symbol id="x-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M1.893 1.98c.052.072 1.245 1.769 2.653 3.77l2.892 4.114c.183.261.333.48.333.486s-.068.089-.152.183l-.522.593-.765.867-3.597 4.087c-.375.426-.734.834-.798.905a1 1 0 0 0-.118.148c0 .01.236.017.664.017h.663l.729-.83c.4-.457.796-.906.879-.999a692 692 0 0 0 1.794-2.038c.034-.037.301-.34.594-.675l.551-.624.345-.392a7 7 0 0 1 .34-.374c.006 0 .93 1.306 2.052 2.903l2.084 2.965.045.063h2.275c1.87 0 2.273-.003 2.266-.021-.008-.02-1.098-1.572-3.894-5.547-2.013-2.862-2.28-3.246-2.273-3.266.008-.019.282-.332 2.085-2.38l2-2.274 1.567-1.782c.022-.028-.016-.03-.65-.03h-.674l-.3.342a871 871 0 0 1-1.782 2.025c-.067.075-.405.458-.75.852a100 100 0 0 1-.803.91c-.148.172-.299.344-.99 1.127-.304.343-.32.358-.345.327-.015-.019-.904-1.282-1.976-2.808L6.365 1.85H1.8zm1.782.91 8.078 11.294c.772 1.08 1.413 1.973 1.425 1.984.016.017.241.02 1.05.017l1.03-.004-2.694-3.766L7.796 5.75 5.722 2.852l-1.039-.004-1.039-.004z" clip-rule="evenodd"/>
+  </symbol>
+</svg>
+</file>
+
+<file path="src/assets/react.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+</file>
+
+<file path="src/assets/vite.svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
+</file>
 
 <file path="src/components/Tabs.jsx">
 import React from 'react';
@@ -2375,6 +2423,193 @@ export function computeAnalytics({
 }
 </file>
 
+<file path="src/App.css">
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.hero {
+  position: relative;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+  }
+
+  .base {
+    width: 170px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+  }
+
+  .framework {
+    z-index: 1;
+    top: 34px;
+    height: 28px;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+      scale(1.4);
+  }
+
+  .vite {
+    z-index: 0;
+    top: 107px;
+    height: 26px;
+    width: auto;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+      scale(0.8);
+  }
+}
+
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
+}
+
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  text-align: left;
+
+  & > div {
+    flex: 1 1 0;
+    padding: 32px;
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
+    }
+  }
+
+  .icon {
+    margin-bottom: 16px;
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  margin: 32px 0 0;
+
+  .logo {
+    height: 18px;
+  }
+
+  a {
+    color: var(--text-h);
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--social-bg);
+    display: flex;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: var(--shadow);
+    }
+    .button-icon {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    li {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+  }
+}
+
+#spacer {
+  height: 88px;
+  border-top: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
+}
+
+.ticks {
+  position: relative;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4.5px;
+    border: 5px solid transparent;
+  }
+
+  &::before {
+    left: 0;
+    border-left-color: var(--border);
+  }
+  &::after {
+    right: 0;
+    border-right-color: var(--border);
+  }
+}
+</file>
+
 <file path="src/constants.js">
 export const SHARED_ICLOUD_SHORTCUT_URL =
   'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
@@ -2655,1729 +2890,596 @@ export function getUiTheme(isDark) {
 }
 </file>
 
-<file path="api/keepalive.js">
+<file path="src/main.jsx">
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+</file>
+
+<file path="src/supabaseClient.js">
 import { createClient } from '@supabase/supabase-js';
 
-export default async function handler(req, res) {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseKey) {
-    return res.status(500).json({ error: 'Missing Supabase environment variables on Vercel' });
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+</file>
+
+<file path=".gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+</file>
+
+<file path=".oxlintrc.json">
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
   }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
-  const { data, error } = await supabase.rpc('keep_alive_ping');
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  return res.status(200).json(data);
 }
 </file>
 
-<file path="public/google40e4585462743276.html">
-google-site-verification: google40e4585462743276.html
-</file>
-
-<file path="public/icons.svg">
-<svg xmlns="http://www.w3.org/2000/svg">
-  <symbol id="bluesky-icon" viewBox="0 0 16 17">
-    <g clip-path="url(#bluesky-clip)"><path fill="#08060d" d="M7.75 7.735c-.693-1.348-2.58-3.86-4.334-5.097-1.68-1.187-2.32-.981-2.74-.79C.188 2.065.1 2.812.1 3.251s.241 3.602.398 4.13c.52 1.744 2.367 2.333 4.07 2.145-2.495.37-4.71 1.278-1.805 4.512 3.196 3.309 4.38-.71 4.987-2.746.608 2.036 1.307 5.91 4.93 2.746 2.72-2.746.747-4.143-1.747-4.512 1.702.189 3.55-.4 4.07-2.145.156-.528.397-3.691.397-4.13s-.088-1.186-.575-1.406c-.42-.19-1.06-.395-2.741.79-1.755 1.24-3.64 3.752-4.334 5.099"/></g>
-    <defs><clipPath id="bluesky-clip"><path fill="#fff" d="M.1.85h15.3v15.3H.1z"/></clipPath></defs>
-  </symbol>
-  <symbol id="discord-icon" viewBox="0 0 20 19">
-    <path fill="#08060d" d="M16.224 3.768a14.5 14.5 0 0 0-3.67-1.153c-.158.286-.343.67-.47.976a13.5 13.5 0 0 0-4.067 0c-.128-.306-.317-.69-.476-.976A14.4 14.4 0 0 0 3.868 3.77C1.546 7.28.916 10.703 1.231 14.077a14.7 14.7 0 0 0 4.5 2.306q.545-.748.965-1.587a9.5 9.5 0 0 1-1.518-.74q.191-.14.372-.293c2.927 1.369 6.107 1.369 8.999 0q.183.152.372.294-.723.437-1.52.74.418.838.963 1.588a14.6 14.6 0 0 0 4.504-2.308c.37-3.911-.63-7.302-2.644-10.309m-9.13 8.234c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.894 0 1.614.82 1.599 1.82.001 1-.705 1.82-1.6 1.82m5.91 0c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.893 0 1.614.82 1.599 1.82 0 1-.706 1.82-1.6 1.82"/>
-  </symbol>
-  <symbol id="documentation-icon" viewBox="0 0 21 20">
-    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="m15.5 13.333 1.533 1.322c.645.555.967.833.967 1.178s-.322.623-.967 1.179L15.5 18.333m-3.333-5-1.534 1.322c-.644.555-.966.833-.966 1.178s.322.623.966 1.179l1.534 1.321"/>
-    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M17.167 10.836v-4.32c0-1.41 0-2.117-.224-2.68-.359-.906-1.118-1.621-2.08-1.96-.599-.21-1.349-.21-2.848-.21-2.623 0-3.935 0-4.983.369-1.684.591-3.013 1.842-3.641 3.428C3 6.449 3 7.684 3 10.154v2.122c0 2.558 0 3.838.706 4.726q.306.383.713.671c.76.536 1.79.64 3.581.66"/>
-    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M3 10a2.78 2.78 0 0 1 2.778-2.778c.555 0 1.209.097 1.748-.047.48-.129.854-.503.982-.982.145-.54.048-1.194.048-1.749a2.78 2.78 0 0 1 2.777-2.777"/>
-  </symbol>
-  <symbol id="github-icon" viewBox="0 0 19 19">
-    <path fill="#08060d" fill-rule="evenodd" d="M9.356 1.85C5.05 1.85 1.57 5.356 1.57 9.694a7.84 7.84 0 0 0 5.324 7.44c.387.079.528-.168.528-.376 0-.182-.013-.805-.013-1.454-2.165.467-2.616-.935-2.616-.935-.349-.91-.864-1.143-.864-1.143-.71-.48.051-.48.051-.48.787.051 1.2.805 1.2.805.695 1.194 1.817.857 2.268.649.064-.507.27-.857.49-1.052-1.728-.182-3.545-.857-3.545-3.87 0-.857.31-1.558.8-2.104-.078-.195-.349-1 .077-2.078 0 0 .657-.208 2.14.805a7.5 7.5 0 0 1 1.946-.26c.657 0 1.328.092 1.946.26 1.483-1.013 2.14-.805 2.14-.805.426 1.078.155 1.883.078 2.078.502.546.799 1.247.799 2.104 0 3.013-1.818 3.675-3.558 3.87.284.247.528.714.528 1.454 0 1.052-.012 1.896-.012 2.156 0 .208.142.455.528.377a7.84 7.84 0 0 0 5.324-7.441c.013-4.338-3.48-7.844-7.773-7.844" clip-rule="evenodd"/>
-  </symbol>
-  <symbol id="social-icon" viewBox="0 0 20 20">
-    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M12.5 6.667a4.167 4.167 0 1 0-8.334 0 4.167 4.167 0 0 0 8.334 0"/>
-    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M2.5 16.667a5.833 5.833 0 0 1 8.75-5.053m3.837.474.513 1.035c.07.144.257.282.414.309l.93.155c.596.1.736.536.307.965l-.723.73a.64.64 0 0 0-.152.531l.207.903c.164.715-.213.991-.84.618l-.872-.52a.63.63 0 0 0-.577 0l-.872.52c-.624.373-1.003.094-.84-.618l.207-.903a.64.64 0 0 0-.152-.532l-.723-.729c-.426-.43-.289-.864.306-.964l.93-.156a.64.64 0 0 0 .412-.31l.513-1.034c.28-.562.735-.562 1.012 0"/>
-  </symbol>
-  <symbol id="x-icon" viewBox="0 0 19 19">
-    <path fill="#08060d" fill-rule="evenodd" d="M1.893 1.98c.052.072 1.245 1.769 2.653 3.77l2.892 4.114c.183.261.333.48.333.486s-.068.089-.152.183l-.522.593-.765.867-3.597 4.087c-.375.426-.734.834-.798.905a1 1 0 0 0-.118.148c0 .01.236.017.664.017h.663l.729-.83c.4-.457.796-.906.879-.999a692 692 0 0 0 1.794-2.038c.034-.037.301-.34.594-.675l.551-.624.345-.392a7 7 0 0 1 .34-.374c.006 0 .93 1.306 2.052 2.903l2.084 2.965.045.063h2.275c1.87 0 2.273-.003 2.266-.021-.008-.02-1.098-1.572-3.894-5.547-2.013-2.862-2.28-3.246-2.273-3.266.008-.019.282-.332 2.085-2.38l2-2.274 1.567-1.782c.022-.028-.016-.03-.65-.03h-.674l-.3.342a871 871 0 0 1-1.782 2.025c-.067.075-.405.458-.75.852a100 100 0 0 1-.803.91c-.148.172-.299.344-.99 1.127-.304.343-.32.358-.345.327-.015-.019-.904-1.282-1.976-2.808L6.365 1.85H1.8zm1.782.91 8.078 11.294c.772 1.08 1.413 1.973 1.425 1.984.016.017.241.02 1.05.017l1.03-.004-2.694-3.766L7.796 5.75 5.722 2.852l-1.039-.004-1.039-.004z" clip-rule="evenodd"/>
-  </symbol>
-</svg>
-</file>
-
-<file path="src/assets/react.svg">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
-</file>
-
-<file path="src/assets/vite.svg">
-<svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
-</file>
-
-<file path="src/components/AccountsTab.jsx">
-import React from 'react';
-import { WALLET_COLORS } from '../constants/theme';
-import { formatTimeOnly, getCategoryAccentColor } from '../utils/formatters';
-
-export default function AccountsTab({
-  ui,
-  isDark,
-  tabAnimClass,
-  wallets,
-  currencySymbol,
-  activityWalletFilter,
-  setActivityWalletFilter,
-  activitySearch,
-  setActivitySearch,
-  activityTypeFilter,
-  setActivityTypeFilter,
-  groupedTransactions,
-  resolveTxCategory,
-  openEditWallet,
-  onOpenNewWallet,
-  openEditTransaction,
-  handleDeleteTransaction
-}) {
-  return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
-      {/* Cartoon Sticker Account Cards */}
-      <div className="shrink-0 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <h3 className={`text-xs font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
-            Your Accounts ({wallets.length})
-          </h3>
-          {activityWalletFilter !== 'all' && (
-            <button
-              type="button"
-              onClick={() => setActivityWalletFilter('all')}
-              className="text-[11px] text-[#F4B942] font-cartoon font-bold key-press"
-            >
-              Show All
-            </button>
-          )}
-        </div>
-
-        <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
-          {wallets.map((w, idx) => {
-            const isFiltered = activityWalletFilter === w.id;
-            const cardAccent = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
-            return (
-              <div
-                key={w.id}
-                onClick={() =>
-                  setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id))
-                }
-                style={{
-                  backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
-                }}
-                className="min-w-[164px] p-3.5 rounded-2xl border-2 border-[#111110] shadow-[0_4px_0_#111110] flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press"
-              >
-                <div className="flex items-center justify-between gap-2 relative z-10">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
-                      style={{
-                        backgroundColor: isFiltered ? '#FAF6EE' : cardAccent
-                      }}
-                    >
-                      {w.icon}
-                    </span>
-                    <span
-                      className={`font-cartoon font-bold text-xs truncate ${
-                        isFiltered ? 'text-[#1e1e1c]' : ui.textPrimary
-                      }`}
-                    >
-                      {w.name}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEditWallet(w);
-                    }}
-                    className={`px-2 py-0.5 rounded-lg border-2 border-[#111110] text-[10px] font-cartoon font-bold ${
-                      isFiltered ? 'bg-[#1e1e1c] text-[#D8CBB3]' : 'bg-[#D8CBB3] text-[#1e1e1c]'
-                    }`}
-                  >
-                    Edit
-                  </button>
-                </div>
-                <div className="mt-3 relative z-10 flex items-baseline justify-between gap-2">
-                  <div>
-                    <p
-                      className={`font-cartoon font-bold text-sm tabular-nums ${
-                        isFiltered ? 'text-[#1e1e1c]' : ui.textPrimary
-                      }`}
-                    >
-                      {currencySymbol}
-                      {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </p>
-                    <p
-                      className={`text-[10px] font-semibold ${
-                        isFiltered ? 'text-[#1e1e1c]/75' : ui.textMuted
-                      }`}
-                    >
-                      {w.type}
-                    </p>
-                  </div>
-                  {isFiltered && (
-                    <span className="text-[9px] px-2 py-0.5 rounded-full font-cartoon font-bold bg-[#1e1e1c] text-[#D8CBB3]">
-                      Active
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-          <button
-            type="button"
-            onClick={onOpenNewWallet}
-            className={`min-w-[118px] p-3 rounded-2xl border-2 border-dashed border-[#D8CBB3]/50 flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.textSecondary}`}
-          >
-            <span className="text-xl font-cartoon font-bold">+</span>
-            <span className="text-[11px] font-cartoon font-bold">New Account</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search + Type Filter Pills */}
-      <div className="flex items-center gap-2 shrink-0">
-        <div className={`flex-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${ui.input}`}>
-          <svg
-            className={`w-3.5 h-3.5 shrink-0 ${ui.textMuted}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2.4"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-            />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search note, category, amount..."
-            value={activitySearch}
-            onChange={(e) => setActivitySearch(e.target.value)}
-            className="w-full bg-transparent text-xs font-medium focus:outline-none scale-[0.85] origin-left"
-          />
-          {activitySearch && (
-            <button
-              type="button"
-              onClick={() => setActivitySearch('')}
-              className={`text-[11px] font-bold ${ui.textMuted}`}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        <div className={`flex p-0.5 rounded-xl shrink-0 ${ui.segmentedBg}`}>
-          {[
-            { id: 'all', label: 'All' },
-            { id: 'expense', label: 'Out' },
-            { id: 'income', label: 'In' }
-          ].map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setActivityTypeFilter(f.id)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-cartoon font-bold transition-all ${
-                activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Date-Grouped Activity Feed */}
-      <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
-        {groupedTransactions.length === 0 ? (
-          <div className={`p-6 rounded-2xl text-center text-xs font-cartoon ${ui.card} ${ui.textMuted}`}>
-            No transactions here yet! Tap the Keypad to pop one in.
-          </div>
-        ) : (
-          groupedTransactions.map((group) => (
-            <div key={group.label} className="space-y-2">
-              <div
-                className={`sticky top-0 z-10 py-1 px-1 flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.stickyHeader}`}
-              >
-                <span className={ui.textSecondary}>{group.label}</span>
-                <span className={`tabular-nums ${group.netSpend > 0 ? 'text-[#52B788]' : ui.textMuted}`}>
-                  {group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}
-                  {currencySymbol}
-                  {Math.abs(group.netSpend).toLocaleString('en-IN')}
-                </span>
-              </div>
-
-              {group.items.map((tx, idx) => {
-                const w = wallets.find((item) => item.id === tx.wallet_id);
-                const toW = wallets.find((item) => item.id === tx.to_wallet_id);
-                const { category: c, cleanNote } = resolveTxCategory(tx);
-                const catAccent =
-                  tx.type === 'transfer'
-                    ? '#F4B942'
-                    : tx.type === 'income'
-                    ? '#52B788'
-                    : getCategoryAccentColor(c, idx);
-
-                return (
-                  <div
-                    key={tx.id}
-                    onClick={() => openEditTransaction(tx)}
-                    className={`p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.card}`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-10 h-10 rounded-xl border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base shrink-0"
-                        style={{ backgroundColor: catAccent }}
-                      >
-                        {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                            {tx.type === 'transfer'
-                              ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
-                              : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
-                          </p>
-                          {tx.pendingSync && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#F4B942] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
-                              Queued
-                            </span>
-                          )}
-                          {tx.source === 'shortcut' && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
-                              Back Tap
-                            </span>
-                          )}
-                        </div>
-                        <p className={`text-[10px] font-medium truncate ${ui.textMuted}`}>
-                          {w?.name || 'Account'}
-                          {cleanNote && c?.name ? ` · ${c.name}` : ''}
-                          {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`text-xs font-cartoon font-bold tabular-nums ${
-                          tx.type === 'income'
-                            ? 'text-[#52B788]'
-                            : tx.type === 'transfer'
-                            ? 'text-[#F4B942]'
-                            : ui.textSand
-                        }`}
-                      >
-                        {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                        {currencySymbol}
-                        {Number(tx.amount || 0).toLocaleString('en-IN')}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTransaction(tx.id);
-                        }}
-                        className={`p-1 rounded-lg text-xs font-bold key-press ${ui.textMuted} hover:text-[#F26B5B]`}
-                        title="Delete"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="src/components/IconLibraryPicker.jsx">
-import React, { useState, useMemo } from 'react';
-import { ICON_CATALOG, ICON_GROUPS } from '../constants/icons';
-
-export default function IconLibraryPicker({
-  selectedIcon,
-  onSelectIcon,
-  ui,
-  defaultGroup = 'All'
-}) {
-  const [activeGroup, setActiveGroup] = useState(defaultGroup);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredIcons = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return ICON_CATALOG.filter((entry) => {
-      if (activeGroup !== 'All' && entry.group !== activeGroup && !q) {
-        return false;
-      }
-      if (!q) return true;
-      return (
-        entry.tags.includes(q) ||
-        entry.group.toLowerCase().includes(q) ||
-        entry.icon.includes(q)
-      );
-    });
-  }, [activeGroup, searchQuery]);
-
-  const handleCustomEmojiInput = (e) => {
-    const raw = e.target.value;
-    if (!raw) return;
-    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-      const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
-      const segments = Array.from(segmenter.segment(raw.trim()));
-      if (segments.length > 0) {
-        onSelectIcon(segments[segments.length - 1].segment);
-        return;
-      }
+<file path="vercel.json">
+{
+  "crons": [
+    {
+      "path": "/api/keepalive",
+      "schedule": "0 8 * * *"
     }
-    const chars = Array.from(raw.trim());
-    if (chars.length > 0) {
-      onSelectIcon(chars[chars.length - 1]);
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-          Icon ({ICON_CATALOG.length}+ or type any emoji)
-        </label>
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>Custom:</span>
-          <input
-            type="text"
-            value={selectedIcon}
-            onChange={handleCustomEmojiInput}
-            placeholder="😀"
-            title="Tap to type any emoji from your keyboard"
-            className={`w-11 h-8 text-center rounded-xl text-base font-bold focus:outline-none ${ui.input}`}
-          />
-        </div>
-      </div>
-
-      {/* Search + Group Pills */}
-      <div className="flex items-center gap-1.5">
-        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl w-32 shrink-0 ${ui.input}`}>
-          <span className="text-[11px] opacity-60">🔍</span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search icon..."
-            className="w-full bg-transparent text-xs focus:outline-none scale-[0.85] origin-left"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className={`text-[10px] font-bold ${ui.textMuted}`}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        <div className="flex gap-1 overflow-x-auto no-scrollbar py-0.5">
-          {ICON_GROUPS.map((grp) => {
-            const active = activeGroup === grp && !searchQuery;
-            return (
-              <button
-                key={grp}
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setActiveGroup(grp);
-                }}
-                className={`px-2.5 py-1 rounded-xl text-[10px] font-cartoon font-bold shrink-0 key-press ${
-                  active ? ui.pillActive : ui.pillIdle
-                }`}
-              >
-                {grp}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Scrollable Multi-Row Icon Grid */}
-      <div
-        className={`grid grid-cols-7 gap-1.5 max-h-36 overflow-y-auto custom-scroll p-2 rounded-2xl ${ui.cardSubtle}`}
-      >
-        {filteredIcons.length === 0 ? (
-          <div className={`col-span-7 py-4 text-center text-xs font-cartoon ${ui.textMuted}`}>
-            No match—type any emoji in the Custom box above!
-          </div>
-        ) : (
-          filteredIcons.map((item, idx) => {
-            const isSelected = selectedIcon === item.icon;
-            return (
-              <button
-                key={`${item.icon}-${idx}`}
-                type="button"
-                onClick={() => onSelectIcon(item.icon)}
-                className={`h-10 rounded-xl flex items-center justify-center text-lg key-press ${
-                  isSelected ? ui.pillActive : ui.pillIdle
-                }`}
-              >
-                {item.icon}
-              </button>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
+  ]
 }
 </file>
 
-<file path="src/components/InsightsTab.jsx">
-import React from 'react';
-import { formatDayGroupLabel, getCategoryAccentColor } from '../utils/formatters';
+<file path="public/privacy.html">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1e1e1c" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Privacy Policy — TAPX</title>
+    <style>
+      :root {
+        --bg: #1e1e1c;
+        --surface: #282825;
+        --surface-elevated: #32302b;
+        --outline: #111110;
+        --sand: #D8CBB3;
+        --cream: #F5EFE6;
+        --text-primary: #F5EFE6;
+        --text-secondary: #B8AA93;
+        --text-muted: #877D6E;
+        --coral: #F26B5B;
+        --mint: #52B788;
+        --gold: #F4B942;
+        --sky: #5C9EAD;
+      }
 
-const RANGE_PRESETS = [
-  { id: 'week', label: '7D' },
-  { id: 'month', label: 'This Month' },
-  { id: 'last_month', label: 'Last Month' },
-  { id: '30d', label: '30D' },
-  { id: '90d', label: '90D' },
-  { id: 'all', label: 'All' },
-  { id: 'custom', label: '📅 Custom' }
-];
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-export default function InsightsTab({
-  ui,
-  isDark,
-  tabAnimClass,
-  analyticsRange,
-  setAnalyticsRange,
-  customStartDate,
-  setCustomStartDate,
-  customEndDate,
-  setCustomEndDate,
-  analyticsData,
-  currencySymbol,
-  selectedDonutCatId,
-  setSelectedDonutCatId,
-  selectedBarIdx,
-  setSelectedBarIdx,
-  wallets,
-  resolveTxCategory,
-  openEditTransaction,
-  handleExportCsv
-}) {
-  const safeBarIdx = Math.min(
-    selectedBarIdx,
-    Math.max(0, (analyticsData.trendBars?.length || 1) - 1)
-  );
-  const selectedDayObj =
-    analyticsData.trendBars?.[safeBarIdx] ||
-    analyticsData.trendBars?.[analyticsData.trendBars.length - 1];
+      html,
+      body {
+        background-color: var(--bg);
+        color: var(--text-primary);
+        font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.65;
+      }
 
-  const activeDonutCat =
-    analyticsData.categoryBreakdown.find((c) => c.id === selectedDonutCatId) ||
-    analyticsData.categoryBreakdown[0] ||
-    null;
+      h1,
+      h2,
+      .brand-name,
+      .badge,
+      .back-link,
+      .contact-label {
+        font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Plus Jakarta Sans', system-ui, sans-serif;
+      }
 
-  const donutRadius = 45;
-  const donutCircumference = 2 * Math.PI * donutRadius;
-  let donutCumulativeShare = 0;
+      .container {
+        max-width: 740px;
+        margin: 0 auto;
+        padding: 44px 20px 80px;
+      }
 
-  return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
-      {/* Top Bar: Scrollable Range Presets + Custom Toggle + 1-Tap CSV Export */}
-      <div className="space-y-2 shrink-0">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            {RANGE_PRESETS.map((tab) => {
-              const active = analyticsRange === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setAnalyticsRange(tab.id);
-                    setSelectedBarIdx(6);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold shrink-0 transition-all key-press ${
-                    active ? ui.pillActive : ui.pillIdle
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 36px;
+        padding-bottom: 20px;
+        border-bottom: 2px dashed #363632;
+      }
 
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            title="Export filtered period to CSV"
-            className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${ui.pillActive}`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-              />
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+      }
+
+      .brand-logo-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: var(--surface);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .brand-name {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--cream);
+      }
+
+      .back-link {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e1e1c;
+        text-decoration: none;
+        padding: 9px 16px;
+        border-radius: 9999px;
+        background: var(--sand);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      }
+
+      .back-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 0 var(--outline);
+        text-decoration: none;
+      }
+
+      .back-link:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 var(--outline);
+      }
+
+      .hero {
+        margin-bottom: 28px;
+      }
+
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #1e1e1c;
+        background: var(--gold);
+        border: 2px solid var(--outline);
+        box-shadow: 0 2px 0 var(--outline);
+        padding: 4px 12px;
+        border-radius: 9999px;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.18;
+        margin-bottom: 8px;
+        color: var(--cream);
+      }
+
+      .meta {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .summary-card {
+        background: var(--sand);
+        color: #1e1e1c;
+        border: 2.5px solid var(--outline);
+        box-shadow: 0 5px 0 var(--outline);
+        border-radius: 24px;
+        padding: 20px 22px;
+        margin-bottom: 28px;
+      }
+
+      .summary-card p {
+        font-size: 14px;
+        font-weight: 600;
+        color: #282825;
+      }
+
+      .summary-card strong {
+        color: #111110;
+        font-weight: 800;
+      }
+
+      .summary-card a {
+        color: #111110;
+        text-decoration: underline;
+        font-weight: 700;
+      }
+
+      section {
+        background: var(--surface);
+        border: 2px solid var(--outline);
+        box-shadow: 0 4px 0 var(--outline);
+        border-radius: 24px;
+        padding: 24px 24px;
+        margin-bottom: 18px;
+      }
+
+      h2 {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--sand);
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        padding-left: 18px;
+        margin-top: 8px;
+        margin-bottom: 12px;
+      }
+
+      ul:last-child {
+        margin-bottom: 0;
+      }
+
+      li {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      li:last-child {
+        margin-bottom: 0;
+      }
+
+      strong {
+        color: var(--cream);
+        font-weight: 700;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12.5px;
+        background: #181816;
+        color: var(--gold);
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid var(--outline);
+      }
+
+      a {
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .contact-item {
+        background: var(--surface-elevated);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        border-radius: 16px;
+        padding: 12px 14px;
+      }
+
+      .contact-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+      }
+
+      .contact-value {
+        font-size: 13px;
+        color: var(--cream);
+        font-weight: 600;
+      }
+
+      footer {
+        margin-top: 36px;
+        padding-top: 20px;
+        border-top: 2px dashed #363632;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 28px 16px 56px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+        section {
+          padding: 20px 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <a href="/" class="brand">
+          <div class="brand-logo-box">
+            <svg viewBox="70 50 375 415" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <rect x="108" y="224" width="316" height="220" rx="44" fill="#111110" />
+              <rect x="164" y="144" width="56" height="116" rx="14" fill="#F26B5B" stroke="#111110" stroke-width="10" />
+              <rect x="236" y="106" width="56" height="154" rx="14" fill="#52B788" stroke="#111110" stroke-width="10" />
+              <rect x="308" y="68" width="56" height="192" rx="14" fill="#F4B942" stroke="#111110" stroke-width="10" />
+              <rect x="96" y="212" width="316" height="216" rx="44" fill="#D8CBB3" stroke="#111110" stroke-width="11" />
+              <rect x="324" y="290" width="102" height="64" rx="32" fill="#282825" stroke="#111110" stroke-width="10" />
+              <circle cx="358" cy="322" r="13" fill="#F4B942" stroke="#111110" stroke-width="7" />
             </svg>
-            CSV
-          </button>
-        </div>
-
-        {/* Custom Date Range Picker Bar */}
-        {analyticsRange === 'custom' && (
-          <div className={`p-2.5 rounded-2xl grid grid-cols-2 gap-2 animate-tab ${ui.card}`}>
-            <div className="space-y-0.5">
-              <label className={`text-[9px] font-cartoon font-bold uppercase px-1 ${ui.textMuted}`}>
-                From Date
-              </label>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className={`w-full rounded-xl px-2.5 py-1.5 text-xs font-cartoon font-bold focus:outline-none ${ui.input}`}
-              />
-            </div>
-            <div className="space-y-0.5">
-              <label className={`text-[9px] font-cartoon font-bold uppercase px-1 ${ui.textMuted}`}>
-                To Date
-              </label>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className={`w-full rounded-xl px-2.5 py-1.5 text-xs font-cartoon font-bold focus:outline-none ${ui.input}`}
-              />
-            </div>
           </div>
-        )}
+          <span class="brand-name">TAPX</span>
+        </a>
+        <a href="/" class="back-link">Open App &rarr;</a>
+      </header>
+
+      <div class="hero">
+        <span class="badge">Privacy &amp; Data Protection</span>
+        <h1>Privacy Policy</h1>
+        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 18, 2026</p>
       </div>
 
-      {/* Scrollable Deep Insights Feed */}
-      <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
-        {/* 1. Hero Cashflow, Period Delta & Pacing Card */}
-        <div className={`p-4 rounded-3xl space-y-3 relative overflow-hidden ${ui.card}`}>
-          <div className="flex items-center justify-between">
-            <span className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
-              {analyticsData.windowLabel} · {analyticsData.effectiveDays}{' '}
-              {analyticsData.effectiveDays === 1 ? 'Day' : 'Days'}
-            </span>
-            {analyticsData.expenseDeltaPct !== null && (
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-cartoon font-bold border border-[#111110] ${
-                  analyticsData.expenseDeltaPct <= 0
-                    ? 'bg-[#52B788] text-[#1e1e1c]'
-                    : 'bg-[#F26B5B] text-[#1e1e1c]'
-                }`}
-              >
-                {analyticsData.expenseDeltaPct > 0 ? '▲ +' : '▼ '}
-                {analyticsData.expenseDeltaPct}% vs prev
-              </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>Spent</p>
-              <p className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
-                {currencySymbol}
-                {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-              </p>
-              <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
-                {currencySymbol}
-                {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/day
-              </p>
-            </div>
-
-            <div>
-              <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>Income</p>
-              <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5 truncate">
-                +{currencySymbol}
-                {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-              </p>
-              <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
-                {analyticsData.savingsRate !== null
-                  ? `${analyticsData.savingsRate}% saved`
-                  : `${analyticsData.expenseCount} entries`}
-              </p>
-            </div>
-
-            <div>
-              <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
-                {analyticsRange === 'month' ? 'Est. Month' : 'Net Flow'}
-              </p>
-              <p
-                className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${
-                  analyticsRange === 'month'
-                    ? ui.textSand
-                    : analyticsData.netFlow >= 0
-                    ? 'text-[#52B788]'
-                    : 'text-[#F26B5B]'
-                }`}
-              >
-                {analyticsRange === 'month' ? (
-                  <>
-                    {currencySymbol}
-                    {analyticsData.projectedMonthSpend.toLocaleString('en-IN')}
-                  </>
-                ) : (
-                  <>
-                    {analyticsData.netFlow >= 0 ? '+' : '-'}
-                    {currencySymbol}
-                    {Math.abs(analyticsData.netFlow).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                  </>
-                )}
-              </p>
-              <p className={`text-[10px] font-semibold ${ui.textMuted}`}>
-                {analyticsRange === 'month' ? 'Monthly pace' : `${analyticsData.shortcutPct}% Back Tap`}
-              </p>
-            </div>
-          </div>
-
-          {/* Chunky Cashflow Ratio Bar */}
-          {(analyticsData.totalExpense > 0 || analyticsData.totalIncome > 0) && (
-            <div className="space-y-1 pt-1">
-              <div className="w-full h-3.5 rounded-full overflow-hidden flex bg-[#161614] border-2 border-[#111110] p-0.5 gap-0.5">
-                {analyticsData.totalIncome > 0 && (
-                  <div
-                    className="h-full rounded-l-full bg-[#52B788] transition-all duration-500"
-                    style={{
-                      width: `${Math.max(
-                        8,
-                        Math.round(
-                          (analyticsData.totalIncome /
-                            (analyticsData.totalIncome + analyticsData.totalExpense)) *
-                            100
-                        )
-                      )}%`
-                    }}
-                  />
-                )}
-                {analyticsData.totalExpense > 0 && (
-                  <div
-                    className="h-full rounded-r-full bg-[#F26B5B] transition-all duration-500"
-                    style={{
-                      width: `${Math.max(
-                        8,
-                        Math.round(
-                          (analyticsData.totalExpense /
-                            (analyticsData.totalIncome + analyticsData.totalExpense)) *
-                            100
-                        )
-                      )}%`
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 2. Velocity, No-Spend Days & Ticket Metrics Strip */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
-            <span className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-              🛡️ No-Spend
-            </span>
-            <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-1">
-              {analyticsData.noSpendDays} {analyticsData.noSpendDays === 1 ? 'Day' : 'Days'}
-            </p>
-            <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>
-              {analyticsData.noSpendPct}% of period
-            </span>
-          </div>
-
-          <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
-            <span className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-              🎯 Avg Spend
-            </span>
-            <p className={`text-base font-cartoon font-bold tabular-nums mt-1 ${ui.textSand}`}>
-              {currencySymbol}
-              {analyticsData.avgTicket.toLocaleString('en-IN')}
-            </p>
-            <span className={`text-[10px] font-semibold tabular-nums ${ui.textSecondary}`}>
-              Median {currencySymbol}
-              {analyticsData.medianTicket.toLocaleString('en-IN')}
-            </span>
-          </div>
-
-          <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
-            <span className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-              ⚡ Frequency
-            </span>
-            <p className={`text-base font-cartoon font-bold tabular-nums mt-1 ${ui.textPrimary}`}>
-              {(analyticsData.expenseCount / Math.max(1, analyticsData.effectiveDays)).toFixed(1)}/d
-            </p>
-            <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>
-              {analyticsData.activeSpendDays} active days
-            </span>
-          </div>
-        </div>
-
-        {/* 3. Smart Pocket Insights Callouts */}
-        {analyticsData.smartInsights.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
-            {analyticsData.smartInsights.map((ins, i) => (
-              <div
-                key={i}
-                className={`min-w-[215px] p-3 rounded-2xl flex items-start gap-2.5 shrink-0 ${ui.card}`}
-              >
-                <span className="w-8 h-8 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] flex items-center justify-center text-sm shrink-0">
-                  {ins.icon}
-                </span>
-                <div className="min-w-0">
-                  <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                    {ins.title}
-                  </p>
-                  <p className={`text-[10px] font-medium leading-snug mt-0.5 ${ui.textSecondary}`}>
-                    {ins.detail}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 4. Interactive SVG Category Donut + Breakdown Card */}
-        <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
-          <div className="flex items-center justify-between">
-            <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Where It Went</h4>
-            <span className={`text-[10px] font-semibold ${ui.textMuted}`}>Tap a slice to inspect</span>
-          </div>
-
-          {analyticsData.categoryBreakdown.length === 0 ? (
-            <p className={`text-xs py-3 text-center font-cartoon ${ui.textMuted}`}>
-              No expenses recorded in this timeframe.
-            </p>
-          ) : (
-            <>
-              <div className="flex items-center gap-4 py-1">
-                <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                  <svg className="w-28 h-28 -rotate-90" viewBox="0 0 112 112">
-                    <circle
-                      cx="56"
-                      cy="56"
-                      r={donutRadius}
-                      fill="none"
-                      stroke={isDark ? '#181816' : '#D8CBB3'}
-                      strokeWidth="14"
-                    />
-                    {analyticsData.categoryBreakdown.map((item) => {
-                      const strokeLen = Math.max(
-                        0,
-                        item.exactShare * donutCircumference -
-                          (analyticsData.categoryBreakdown.length > 1 ? 3 : 0)
-                      );
-                      const dashOffset = -donutCumulativeShare * donutCircumference;
-                      donutCumulativeShare += item.exactShare;
-                      const isFocused = activeDonutCat?.id === item.id;
-
-                      return (
-                        <circle
-                          key={item.id}
-                          cx="56"
-                          cy="56"
-                          r={donutRadius}
-                          fill="none"
-                          stroke={item.color}
-                          strokeWidth={isFocused ? '16' : '12.5'}
-                          strokeDasharray={`${strokeLen} ${donutCircumference}`}
-                          strokeDashoffset={dashOffset}
-                          strokeLinecap="round"
-                          className="transition-all duration-300 cursor-pointer"
-                          onClick={() => setSelectedDonutCatId(item.id)}
-                        />
-                      );
-                    })}
-                  </svg>
-                  {activeDonutCat && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-2">
-                      <span className="text-lg leading-none">{activeDonutCat.icon}</span>
-                      <span className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textPrimary}`}>
-                        {activeDonutCat.pct}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {activeDonutCat && (
-                  <div className="flex-1 min-w-0 space-y-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="w-3 h-3 rounded-full border border-[#111110] shrink-0"
-                        style={{ backgroundColor: activeDonutCat.color }}
-                      />
-                      <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                        {activeDonutCat.name}
-                      </p>
-                    </div>
-                    <p className={`text-lg font-cartoon font-bold tabular-nums leading-tight ${ui.textSand}`}>
-                      {currencySymbol}
-                      {activeDonutCat.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </p>
-                    <div className={`text-[10px] font-semibold space-y-0.5 ${ui.textSecondary}`}>
-                      <p>
-                        {activeDonutCat.count} {activeDonutCat.count === 1 ? 'entry' : 'entries'} · Avg{' '}
-                        {currencySymbol}
-                        {activeDonutCat.avgTicket.toLocaleString('en-IN')}
-                      </p>
-                      {activeDonutCat.budget > 0 && (
-                        <p className="text-[#F4B942]">
-                          Limit: {currencySymbol}
-                          {activeDonutCat.budget.toLocaleString('en-IN')} ({activeDonutCat.budgetPct}%)
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2 pt-1">
-                {analyticsData.categoryBreakdown.map((item) => {
-                  const isFocused = activeDonutCat?.id === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedDonutCatId(item.id)}
-                      className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-all key-press ${
-                        isFocused ? ui.cardElevated : ui.cardSubtle
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span
-                          className="w-7 h-7 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
-                          style={{ backgroundColor: item.color }}
-                        >
-                          {item.icon}
-                        </span>
-                        <span className={`font-cartoon font-bold truncate ${ui.textPrimary}`}>{item.name}</span>
-                        <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({item.count})</span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0 tabular-nums">
-                        <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                          {currencySymbol}
-                          {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                        </span>
-                        <span
-                          className="text-[10px] px-2 py-0.5 rounded-lg border border-[#111110] font-cartoon font-bold text-[#1e1e1c]"
-                          style={{ backgroundColor: item.color }}
-                        >
-                          {item.pct}%
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* 5. Interactive Period Trend Bar Chart */}
-        <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Spending Rhythm</h4>
-              {selectedDayObj && (
-                <p className={`text-[10px] font-semibold tabular-nums ${ui.textSecondary}`}>
-                  {selectedDayObj.fullDateLabel}:{' '}
-                  <span className={`font-bold ${ui.textSand}`}>
-                    {currencySymbol}
-                    {selectedDayObj.amount.toLocaleString('en-IN')}
-                  </span>
-                </p>
-              )}
-            </div>
-            <span className={`text-[10px] font-cartoon font-bold tabular-nums ${ui.textMuted}`}>
-              Avg: {currencySymbol}
-              {Math.round(analyticsData.trendAvg).toLocaleString('en-IN')}
-            </span>
-          </div>
-
-          <div
-            className="grid gap-1.5 items-end h-28 pt-2"
-            style={{
-              gridTemplateColumns: `repeat(${analyticsData.trendBars.length}, minmax(0, 1fr))`
-            }}
-          >
-            {analyticsData.trendBars.map((day, idx) => {
-              const isSelected = safeBarIdx === idx;
-              const heightPct =
-                day.amount > 0
-                  ? Math.max(16, Math.round((day.amount / analyticsData.maxTrendSpend) * 100))
-                  : 8;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelectedBarIdx(idx)}
-                  className="flex flex-col items-center justify-end h-full gap-1 key-press min-w-0"
-                >
-                  <span
-                    className={`text-[8.5px] font-cartoon font-bold tabular-nums truncate max-w-full ${
-                      isSelected ? ui.textSand : ui.textMuted
-                    }`}
-                  >
-                    {day.amount > 0
-                      ? day.amount >= 1000
-                        ? `${(day.amount / 1000).toFixed(1)}k`
-                        : Math.round(day.amount)
-                      : ''}
-                  </span>
-                  <div
-                    className={`w-full rounded-xl h-16 flex items-end p-0.5 border-2 border-[#111110] ${
-                      isSelected ? 'bg-[#181816]' : ui.cardSubtle
-                    }`}
-                  >
-                    <div
-                      className={`w-full rounded-lg border border-[#111110] transition-all duration-500 ios-spring ${
-                        isSelected
-                          ? 'bg-[#F4B942]'
-                          : day.isToday
-                          ? 'bg-[#D8CBB3]'
-                          : day.amount > 0
-                          ? 'bg-[#52B788]'
-                          : 'bg-transparent border-transparent'
-                      }`}
-                      style={{ height: `${heightPct}%` }}
-                    />
-                  </div>
-                  <span
-                    className={`text-[9px] font-cartoon font-bold truncate max-w-full ${
-                      isSelected || day.isToday ? ui.textSand : ui.textMuted
-                    }`}
-                  >
-                    {day.isToday && analyticsData.trendBars.length <= 7 ? 'Today' : day.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 6. Day-of-Week Heatmap (Mon–Sun) */}
-        <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Day-of-Week Heatmap</h4>
-              <p className={`text-[10px] font-semibold ${ui.textMuted}`}>
-                Which days drain your wallet most
-              </p>
-            </div>
-            {analyticsData.peakDow && analyticsData.peakDow.amount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold bg-[#F4B942] text-[#1e1e1c] border border-[#111110]">
-                Peak: {analyticsData.peakDow.label} ({analyticsData.peakDow.sharePct}%)
-              </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-7 gap-1.5 pt-1">
-            {analyticsData.dowBreakdown.map((d) => {
-              const isPeak =
-                analyticsData.peakDow?.dayNum === d.dayNum && d.amount > 0;
-              return (
-                <div
-                  key={d.dayNum}
-                  className={`p-2 rounded-2xl border-2 border-[#111110] flex flex-col items-center gap-1 ${
-                    isPeak
-                      ? 'bg-[#F4B942] text-[#1e1e1c] shadow-[0_3px_0_#111110]'
-                      : ui.cardSubtle
-                  }`}
-                >
-                  <span
-                    className={`text-[10px] font-cartoon font-bold ${
-                      isPeak ? 'text-[#1e1e1c]' : ui.textSecondary
-                    }`}
-                  >
-                    {d.label}
-                  </span>
-                  <span
-                    className={`text-[10px] font-cartoon font-bold tabular-nums ${
-                      isPeak ? 'text-[#1e1e1c]' : ui.textPrimary
-                    }`}
-                  >
-                    {d.amount >= 1000
-                      ? `${(d.amount / 1000).toFixed(1)}k`
-                      : Math.round(d.amount)}
-                  </span>
-                  <span
-                    className={`text-[8.5px] font-semibold ${
-                      isPeak ? 'text-[#1e1e1c]/80' : ui.textMuted
-                    }`}
-                  >
-                    {d.count}x
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 7. Time-of-Day Rhythm + Ticket Size Breakdown */}
-        <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
-          <div className="flex items-center justify-between">
-            <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>
-              Time-of-Day &amp; Ticket Size
-            </h4>
-            <span className={`text-[10px] font-semibold ${ui.textMuted}`}>Habit breakdown</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            {analyticsData.timeOfDayBreakdown.map((slot) => (
-              <div
-                key={slot.id}
-                className={`p-2.5 rounded-2xl flex items-center justify-between ${ui.cardSubtle}`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className="w-7 h-7 rounded-xl border border-[#111110] flex items-center justify-center text-xs shrink-0"
-                    style={{ backgroundColor: slot.color }}
-                  >
-                    {slot.icon}
-                  </span>
-                  <div className="min-w-0">
-                    <p className={`text-[11px] font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                      {slot.label}
-                    </p>
-                    <p className={`text-[9px] font-semibold ${ui.textMuted}`}>{slot.sub}</p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0 tabular-nums">
-                  <p className={`text-[11px] font-cartoon font-bold ${ui.textSand}`}>{slot.pct}%</p>
-                  <p className={`text-[9px] font-semibold ${ui.textMuted}`}>{slot.count}x</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Ticket Size Pills */}
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            {Object.values(analyticsData.ticketBuckets).map((b) => (
-              <div
-                key={b.label}
-                className={`p-2.5 rounded-2xl text-center space-y-0.5 ${ui.cardSubtle}`}
-              >
-                <p className={`text-[9.5px] font-cartoon font-bold ${ui.textSecondary}`}>
-                  {b.label}
-                </p>
-                <p className={`text-sm font-cartoon font-bold tabular-nums ${ui.textPrimary}`}>
-                  {b.count} <span className={`text-[10px] font-normal ${ui.textMuted}`}>txns</span>
-                </p>
-                <p className="text-[10px] font-cartoon font-bold tabular-nums" style={{ color: b.color }}>
-                  {currencySymbol}
-                  {Math.round(b.amount).toLocaleString('en-IN')}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 8. Category Budget Health Tracker (When limits are set) */}
-        {analyticsData.budgetedCategories.length > 0 && (
-          <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-            <div className="flex items-center justify-between">
-              <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Budget Guardrails</h4>
-              <span className={`text-[10px] font-cartoon font-bold tabular-nums ${ui.textSand}`}>
-                {currencySymbol}
-                {analyticsData.totalBudgetSpent.toLocaleString('en-IN')} / {currencySymbol}
-                {analyticsData.totalBudgetLimit.toLocaleString('en-IN')}
-              </span>
-            </div>
-
-            <div className="space-y-2.5">
-              {analyticsData.budgetedCategories.map((b) => (
-                <div key={b.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs tabular-nums">
-                    <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                      {b.icon} {b.name}
-                    </span>
-                    <span className={`font-cartoon font-bold ${b.overBy > 0 ? 'text-[#F26B5B]' : ui.textPrimary}`}>
-                      {currencySymbol}
-                      {b.spent.toLocaleString('en-IN')} / {currencySymbol}
-                      {b.limit.toLocaleString('en-IN')} ({b.pct}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-3 rounded-full overflow-hidden bg-[#181816] border-2 border-[#111110] p-0.5">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ios-spring ${
-                        b.pct >= 100
-                          ? 'bg-[#F26B5B]'
-                          : b.pct >= 80
-                          ? 'bg-[#F4B942]'
-                          : 'bg-[#52B788]'
-                      }`}
-                      style={{ width: `${Math.min(100, Math.max(6, b.pct))}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 9. Account Share Breakdown */}
-        {analyticsData.walletBreakdown.length > 0 && (
-          <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
-            <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Account Share</h4>
-            <div className="space-y-2.5">
-              {analyticsData.walletBreakdown.map((w) => (
-                <div key={w.id} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs tabular-nums">
-                    <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                      {w.icon} {w.name}
-                    </span>
-                    <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                      {currencySymbol}
-                      {w.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}{' '}
-                      <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({w.pct}%)</span>
-                    </span>
-                  </div>
-                  <div className="w-full h-3 rounded-full overflow-hidden bg-[#181816] border-2 border-[#111110] p-0.5">
-                    <div
-                      className="h-full rounded-full transition-all duration-500 ios-spring"
-                      style={{ width: `${Math.max(6, w.pct)}%`, backgroundColor: w.color }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 10. Largest Spends in Period */}
-        {analyticsData.topExpenses.length > 0 && (
-          <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
-            <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Biggest Splurges</h4>
-            <div className="space-y-2">
-              {analyticsData.topExpenses.map((tx, idx) => {
-                const w = wallets.find((item) => item.id === tx.wallet_id);
-                const { category: c, cleanNote } = resolveTxCategory(tx);
-                const accent = getCategoryAccentColor(c, idx);
-                return (
-                  <div
-                    key={tx.id}
-                    onClick={() => openEditTransaction(tx)}
-                    className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
-                        style={{ backgroundColor: accent }}
-                      >
-                        {c?.icon || '💸'}
-                      </span>
-                      <div className="min-w-0">
-                        <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                          {cleanNote || c?.name || 'Expense'}
-                        </p>
-                        <p className={`text-[10px] font-semibold truncate ${ui.textMuted}`}>
-                          {w?.name || 'Account'} · {formatDayGroupLabel(tx.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
-                      -{currencySymbol}
-                      {Number(tx.amount || 0).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="src/components/KeypadTab.jsx">
-import React from 'react';
-import { WALLET_COLORS } from '../constants/theme';
-import { getCategoryAccentColor } from '../utils/formatters';
-
-export default function KeypadTab({
-  ui,
-  tabAnimClass,
-  entryType,
-  setEntryType,
-  categories,
-  setSelectedCategoryId,
-  amountStr,
-  formattedDisplayAmount,
-  amountFontSizeClass,
-  amountPulse,
-  currencySymbol,
-  note,
-  setNote,
-  noteInputRef,
-  selectedWalletObj,
-  wallets,
-  selectedWalletId,
-  setSelectedWalletId,
-  toWalletId,
-  setToWalletId,
-  filteredCategories,
-  selectedCategoryId,
-  handleDigitPress,
-  handleQuickAddAmount,
-  handleSwapTransferWallets,
-  handleLogTransaction,
-  delHoldTimerRef,
-  onOpenNewWallet,
-  onOpenNewCategory
-}) {
-  const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
-  const primaryButtonClass =
-    entryType === 'income'
-      ? ui.primaryBtnIncome
-      : entryType === 'transfer'
-      ? ui.primaryBtnTransfer
-      : ui.primaryBtnExpense;
-
-  return (
-    <div className={`flex-1 min-h-0 flex flex-col justify-between overflow-hidden ${tabAnimClass}`}>
-      {/* Chunky Sliding Segmented Control */}
-      <div className={`relative grid grid-cols-3 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
-        <div
-          className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
-          style={{ transform: `translate3d(${entryIndex * 100}%, 0, 0)` }}
-        />
-        {[
-          { id: 'expense', label: '💸 Expense' },
-          { id: 'income', label: '💰 Income' },
-          { id: 'transfer', label: '⇄ Transfer' }
-        ].map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => {
-              setEntryType(t.id);
-              const firstMatch = categories.find(
-                (c) => c.type === (t.id === 'income' ? 'income' : 'expense')
-              );
-              if (firstMatch) setSelectedCategoryId(firstMatch.id);
-            }}
-            className={`relative z-10 py-1.5 text-xs font-cartoon rounded-xl transition-colors duration-200 ${
-              entryType === t.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Center Cartoon Amount Display Card */}
-      <div
-        className={`my-auto py-3 px-4 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden ${ui.heroCard}`}
-      >
-        {amountStr !== '0' && (
-          <button
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              handleDigitPress('CLEAR');
-            }}
-            className={`absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
-          >
-            Reset
-          </button>
-        )}
-
-        <div
-          className={`${amountFontSizeClass} leading-none font-cartoon font-bold tracking-tight tabular-nums transition-transform duration-100 ${
-            amountPulse ? 'scale-[1.06] -rotate-1' : 'scale-100'
-          } ${
-            entryType === 'income'
-              ? 'text-[#52B788]'
-              : entryType === 'transfer'
-              ? 'text-[#F4B942]'
-              : ui.textSand
-          }`}
-        >
-          <span className={`text-2xl mr-1 font-cartoon ${ui.textMuted}`}>
-            {entryType === 'income' ? '+' : entryType === 'expense' && amountStr !== '0' ? '-' : ''}
-            {currencySymbol}
-          </span>
-          {formattedDisplayAmount}
-        </div>
-
-        <input
-          ref={noteInputRef}
-          type="text"
-          enterKeyHint="done"
-          placeholder={
-            entryType === 'transfer'
-              ? 'Transfer note (e.g. ATM withdrawal)...'
-              : 'Write a quick note...'
-          }
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') e.currentTarget.blur();
-          }}
-          className={`mt-1 bg-transparent text-center text-xs font-semibold focus:outline-none w-4/5 scale-[0.84] origin-center ${ui.textSecondary}`}
-        />
-
-        {/* Quick Add Sticker Chips */}
-        <div className="flex items-center gap-1.5 mt-1.5">
-          {[50, 100, 500, 1000].map((val) => (
-            <button
-              key={val}
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                handleQuickAddAmount(val);
-              }}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
-            >
-              +{currencySymbol}
-              {val >= 1000 ? '1k' : val}
-            </button>
-          ))}
-        </div>
-
-        {selectedWalletObj && (
-          <div
-            className={`mt-2.5 pt-2 border-t-2 border-dashed w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold ${ui.divider} ${ui.textMuted}`}
-          >
-            <span>{selectedWalletObj.icon}</span>
-            <span className={`font-bold ${ui.textSecondary}`}>{selectedWalletObj.name}</span>
-            <span>·</span>
-            <span className="tabular-nums">
-              {currencySymbol}
-              {Number(selectedWalletObj.balance || 0).toLocaleString('en-IN')} in pocket
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Wallet & Category Selector Pills */}
-      <div className="space-y-2 shrink-0">
-        <div className="space-y-1">
-          <div className="flex items-center justify-between px-0.5">
-            <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
-              {entryType === 'transfer' ? 'From Account → To Account' : 'Pick Account'}
-            </span>
-            {entryType === 'transfer' && wallets.length > 1 && (
-              <button
-                type="button"
-                onClick={handleSwapTransferWallets}
-                className="text-[10px] font-cartoon font-bold text-[#F4B942] key-press"
-              >
-                ⇄ Swap
-              </button>
-            )}
-          </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {wallets.length === 0 ? (
-              <button
-                type="button"
-                onClick={onOpenNewWallet}
-                className={`px-3.5 py-2 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
-              >
-                + Add your first account
-              </button>
-            ) : (
-              wallets.map((w, idx) => {
-                const active = selectedWalletId === w.id;
-                const wColor = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
-                return (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => setSelectedWalletId(w.id)}
-                    style={
-                      active
-                        ? {
-                            backgroundColor: wColor,
-                            borderColor: '#111110',
-                            color: '#1e1e1c'
-                          }
-                        : undefined
-                    }
-                    className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
-                      active ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]' : ui.pillIdle
-                    }`}
-                  >
-                    <span>{w.icon}</span>
-                    <span>{w.name}</span>
-                    <span className={`text-[10px] tabular-nums ${active ? 'opacity-90 font-extrabold' : 'opacity-75'}`}>
-                      {currencySymbol}
-                      {Number(w.balance || 0).toLocaleString('en-IN')}
-                    </span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          {entryType === 'transfer' && wallets.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
-              {wallets
-                .filter((w) => w.id !== selectedWalletId)
-                .map((w) => (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => setToWalletId(w.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1 shrink-0 transition-colors duration-150 key-press ${
-                      toWalletId === w.id ? ui.pillActive : ui.pillIdle
-                    }`}
-                  >
-                    <span>
-                      → {w.icon} {w.name}
-                    </span>
-                  </button>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {entryType !== 'transfer' && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between px-0.5">
-              <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
-                {entryType === 'income' ? 'Income Category' : 'Expense Category'}
-              </span>
-              <button
-                type="button"
-                onClick={() => onOpenNewCategory(entryType === 'income' ? 'income' : 'expense')}
-                className={`text-[10px] font-cartoon font-bold ${ui.textSecondary} key-press`}
-              >
-                + Custom
-              </button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-              {filteredCategories.map((c, idx) => {
-                const active = selectedCategoryId === c.id;
-                const accent = getCategoryAccentColor(c, idx);
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setSelectedCategoryId(c.id)}
-                    style={
-                      active
-                        ? {
-                            backgroundColor: accent,
-                            borderColor: '#111110',
-                            color: '#1e1e1c'
-                          }
-                        : undefined
-                    }
-                    className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
-                      active ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]' : ui.pillIdle
-                    }`}
-                  >
-                    <span>{c.icon}</span>
-                    <span>{c.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Tactile Arcade Cartoon Numpad */}
-      <div className="grid grid-cols-3 gap-2 pt-1.5 shrink-0">
-        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
-          <button
-            key={key}
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              handleDigitPress(key);
-              if (key === 'DEL') {
-                if (delHoldTimerRef.current) clearTimeout(delHoldTimerRef.current);
-                delHoldTimerRef.current = setTimeout(() => {
-                  handleDigitPress('CLEAR');
-                }, 420);
-              }
-            }}
-            onPointerUp={() => {
-              if (key === 'DEL' && delHoldTimerRef.current) {
-                clearTimeout(delHoldTimerRef.current);
-              }
-            }}
-            onPointerLeave={() => {
-              if (key === 'DEL' && delHoldTimerRef.current) {
-                clearTimeout(delHoldTimerRef.current);
-              }
-            }}
-            className={`h-11 rounded-2xl text-lg font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
-              key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
-            }`}
-          >
-            {key === 'DEL' ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z"
-                />
-              </svg>
-            ) : (
-              key
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Chunky Sand / Mint / Gold Action Button */}
-      <button
-        type="button"
-        onClick={handleLogTransaction}
-        className={`w-full py-3.5 mt-2 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass}`}
-      >
-        Save {entryType === 'transfer' ? 'Transfer ⇄' : entryType === 'income' ? 'Income 💰' : 'Expense 💸'}
-      </button>
-    </div>
-  );
-}
-</file>
-
-<file path="src/components/LoginScreen.jsx">
-import React from 'react';
-import TapxLogo from './TapxLogo';
-
-export default function LoginScreen({
-  ui,
-  savedAccounts,
-  onGoogleLogin,
-  onRemoveSavedAccount
-}) {
-  return (
-    <div
-      className={`h-full w-full ${ui.bg} flex flex-col justify-between px-7 max-w-md mx-auto overflow-hidden select-none relative`}
-      style={{
-        paddingTop: 'max(env(safe-area-inset-top), 20px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 20px)'
-      }}
-    >
-      <div />
-
-      <div className="relative z-10 flex flex-col items-center text-center space-y-3">
-        <div className="p-3 rounded-[32px] bg-[#282825] border-2 border-[#111110] shadow-[0_6px_0_#111110] mb-1">
-          <TapxLogo className="w-24 h-24" />
-        </div>
-        <span className="px-3 py-1 rounded-full text-[11px] font-cartoon font-bold uppercase tracking-wider bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_2px_0_#111110]">
-          Pocket Expense Buddy
-        </span>
-        <h1 className={`text-4xl font-cartoon font-bold tracking-tight ${ui.textPrimary}`}>
-          TAPX
-        </h1>
-        <p className={`text-sm max-w-[250px] font-medium leading-relaxed ${ui.textSecondary}`}>
-          Playful multi-wallet expense tracking with instant iPhone Back Tap logging.
+      <div class="summary-card">
+        <p>
+          <strong>TAPX</strong> (<a href="https://xtap.vercel.app">https://xtap.vercel.app</a>) is a personal
+          multi-wallet expense tracking web application developed and operated by <strong>Kalp Patel</strong>.
+          Your financial records belong strictly to you—we never sell, rent, advertise against, or share your
+          personal or financial information with third parties.
         </p>
       </div>
 
-      <div className="relative z-10 space-y-3">
-        {savedAccounts.length > 0 && (
-          <div className="space-y-2 pb-1">
-            <p className={`text-[11px] font-cartoon font-bold uppercase tracking-wider px-1 ${ui.textMuted}`}>
-              Jump right back in
-            </p>
-            <div className="space-y-2">
-              {savedAccounts.map((acc) => (
-                <div
-                  key={acc.email}
-                  onClick={() => onGoogleLogin(acc.email)}
-                  className={`w-full p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {acc.avatar ? (
-                      <img
-                        src={acc.avatar}
-                        alt={acc.name}
-                        className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-[#111110]"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] font-cartoon font-bold text-sm flex items-center justify-center shrink-0">
-                        {String(acc.name || acc.email || 'U').charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0 text-left">
-                      <p className={`text-xs font-bold truncate ${ui.textPrimary}`}>
-                        {acc.name}
-                      </p>
-                      <p className={`text-[11px] truncate ${ui.textSecondary}`}>
-                        {acc.email}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => onRemoveSavedAccount(acc.email, e)}
-                    className={`p-1.5 text-xs rounded-xl font-bold ${ui.textMuted} hover:text-[#F26B5B]`}
-                    title="Remove saved account"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => onGoogleLogin('')}
-          className={`w-full py-4 px-5 font-cartoon font-bold text-base rounded-2xl flex items-center justify-center gap-3 key-press ${ui.primaryBtnExpense}`}
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"
-            />
-          </svg>
-          {savedAccounts.length > 0 ? 'Use another Google Account' : 'Continue with Google'}
-        </button>
-
-        <p className={`text-[11px] text-center leading-relaxed ${ui.textMuted}`}>
-          TAPX uses Google Sign-In solely to sync your private account across devices. Read our{' '}
-          <a href="/privacy.html" className={`underline font-bold ${ui.textSecondary}`}>
-            Privacy Policy
-          </a>
-          {' · '}
-          <a href="mailto:kalppatel132008@gmail.com" className={`underline font-bold ${ui.textSecondary}`}>
-            Support
-          </a>
+      <section>
+        <h2>1. Information We Collect</h2>
+        <p>
+          TAPX collects only the minimum information necessary to authenticate your account, synchronize your
+          balances across devices, and power quick transaction logging:
         </p>
-      </div>
+        <ul>
+          <li>
+            <strong>Google Account Information:</strong> When you sign in with Google OAuth, we receive your
+            basic profile information (display name, email address, and unique Google User ID) via standard
+            <code>openid</code>, <code>userinfo.email</code>, and <code>userinfo.profile</code> scopes. TAPX
+            does <strong>not</strong> request access to your Gmail messages, Google Drive, Contacts, Calendar,
+            or external bank accounts.
+          </li>
+          <li>
+            <strong>User-Entered Financial Records:</strong> Wallets/accounts, initial and current balances,
+            custom expense or income categories, custom icons, optional monthly spending limits, currency
+            preferences, transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
+          </li>
+          <li>
+            <strong>Automation &amp; Local Storage Data:</strong> A unique, revocable Shortcut Security Token
+            generated for your account to authenticate iPhone Back Tap / Apple Shortcuts requests, along with
+            local browser storage (<code>localStorage</code>) on your device to provide instant offline-ready
+            loading and theme preferences.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>2. How We Use Your Information</h2>
+        <p>We process the information described above exclusively for the following purposes:</p>
+        <ul>
+          <li>Authenticating your session and isolating your workspace from other users.</li>
+          <li>Calculating wallet balances, inter-wallet transfers, category totals, and spending insights.</li>
+          <li>
+            Validating and recording quick expense or income entries submitted through your personal Apple
+            Shortcuts webhook URL.
+          </li>
+          <li>Maintaining application uptime, security, and database integrity.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. Google API Services User Data Policy</h2>
+        <p>
+          TAPX's use and transfer to any other app of information received from Google APIs strictly adheres
+          to the
+          <a
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Google API Services User Data Policy
+          </a>, including the Limited Use requirements.
+        </p>
+        <p>
+          Specifically, Google user data obtained through sign-in is used solely to provide and maintain
+          user-facing authentication within TAPX and is never transferred to third-party data brokers, used
+          for targeted advertising, or used to train artificial intelligence or machine learning models.
+        </p>
+      </section>
+
+      <section>
+        <h2>4. Infrastructure &amp; Service Providers</h2>
+        <p>
+          TAPX relies on trusted cloud infrastructure providers to host the application and store your records
+          securely:
+        </p>
+        <ul>
+          <li>
+            <strong>Supabase:</strong> Provides user authentication and managed PostgreSQL database hosting.
+            All tables enforce PostgreSQL Row-Level Security (RLS) so that only your authenticated account
+            can read or modify your records.
+          </li>
+          <li>
+            <strong>Vercel:</strong> Hosts the TAPX web interface and executes serverless API endpoints
+            (such as <code>/api/shortcut</code>) over encrypted HTTPS connections.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Data Security</h2>
+        <p>
+          All network communication between your device, Vercel, and Supabase is encrypted in transit using
+          HTTPS/TLS. Access to your data is protected by Google OAuth 2.0 session tokens and database-level
+          Row-Level Security policies. If you ever suspect your Apple Shortcuts token has been exposed, you
+          can immediately invalidate it and generate a new token inside <strong>Settings &rarr; Back Tap Setup</strong>.
+        </p>
+      </section>
+
+      <section>
+        <h2>6. Data Retention &amp; Your Deletion Rights</h2>
+        <p>
+          Your financial data is retained only while your TAPX account remains active. You maintain direct
+          control over your information at all times:
+        </p>
+        <ul>
+          <li>
+            <strong>In-App Controls:</strong> You can edit or permanently delete individual transactions,
+            wallets, and categories directly inside TAPX at any time. Signing out automatically clears local
+            cached data from your browser.
+          </li>
+          <li>
+            <strong>Full Account Deletion:</strong> You may request permanent deletion of your TAPX account
+            and all associated database records at any time by emailing
+            <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a> from your registered
+            email address. Deletion requests are completed within 7 days.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. Children's Privacy</h2>
+        <p>
+          TAPX is not directed to children under the age of 13 (or the minimum age of digital consent in your
+          jurisdiction), and we do not knowingly collect personal information from children.
+        </p>
+      </section>
+
+      <section>
+        <h2>8. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy periodically to reflect improvements to TAPX or changes in legal
+          requirements. Any updates will be published on this page with an updated effective date.
+        </p>
+      </section>
+
+      <section>
+        <h2>9. Contact Information</h2>
+        <p>
+          If you have any questions about this Privacy Policy, data security, or account deletion, please
+          contact the developer:
+        </p>
+        <div class="contact-grid">
+          <div class="contact-item">
+            <span class="contact-label">Developer</span>
+            <span class="contact-value">Kalp Patel</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Contact Email</span>
+            <span class="contact-value">
+              <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a>
+            </span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Application URL</span>
+            <span class="contact-value">
+              <a href="https://xtap.vercel.app">https://xtap.vercel.app</a>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>&copy; 2026 TAPX. All rights reserved.</span>
+        <span>Built by Kalp Patel &middot; Ahmedabad, India</span>
+      </footer>
     </div>
-  );
-}
+  </body>
+</html>
 </file>
 
 <file path="src/components/Modals.jsx">
@@ -5109,1673 +4211,6 @@ export function EditTransactionModal({
     </div>
   );
 }
-</file>
-
-<file path="src/components/NavIcon.jsx">
-import React from 'react';
-
-export default function NavIcon({ id, active }) {
-  const sizeClass = 'w-[21px] h-[21px]';
-
-  if (id === 'pad') {
-    const r = active ? '2.4' : '1.9';
-    return (
-      <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="6.5" cy="4.5" r={r} />
-        <circle cx="12" cy="4.5" r={r} />
-        <circle cx="17.5" cy="4.5" r={r} />
-        <circle cx="6.5" cy="10" r={r} />
-        <circle cx="12" cy="10" r={r} />
-        <circle cx="17.5" cy="10" r={r} />
-        <circle cx="6.5" cy="15.5" r={r} />
-        <circle cx="12" cy="15.5" r={r} />
-        <circle cx="17.5" cy="15.5" r={r} />
-        <circle cx="12" cy="20.5" r={r} />
-      </svg>
-    );
-  }
-
-  if (id === 'wallets') {
-    return (
-      <svg
-        className={sizeClass}
-        fill={active ? 'currentColor' : 'none'}
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={active ? '1.6' : '2.2'}
-      >
-        <rect x="2.5" y="4.5" width="19" height="15" rx="3.5" />
-        <path
-          strokeLinecap="round"
-          stroke={active ? '#1e1e1c' : 'currentColor'}
-          strokeWidth="2.2"
-          d="M2.5 9.5h19M6.5 14.5h4"
-        />
-      </svg>
-    );
-  }
-
-  if (id === 'analytics') {
-    return (
-      <svg
-        className={sizeClass}
-        fill={active ? 'currentColor' : 'none'}
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2.2"
-      >
-        <rect x="3.5" y="12" width="4.2" height="8.5" rx="1.8" />
-        <rect x="9.9" y="7.5" width="4.2" height="13" rx="1.8" />
-        <rect x="16.3" y="3.5" width="4.2" height="17" rx="1.8" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg
-      className={sizeClass}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={active ? '2.4' : '2.1'}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"
-      />
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2.2" />
-    </svg>
-  );
-}
-</file>
-
-<file path="src/components/SettingsTab.jsx">
-import React from 'react';
-import { getCategoryAccentColor } from '../utils/formatters';
-
-export default function SettingsTab({
-  ui,
-  tabAnimClass,
-  themePref,
-  setThemePref,
-  settingsSection,
-  setSettingsSection,
-  personalApiUrl,
-  copyToClipboard,
-  copiedField,
-  handleOneTapShortcut,
-  settings,
-  handleRegenerateToken,
-  categories,
-  currentMonthSpendByCat,
-  currencySymbol,
-  onOpenNewCategory,
-  openEditCategory,
-  handleDeleteCategory,
-  confirmDeleteId,
-  session,
-  onSync,
-  handleLogout
-}) {
-  const settingsSubIndex = settingsSection === 'shortcut' ? 0 : 1;
-
-  return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
-      {/* Appearance Mode Selector */}
-      <div className={`p-3.5 rounded-2xl flex items-center justify-between shrink-0 ${ui.card}`}>
-        <div>
-          <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
-          <p className={`text-[10px] font-medium ${ui.textMuted}`}>Charcoal #1e1e1c &amp; Sand #D8CBB3</p>
-        </div>
-        <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
-          {[
-            { id: 'system', label: 'Auto' },
-            { id: 'light', label: 'Sand' },
-            { id: 'dark', label: 'Charcoal' }
-          ].map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setThemePref(m.id)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
-                themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Animated Sliding Sub-Section Switcher */}
-      <div className={`relative grid grid-cols-2 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
-        <div
-          className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
-          style={{ transform: `translate3d(${settingsSubIndex * 100}%, 0, 0)` }}
-        />
-        <button
-          type="button"
-          onClick={() => setSettingsSection('shortcut')}
-          className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
-            settingsSection === 'shortcut' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
-          }`}
-        >
-          ⚡ Back Tap Setup
-        </button>
-        <button
-          type="button"
-          onClick={() => setSettingsSection('budgets')}
-          className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
-            settingsSection === 'budgets' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
-          }`}
-        >
-          🏷️ Categories
-        </button>
-      </div>
-
-      {/* SUB-VIEW 1: BACK TAP SHORTCUT */}
-      {settingsSection === 'shortcut' && (
-        <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab-left">
-          <div className={`p-4 rounded-2xl space-y-3 ${ui.card}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>1-Tap Back Tap Installer</h3>
-                <p className={`text-[10px] font-medium ${ui.textMuted}`}>
-                  Log from Lock Screen with double-tap on the back of your iPhone
-                </p>
-              </div>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] font-cartoon font-bold">
-                iOS
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-                Your Personal Shortcut URL
-              </label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  readOnly
-                  value={personalApiUrl}
-                  className={`flex-1 rounded-xl px-2.5 py-2 text-[11px] font-mono ${ui.input}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
-                  className={`px-3 py-2 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
-                >
-                  {copiedField === 'apiUrl' ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleOneTapShortcut}
-              className={`w-full py-3 px-4 rounded-xl font-cartoon font-bold text-xs key-press ${ui.primaryBtnExpense}`}
-            >
-              Copy Personal URL &amp; Install Shortcut
-            </button>
-
-            <div className={`pt-2 border-t-2 border-dashed space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
-              <p className={`font-cartoon font-bold ${ui.textPrimary}`}>Quick Setup (10 Seconds):</p>
-              <ol className="list-decimal list-inside space-y-1 leading-relaxed font-medium">
-                <li>Tap the button above (your Personal URL copies automatically).</li>
-                <li>
-                  When Apple Shortcuts opens, tap <strong>Paste</strong> into the setup prompt and tap{' '}
-                  <strong>Add Shortcut</strong>.
-                </li>
-                <li>
-                  Go to iPhone <strong>Settings → Accessibility → Touch → Back Tap → Double Tap</strong> and select{' '}
-                  <strong>Log to TAPX</strong>.
-                </li>
-              </ol>
-            </div>
-          </div>
-
-          {/* Token Box */}
-          <div className={`p-3.5 rounded-2xl space-y-1.5 ${ui.card}`}>
-            <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-              Shortcut Security Token
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={settings?.shortcut_token || ''}
-                className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-mono ${ui.input}`}
-              />
-              <button
-                type="button"
-                onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
-              >
-                {copiedField === 'token' ? 'Copied!' : 'Copy'}
-              </button>
-              <button
-                type="button"
-                onClick={handleRegenerateToken}
-                className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
-                title="Regenerate Token"
-              >
-                ↻
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SUB-VIEW 2: CATEGORIES */}
-      {settingsSection === 'budgets' && (
-        <div key="sub-budgets" className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden animate-tab-right">
-          <div className="flex items-center justify-between shrink-0">
-            <span className={`text-[11px] font-cartoon font-bold ${ui.textMuted}`}>
-              {categories.length} Categories
-            </span>
-            <button
-              type="button"
-              onClick={onOpenNewCategory}
-              className={`text-xs px-3 py-1 rounded-full font-cartoon font-bold key-press ${ui.pillActive}`}
-            >
-              + Add Category
-            </button>
-          </div>
-
-          <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5 pb-1">
-            {categories.map((c, idx) => {
-              const spent = currentMonthSpendByCat[c.id] || 0;
-              const budget = Number(c.monthly_budget) || 0;
-              const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
-              const accent = getCategoryAccentColor(c, idx);
-
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => openEditCategory(c)}
-                  className={`p-3 rounded-2xl space-y-2 cursor-pointer key-press ${ui.card}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
-                        style={{ backgroundColor: accent }}
-                      >
-                        {c.icon}
-                      </span>
-                      <div className="min-w-0">
-                        <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>{c.name}</p>
-                        <p className={`text-[10px] font-semibold capitalize ${ui.textMuted}`}>
-                          {c.type} {budget > 0 ? `· ${pct}% of limit` : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <div
-                      className="flex items-center gap-1.5 tabular-nums shrink-0"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {c.type === 'expense' && (
-                        <span className={`text-xs font-cartoon font-bold mr-1 ${ui.textSand}`}>
-                          {currencySymbol}
-                          {spent.toLocaleString('en-IN')}
-                          {budget > 0 ? ` / ${currencySymbol}${budget.toLocaleString('en-IN')}` : ''}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => openEditCategory(c)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCategory(c.id)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${
-                          confirmDeleteId === c.id
-                            ? 'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110]'
-                            : `${ui.textMuted} hover:text-[#F26B5B]`
-                        }`}
-                      >
-                        {confirmDeleteId === c.id ? 'Sure?' : '✕'}
-                      </button>
-                    </div>
-                  </div>
-                  {budget > 0 && c.type === 'expense' && (
-                    <div className="w-full h-2.5 rounded-full overflow-hidden bg-[#181816] border border-[#111110] p-0.5">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ios-spring ${
-                          pct >= 90 ? 'bg-[#F26B5B]' : pct >= 75 ? 'bg-[#F4B942]' : 'bg-[#52B788]'
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Account Footer */}
-      <div className={`pt-2 border-t-2 border-dashed flex items-center justify-between shrink-0 ${ui.divider}`}>
-        <span className={`text-[11px] font-semibold truncate max-w-[180px] ${ui.textMuted}`}>
-          {session?.user?.email}
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onSync}
-            className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
-          >
-            Sync
-          </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="px-3 py-1.5 rounded-full bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] text-xs font-cartoon font-bold key-press"
-          >
-            Sign Out
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="src/components/TapxLogo.jsx">
-import React from 'react';
-
-export default function TapxLogo({ className = 'w-16 h-16' }) {
-  return (
-    <svg
-      viewBox="70 50 375 415"
-      className={`${className} shrink-0 select-none`}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Hard Cartoon Drop Shadow */}
-      <rect x="108" y="224" width="316" height="220" rx="44" fill="#111110" />
-
-      {/* 3 Rising Chunky Cartoon Bars with Bold Outlines */}
-      <rect
-        x="164"
-        y="144"
-        width="56"
-        height="116"
-        rx="14"
-        fill="#F26B5B"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-      <rect
-        x="236"
-        y="106"
-        width="56"
-        height="154"
-        rx="14"
-        fill="#52B788"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-      <rect
-        x="308"
-        y="68"
-        width="56"
-        height="192"
-        rx="14"
-        fill="#F4B942"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-
-      {/* Main Wallet Body in Warm Sand (#D8CBB3) */}
-      <rect
-        x="96"
-        y="212"
-        width="316"
-        height="216"
-        rx="44"
-        fill="#D8CBB3"
-        stroke="#111110"
-        strokeWidth="11"
-      />
-
-      {/* Wallet Clasp in Charcoal (#282825) */}
-      <rect
-        x="324"
-        y="290"
-        width="102"
-        height="64"
-        rx="32"
-        fill="#282825"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-
-      {/* Clasp Button Snap in Sunny Gold */}
-      <circle
-        cx="358"
-        cy="322"
-        r="13"
-        fill="#F4B942"
-        stroke="#111110"
-        strokeWidth="7"
-      />
-    </svg>
-  );
-}
-</file>
-
-<file path="src/constants/icons.js">
-export const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
-
-export const ICON_CATALOG = [
-  // Money, Banking & Wallets
-  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
-  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
-  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
-  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
-  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
-  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
-  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
-  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
-  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
-  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
-  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
-  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
-  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
-  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
-  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
-  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
-  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
-  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
-  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
-  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
-
-  // Food & Drinks
-  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
-  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
-  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
-  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
-  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
-  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
-  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowl chinese' },
-  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
-  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
-  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
-  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
-  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
-  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
-  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
-  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
-  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
-  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
-  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
-  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
-  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
-  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
-  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
-  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
-  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
-
-  // Transport & Travel
-  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
-  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
-  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
-  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
-  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
-  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
-  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
-  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
-  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
-  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
-  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
-  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
-  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
-  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
-  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
-  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
-  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
-  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
-
-  // Shopping, Style & Personal
-  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
-  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
-  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
-  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
-  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
-  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
-  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
-  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
-  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
-  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
-  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
-  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
-  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
-  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
-
-  // Entertainment, Gaming & Fun
-  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
-  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
-  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
-  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
-  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
-  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
-  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
-  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
-  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
-  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
-  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
-  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
-  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
-  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
-
-  // Health, Sports & Fitness
-  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
-  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
-  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
-  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
-  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
-  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
-  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
-  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
-  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
-  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
-  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
-  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
-
-  // Tech, Bills, Study & Home
-  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
-  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
-  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
-  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
-  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
-  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
-  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
-  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
-  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
-  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
-  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
-  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
-  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
-  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
-  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
-  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
-  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
-  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
-];
-</file>
-
-<file path="src/constants/theme.js">
-export const SHARED_ICLOUD_SHORTCUT_URL =
-  'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
-
-export const WALLET_COLORS = [
-  '#E07A5F',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E56B6F',
-  '#D8CBB3',
-  '#F26B5B',
-  '#4EA8DE',
-  '#80ED99',
-  '#F7A072',
-  '#B5838D'
-];
-
-export const CHART_COLORS = [
-  '#F26B5B',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E07A5F',
-  '#E56B6F',
-  '#D8CBB3'
-];
-
-export const DEFAULT_WALLETS_TEMPLATE = [
-  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
-  { name: 'Cash', type: 'Cash', balance: 0, color: '#52B788', icon: '💵' }
-];
-
-export const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#F26B5B', monthly_budget: null },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#52B788', monthly_budget: null },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#F4B942', monthly_budget: null },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#9B7EDE', monthly_budget: null },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#E56B6F', monthly_budget: null },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#5C9EAD', monthly_budget: null },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#E07A5F', monthly_budget: null },
-  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#52B788', monthly_budget: null }
-];
-
-export const NAV_TABS = [
-  { id: 'pad', label: 'Keypad' },
-  { id: 'wallets', label: 'Accounts' },
-  { id: 'analytics', label: 'Insights' },
-  { id: 'settings', label: 'Settings' }
-];
-
-export const CACHE_KEY = 'tapx_local_cache_v4';
-export const THEME_KEY = 'tapx_theme_pref';
-export const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
-export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
-export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
-
-export function getUiTheme(isDark) {
-  if (isDark) {
-    return {
-      bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
-      sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6]',
-      card: 'bg-[#282825] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
-      cardElevated:
-        'bg-[#30302c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      cardSubtle: 'bg-[#22221f] border-2 border-[#111110]/80',
-      heroCard: 'bg-[#282825] border-2 border-[#D8CBB3]/35 shadow-[0_5px_0_#111110]',
-      input:
-        'bg-[#181816] border-2 border-[#111110] text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
-      pillIdle:
-        'bg-[#282825] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_3px_0_#111110] active:shadow-none',
-      pillActive:
-        'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[0_3px_0_#111110] active:shadow-none',
-      numpadKey:
-        'bg-[#282825] border-2 border-[#111110] text-[#F5EFE6] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#30302c]',
-      numpadKeySpecial:
-        'bg-[#32302b] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      segmentedBg:
-        'bg-[#161614] border-2 border-[#111110] shadow-[inset_0_2px_0_rgba(0,0,0,0.5)]',
-      segmentedThumb: 'bg-[#D8CBB3] border-2 border-[#111110] shadow-[0_2px_0_#111110]',
-      segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
-      textPrimary: 'text-[#F5EFE6]',
-      textSand: 'text-[#D8CBB3]',
-      textSecondary: 'text-[#B8AA93]',
-      textMuted: 'text-[#877D6E]',
-      islandBar: 'cartoon-dock-dark',
-      islandLens: 'cartoon-pill-lens-dark',
-      islandTextActive: 'text-[#1e1e1c]',
-      islandTextIdle: 'text-[#B8AA93]',
-      primaryBtnExpense:
-        'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      primaryBtnIncome:
-        'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      primaryBtnTransfer:
-        'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      divider: 'border-[#363632]',
-      stickyHeader: 'bg-[#1e1e1c]'
-    };
-  }
-
-  return {
-    bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
-    sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c]',
-    card: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
-    cardElevated:
-      'bg-[#FFFFFF] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    cardSubtle: 'bg-[#E5DEC9] border-2 border-[#1e1e1c]',
-    heroCard: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_5px_0_#1e1e1c]',
-    input: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
-    pillIdle:
-      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
-    pillActive:
-      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#524E46] active:shadow-none',
-    numpadKey:
-      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    numpadKeySpecial:
-      'bg-[#D8CBB3] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    segmentedBg: 'bg-[#D8CBB3] border-2 border-[#1e1e1c]',
-    segmentedThumb: 'bg-[#1e1e1c] border-2 border-[#1e1e1c]',
-    segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
-    textPrimary: 'text-[#1e1e1c]',
-    textSand: 'text-[#1e1e1c]',
-    textSecondary: 'text-[#524E46]',
-    textMuted: 'text-[#7A7367]',
-    islandBar: 'cartoon-dock-light',
-    islandLens: 'cartoon-pill-lens-light',
-    islandTextActive: 'text-[#D8CBB3]',
-    islandTextIdle: 'text-[#524E46]',
-    primaryBtnExpense:
-      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#524E46] active:shadow-[0_1px_0_#524E46]',
-    primaryBtnIncome:
-      'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    primaryBtnTransfer:
-      'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    divider: 'border-[#1e1e1c]/20',
-    stickyHeader: 'bg-[#EFE7DA]'
-  };
-}
-</file>
-
-<file path="src/utils/formatters.js">
-import { CHART_COLORS } from '../constants/theme';
-
-export function getInitialSyncSession(cachedData) {
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
-        const raw = localStorage.getItem(k);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          const sessionObj = parsed?.currentSession || parsed?.session || parsed;
-          if (sessionObj?.user?.id) {
-            return sessionObj;
-          }
-        }
-      }
-    }
-  } catch {
-    // Ignore storage read errors
-  }
-
-  if (cachedData?.userId) {
-    return {
-      user: {
-        id: cachedData.userId,
-        email: cachedData.userEmail || '',
-        user_metadata: cachedData.userMetadata || {}
-      }
-    };
-  }
-
-  return null;
-}
-
-export function hasOAuthParamsInUrl() {
-  if (typeof window === 'undefined') return false;
-  const search = window.location.search || '';
-  const hash = window.location.hash || '';
-  return (
-    search.includes('code=') ||
-    hash.includes('access_token=') ||
-    hash.includes('error_description=')
-  );
-}
-
-export function parseShortcutCategoryTag(rawNote) {
-  const str = String(rawNote || '');
-  const match = str.match(/\[cat:([^\]]+)\]/i);
-  if (!match) {
-    return { cleanNote: str, tagCategoryName: null };
-  }
-  return {
-    cleanNote: str.replace(/\[cat:[^\]]+\]/gi, '').replace(/\s+/g, ' ').trim(),
-    tagCategoryName: match[1].trim()
-  };
-}
-
-export function cleanCategoryString(str) {
-  return String(str || '')
-    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
-    .trim()
-    .toLowerCase();
-}
-
-export function findMatchingCategoryObj(categoryName, categoriesList) {
-  if (!categoryName || !Array.isArray(categoriesList) || categoriesList.length === 0) {
-    return null;
-  }
-  const target = cleanCategoryString(categoryName);
-  if (!target) return null;
-
-  const exact = categoriesList.find((c) => cleanCategoryString(c.name) === target);
-  if (exact) return exact;
-
-  const partial = categoriesList.find((c) => {
-    const cleanDb = cleanCategoryString(c.name);
-    return cleanDb.includes(target) || target.includes(cleanDb);
-  });
-  return partial || null;
-}
-
-export function getCategoryAccentColor(cat, index = 0) {
-  if (
-    cat?.color &&
-    !['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899'].includes(cat.color)
-  ) {
-    return cat.color;
-  }
-  const name = String(cat?.name || '').toLowerCase();
-  if (name.includes('food') || name.includes('drink') || name.includes('dining')) return '#F26B5B';
-  if (name.includes('grocer')) return '#52B788';
-  if (name.includes('transport') || name.includes('fuel') || name.includes('cab')) return '#F4B942';
-  if (name.includes('shop')) return '#9B7EDE';
-  if (name.includes('entertain') || name.includes('movie')) return '#E56B6F';
-  if (name.includes('bill') || name.includes('recharge')) return '#5C9EAD';
-  if (name.includes('health') || name.includes('fitness')) return '#E07A5F';
-  if (name.includes('income') || name.includes('allowance') || name.includes('salary')) return '#52B788';
-  return CHART_COLORS[index % CHART_COLORS.length];
-}
-
-export function formatDisplayAmount(rawStr) {
-  if (!rawStr || rawStr === '0') return '0';
-  const parts = String(rawStr).split('.');
-  const intPart = Number(parts[0] || 0).toLocaleString('en-IN');
-  if (parts.length > 1) {
-    return `${intPart}.${parts[1]}`;
-  }
-  return intPart;
-}
-
-export function formatDayGroupLabel(isoString) {
-  if (!isoString) return 'Recent';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return 'Recent';
-
-  const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-
-  if (date.toDateString() === now.toDateString()) return 'Today';
-  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-
-  return date.toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    ...(date.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {})
-  });
-}
-
-export function formatTimeOnly(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString('en-IN', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-}
-
-export function escapeCsvCell(val) {
-  const str = String(val ?? '').replace(/"/g, '""');
-  return `"${str}"`;
-}
-</file>
-
-<file path="src/App.css">
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-}
-
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
-}
-
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
-  position: relative;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
-}
-</file>
-
-<file path="src/main.jsx">
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './index.css';
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-</file>
-
-<file path="src/supabaseClient.js">
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-</file>
-
-<file path=".gitignore">
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.env
-</file>
-
-<file path=".oxlintrc.json">
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "oxc"],
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-</file>
-
-<file path="vercel.json">
-{
-  "crons": [
-    {
-      "path": "/api/keepalive",
-      "schedule": "0 8 * * *"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
-</file>
-
-<file path="public/privacy.html">
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1e1e1c" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <title>Privacy Policy — TAPX</title>
-    <style>
-      :root {
-        --bg: #1e1e1c;
-        --surface: #282825;
-        --surface-elevated: #32302b;
-        --outline: #111110;
-        --sand: #D8CBB3;
-        --cream: #F5EFE6;
-        --text-primary: #F5EFE6;
-        --text-secondary: #B8AA93;
-        --text-muted: #877D6E;
-        --coral: #F26B5B;
-        --mint: #52B788;
-        --gold: #F4B942;
-        --sky: #5C9EAD;
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      html,
-      body {
-        background-color: var(--bg);
-        color: var(--text-primary);
-        font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        line-height: 1.65;
-      }
-
-      h1,
-      h2,
-      .brand-name,
-      .badge,
-      .back-link,
-      .contact-label {
-        font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Plus Jakarta Sans', system-ui, sans-serif;
-      }
-
-      .container {
-        max-width: 740px;
-        margin: 0 auto;
-        padding: 44px 20px 80px;
-      }
-
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 36px;
-        padding-bottom: 20px;
-        border-bottom: 2px dashed #363632;
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        color: var(--text-primary);
-      }
-
-      .brand-logo-box {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: var(--surface);
-        border: 2px solid var(--outline);
-        box-shadow: 0 3px 0 var(--outline);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .brand-name {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: var(--cream);
-      }
-
-      .back-link {
-        font-size: 13px;
-        font-weight: 700;
-        color: #1e1e1c;
-        text-decoration: none;
-        padding: 9px 16px;
-        border-radius: 9999px;
-        background: var(--sand);
-        border: 2px solid var(--outline);
-        box-shadow: 0 3px 0 var(--outline);
-        transition: transform 0.1s ease, box-shadow 0.1s ease;
-      }
-
-      .back-link:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 0 var(--outline);
-        text-decoration: none;
-      }
-
-      .back-link:active {
-        transform: translateY(2px);
-        box-shadow: 0 1px 0 var(--outline);
-      }
-
-      .hero {
-        margin-bottom: 28px;
-      }
-
-      .badge {
-        display: inline-block;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: #1e1e1c;
-        background: var(--gold);
-        border: 2px solid var(--outline);
-        box-shadow: 0 2px 0 var(--outline);
-        padding: 4px 12px;
-        border-radius: 9999px;
-        margin-bottom: 14px;
-      }
-
-      h1 {
-        font-size: 34px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.18;
-        margin-bottom: 8px;
-        color: var(--cream);
-      }
-
-      .meta {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-muted);
-      }
-
-      .summary-card {
-        background: var(--sand);
-        color: #1e1e1c;
-        border: 2.5px solid var(--outline);
-        box-shadow: 0 5px 0 var(--outline);
-        border-radius: 24px;
-        padding: 20px 22px;
-        margin-bottom: 28px;
-      }
-
-      .summary-card p {
-        font-size: 14px;
-        font-weight: 600;
-        color: #282825;
-      }
-
-      .summary-card strong {
-        color: #111110;
-        font-weight: 800;
-      }
-
-      .summary-card a {
-        color: #111110;
-        text-decoration: underline;
-        font-weight: 700;
-      }
-
-      section {
-        background: var(--surface);
-        border: 2px solid var(--outline);
-        box-shadow: 0 4px 0 var(--outline);
-        border-radius: 24px;
-        padding: 24px 24px;
-        margin-bottom: 18px;
-      }
-
-      h2 {
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: var(--sand);
-        margin-bottom: 10px;
-      }
-
-      p {
-        font-size: 14px;
-        color: var(--text-secondary);
-        margin-bottom: 12px;
-      }
-
-      p:last-child {
-        margin-bottom: 0;
-      }
-
-      ul {
-        padding-left: 18px;
-        margin-top: 8px;
-        margin-bottom: 12px;
-      }
-
-      ul:last-child {
-        margin-bottom: 0;
-      }
-
-      li {
-        font-size: 14px;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-      }
-
-      li:last-child {
-        margin-bottom: 0;
-      }
-
-      strong {
-        color: var(--cream);
-        font-weight: 700;
-      }
-
-      code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 12.5px;
-        background: #181816;
-        color: var(--gold);
-        padding: 2px 6px;
-        border-radius: 6px;
-        border: 1px solid var(--outline);
-      }
-
-      a {
-        color: var(--gold);
-        font-weight: 600;
-        text-decoration: none;
-      }
-
-      a:hover {
-        text-decoration: underline;
-      }
-
-      .contact-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 12px;
-        margin-top: 14px;
-      }
-
-      .contact-item {
-        background: var(--surface-elevated);
-        border: 2px solid var(--outline);
-        box-shadow: 0 3px 0 var(--outline);
-        border-radius: 16px;
-        padding: 12px 14px;
-      }
-
-      .contact-label {
-        display: block;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--text-muted);
-        margin-bottom: 2px;
-      }
-
-      .contact-value {
-        font-size: 13px;
-        color: var(--cream);
-        font-weight: 600;
-      }
-
-      footer {
-        margin-top: 36px;
-        padding-top: 20px;
-        border-top: 2px dashed #363632;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-muted);
-      }
-
-      @media (max-width: 600px) {
-        .container {
-          padding: 28px 16px 56px;
-        }
-        h1 {
-          font-size: 28px;
-        }
-        section {
-          padding: 20px 18px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <header class="topbar">
-        <a href="/" class="brand">
-          <div class="brand-logo-box">
-            <svg viewBox="70 50 375 415" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
-              <rect x="108" y="224" width="316" height="220" rx="44" fill="#111110" />
-              <rect x="164" y="144" width="56" height="116" rx="14" fill="#F26B5B" stroke="#111110" stroke-width="10" />
-              <rect x="236" y="106" width="56" height="154" rx="14" fill="#52B788" stroke="#111110" stroke-width="10" />
-              <rect x="308" y="68" width="56" height="192" rx="14" fill="#F4B942" stroke="#111110" stroke-width="10" />
-              <rect x="96" y="212" width="316" height="216" rx="44" fill="#D8CBB3" stroke="#111110" stroke-width="11" />
-              <rect x="324" y="290" width="102" height="64" rx="32" fill="#282825" stroke="#111110" stroke-width="10" />
-              <circle cx="358" cy="322" r="13" fill="#F4B942" stroke="#111110" stroke-width="7" />
-            </svg>
-          </div>
-          <span class="brand-name">TAPX</span>
-        </a>
-        <a href="/" class="back-link">Open App &rarr;</a>
-      </header>
-
-      <div class="hero">
-        <span class="badge">Privacy &amp; Data Protection</span>
-        <h1>Privacy Policy</h1>
-        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 18, 2026</p>
-      </div>
-
-      <div class="summary-card">
-        <p>
-          <strong>TAPX</strong> (<a href="https://xtap.vercel.app">https://xtap.vercel.app</a>) is a personal
-          multi-wallet expense tracking web application developed and operated by <strong>Kalp Patel</strong>.
-          Your financial records belong strictly to you—we never sell, rent, advertise against, or share your
-          personal or financial information with third parties.
-        </p>
-      </div>
-
-      <section>
-        <h2>1. Information We Collect</h2>
-        <p>
-          TAPX collects only the minimum information necessary to authenticate your account, synchronize your
-          balances across devices, and power quick transaction logging:
-        </p>
-        <ul>
-          <li>
-            <strong>Google Account Information:</strong> When you sign in with Google OAuth, we receive your
-            basic profile information (display name, email address, and unique Google User ID) via standard
-            <code>openid</code>, <code>userinfo.email</code>, and <code>userinfo.profile</code> scopes. TAPX
-            does <strong>not</strong> request access to your Gmail messages, Google Drive, Contacts, Calendar,
-            or external bank accounts.
-          </li>
-          <li>
-            <strong>User-Entered Financial Records:</strong> Wallets/accounts, initial and current balances,
-            custom expense or income categories, custom icons, optional monthly spending limits, currency
-            preferences, transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
-          </li>
-          <li>
-            <strong>Automation &amp; Local Storage Data:</strong> A unique, revocable Shortcut Security Token
-            generated for your account to authenticate iPhone Back Tap / Apple Shortcuts requests, along with
-            local browser storage (<code>localStorage</code>) on your device to provide instant offline-ready
-            loading and theme preferences.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>2. How We Use Your Information</h2>
-        <p>We process the information described above exclusively for the following purposes:</p>
-        <ul>
-          <li>Authenticating your session and isolating your workspace from other users.</li>
-          <li>Calculating wallet balances, inter-wallet transfers, category totals, and spending insights.</li>
-          <li>
-            Validating and recording quick expense or income entries submitted through your personal Apple
-            Shortcuts webhook URL.
-          </li>
-          <li>Maintaining application uptime, security, and database integrity.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>3. Google API Services User Data Policy</h2>
-        <p>
-          TAPX's use and transfer to any other app of information received from Google APIs strictly adheres
-          to the
-          <a
-            href="https://developers.google.com/terms/api-services-user-data-policy"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Google API Services User Data Policy
-          </a>, including the Limited Use requirements.
-        </p>
-        <p>
-          Specifically, Google user data obtained through sign-in is used solely to provide and maintain
-          user-facing authentication within TAPX and is never transferred to third-party data brokers, used
-          for targeted advertising, or used to train artificial intelligence or machine learning models.
-        </p>
-      </section>
-
-      <section>
-        <h2>4. Infrastructure &amp; Service Providers</h2>
-        <p>
-          TAPX relies on trusted cloud infrastructure providers to host the application and store your records
-          securely:
-        </p>
-        <ul>
-          <li>
-            <strong>Supabase:</strong> Provides user authentication and managed PostgreSQL database hosting.
-            All tables enforce PostgreSQL Row-Level Security (RLS) so that only your authenticated account
-            can read or modify your records.
-          </li>
-          <li>
-            <strong>Vercel:</strong> Hosts the TAPX web interface and executes serverless API endpoints
-            (such as <code>/api/shortcut</code>) over encrypted HTTPS connections.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>5. Data Security</h2>
-        <p>
-          All network communication between your device, Vercel, and Supabase is encrypted in transit using
-          HTTPS/TLS. Access to your data is protected by Google OAuth 2.0 session tokens and database-level
-          Row-Level Security policies. If you ever suspect your Apple Shortcuts token has been exposed, you
-          can immediately invalidate it and generate a new token inside <strong>Settings &rarr; Back Tap Setup</strong>.
-        </p>
-      </section>
-
-      <section>
-        <h2>6. Data Retention &amp; Your Deletion Rights</h2>
-        <p>
-          Your financial data is retained only while your TAPX account remains active. You maintain direct
-          control over your information at all times:
-        </p>
-        <ul>
-          <li>
-            <strong>In-App Controls:</strong> You can edit or permanently delete individual transactions,
-            wallets, and categories directly inside TAPX at any time. Signing out automatically clears local
-            cached data from your browser.
-          </li>
-          <li>
-            <strong>Full Account Deletion:</strong> You may request permanent deletion of your TAPX account
-            and all associated database records at any time by emailing
-            <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a> from your registered
-            email address. Deletion requests are completed within 7 days.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>7. Children's Privacy</h2>
-        <p>
-          TAPX is not directed to children under the age of 13 (or the minimum age of digital consent in your
-          jurisdiction), and we do not knowingly collect personal information from children.
-        </p>
-      </section>
-
-      <section>
-        <h2>8. Changes to This Policy</h2>
-        <p>
-          We may update this Privacy Policy periodically to reflect improvements to TAPX or changes in legal
-          requirements. Any updates will be published on this page with an updated effective date.
-        </p>
-      </section>
-
-      <section>
-        <h2>9. Contact Information</h2>
-        <p>
-          If you have any questions about this Privacy Policy, data security, or account deletion, please
-          contact the developer:
-        </p>
-        <div class="contact-grid">
-          <div class="contact-item">
-            <span class="contact-label">Developer</span>
-            <span class="contact-value">Kalp Patel</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-label">Contact Email</span>
-            <span class="contact-value">
-              <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a>
-            </span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-label">Application URL</span>
-            <span class="contact-value">
-              <a href="https://xtap.vercel.app">https://xtap.vercel.app</a>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <footer>
-        <span>&copy; 2026 TAPX. All rights reserved.</span>
-        <span>Built by Kalp Patel &middot; Ahmedabad, India</span>
-      </footer>
-    </div>
-  </body>
-</html>
 </file>
 
 <file path="README.md">
