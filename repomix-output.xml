@@ -131,22 +131,30 @@ google-site-verification: google40e4585462743276.html
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#09090b" />
+    <meta name="theme-color" content="#1e1e1c" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <title>Privacy Policy — TAPX</title>
     <style>
       :root {
-        --bg: #09090b;
-        --surface: #131316;
-        --surface-elevated: #18181c;
-        --border: #232329;
-        --text-primary: #fafafa;
-        --text-secondary: #a1a1aa;
-        --text-muted: #71717a;
-        --accent: #10b981;
-        --accent-soft: rgba(16, 185, 129, 0.12);
-        --accent-border: rgba(16, 185, 129, 0.28);
-        --link: #38bdf8;
+        --bg: #1e1e1c;
+        --surface: #282825;
+        --surface-elevated: #32302b;
+        --outline: #111110;
+        --sand: #D8CBB3;
+        --cream: #F5EFE6;
+        --text-primary: #F5EFE6;
+        --text-secondary: #B8AA93;
+        --text-muted: #877D6E;
+        --coral: #F26B5B;
+        --mint: #52B788;
+        --gold: #F4B942;
+        --sky: #5C9EAD;
       }
 
       * {
@@ -159,15 +167,24 @@ google-site-verification: google40e4585462743276.html
       body {
         background-color: var(--bg);
         color: var(--text-primary);
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+        font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
         line-height: 1.65;
+      }
+
+      h1,
+      h2,
+      .brand-name,
+      .badge,
+      .back-link,
+      .contact-label {
+        font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Plus Jakarta Sans', system-ui, sans-serif;
       }
 
       .container {
         max-width: 740px;
         margin: 0 auto;
-        padding: 48px 20px 80px;
+        padding: 44px 20px 80px;
       }
 
       .topbar {
@@ -176,7 +193,7 @@ google-site-verification: google40e4585462743276.html
         justify-content: space-between;
         margin-bottom: 36px;
         padding-bottom: 20px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 2px dashed #363632;
       }
 
       .brand {
@@ -187,86 +204,124 @@ google-site-verification: google40e4585462743276.html
         color: var(--text-primary);
       }
 
+      .brand-logo-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: var(--surface);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .brand-name {
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 700;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
+        color: var(--cream);
       }
 
       .back-link {
         font-size: 13px;
-        font-weight: 600;
-        color: var(--text-secondary);
+        font-weight: 700;
+        color: #1e1e1c;
         text-decoration: none;
-        padding: 8px 14px;
+        padding: 9px 16px;
         border-radius: 9999px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        transition: color 0.15s ease, border-color 0.15s ease;
+        background: var(--sand);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
       }
 
       .back-link:hover {
-        color: var(--text-primary);
-        border-color: #3f3f46;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 0 var(--outline);
+        text-decoration: none;
+      }
+
+      .back-link:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 var(--outline);
       }
 
       .hero {
-        margin-bottom: 32px;
+        margin-bottom: 28px;
       }
 
       .badge {
         display: inline-block;
         font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
+        font-weight: 700;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: var(--accent);
-        background: var(--accent-soft);
-        border: 1px solid var(--accent-border);
-        padding: 4px 10px;
+        color: #1e1e1c;
+        background: var(--gold);
+        border: 2px solid var(--outline);
+        box-shadow: 0 2px 0 var(--outline);
+        padding: 4px 12px;
         border-radius: 9999px;
         margin-bottom: 14px;
       }
 
       h1 {
-        font-size: 32px;
+        font-size: 34px;
         font-weight: 700;
-        letter-spacing: -0.03em;
-        line-height: 1.2;
-        margin-bottom: 10px;
+        letter-spacing: -0.02em;
+        line-height: 1.18;
+        margin-bottom: 8px;
+        color: var(--cream);
       }
 
       .meta {
         font-size: 13px;
+        font-weight: 600;
         color: var(--text-muted);
       }
 
       .summary-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
+        background: var(--sand);
+        color: #1e1e1c;
+        border: 2.5px solid var(--outline);
+        box-shadow: 0 5px 0 var(--outline);
+        border-radius: 24px;
         padding: 20px 22px;
-        margin-bottom: 32px;
+        margin-bottom: 28px;
       }
 
       .summary-card p {
         font-size: 14px;
-        color: var(--text-secondary);
+        font-weight: 600;
+        color: #282825;
+      }
+
+      .summary-card strong {
+        color: #111110;
+        font-weight: 800;
+      }
+
+      .summary-card a {
+        color: #111110;
+        text-decoration: underline;
+        font-weight: 700;
       }
 
       section {
         background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
+        border: 2px solid var(--outline);
+        box-shadow: 0 4px 0 var(--outline);
+        border-radius: 24px;
         padding: 24px 24px;
-        margin-bottom: 16px;
+        margin-bottom: 18px;
       }
 
       h2 {
-        font-size: 17px;
-        font-weight: 650;
-        letter-spacing: -0.015em;
-        color: var(--text-primary);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--sand);
         margin-bottom: 10px;
       }
 
@@ -301,12 +356,23 @@ google-site-verification: google40e4585462743276.html
       }
 
       strong {
-        color: var(--text-primary);
-        font-weight: 600;
+        color: var(--cream);
+        font-weight: 700;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12.5px;
+        background: #181816;
+        color: var(--gold);
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid var(--outline);
       }
 
       a {
-        color: var(--link);
+        color: var(--gold);
+        font-weight: 600;
         text-decoration: none;
       }
 
@@ -316,22 +382,23 @@ google-site-verification: google40e4585462743276.html
 
       .contact-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         gap: 12px;
-        margin-top: 12px;
+        margin-top: 14px;
       }
 
       .contact-item {
         background: var(--surface-elevated);
-        border: 1px solid var(--border);
-        border-radius: 14px;
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        border-radius: 16px;
         padding: 12px 14px;
       }
 
       .contact-label {
         display: block;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--text-muted);
@@ -340,19 +407,20 @@ google-site-verification: google40e4585462743276.html
 
       .contact-value {
         font-size: 13px;
-        color: var(--text-primary);
-        font-weight: 500;
+        color: var(--cream);
+        font-weight: 600;
       }
 
       footer {
         margin-top: 36px;
         padding-top: 20px;
-        border-top: 1px solid var(--border);
+        border-top: 2px dashed #363632;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
         gap: 12px;
         font-size: 12px;
+        font-weight: 600;
         color: var(--text-muted);
       }
 
@@ -361,7 +429,7 @@ google-site-verification: google40e4585462743276.html
           padding: 28px 16px 56px;
         }
         h1 {
-          font-size: 26px;
+          font-size: 28px;
         }
         section {
           padding: 20px 18px;
@@ -373,82 +441,26 @@ google-site-verification: google40e4585462743276.html
     <div class="container">
       <header class="topbar">
         <a href="/" class="brand">
-          <svg viewBox="85 60 345 395" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="p-bar1" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#10b981" />
-                <stop offset="100%" stop-color="#059669" />
-              </linearGradient>
-              <linearGradient id="p-bar2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#2dd4bf" />
-                <stop offset="100%" stop-color="#0d9488" />
-              </linearGradient>
-              <linearGradient id="p-bar3" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#38bdf8" />
-                <stop offset="100%" stop-color="#2563eb" />
-              </linearGradient>
-              <linearGradient id="p-navy" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#163e7a" />
-                <stop offset="100%" stop-color="#0a2347" />
-              </linearGradient>
-              <mask id="p-wallet-cut">
-                <rect x="0" y="0" width="512" height="512" fill="white" />
-                <path d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z" fill="black" />
-                <circle cx="298" cy="260" r="60" fill="black" />
-                <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
-              </mask>
-              <mask id="p-clasp-cut">
-                <rect x="0" y="0" width="512" height="512" fill="white" />
-                <circle cx="358" cy="354" r="12" fill="black" />
-              </mask>
-            </defs>
-            <g mask="url(#p-wallet-cut)">
-              <rect x="172" y="152" width="54" height="106" rx="6" fill="url(#p-bar1)" />
-              <rect x="242" y="114" width="54" height="144" rx="6" fill="url(#p-bar2)" />
-              <rect x="312" y="74" width="54" height="184" rx="6" fill="url(#p-bar3)" />
-              <path
-                d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z"
-                fill="url(#p-navy)"
-              />
-              <path
-                d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z"
-                fill="#0e7c86"
-              />
-              <path
-                d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z"
-                fill="#15a378"
-              />
-            </g>
-            <path
-              d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z"
-              fill="#15a378"
-            />
-            <path
-              d="M 272 246 A 28 28 0 0 1 324 246"
-              fill="none"
-              stroke="#0a5c4c"
-              stroke-width="7"
-              stroke-linecap="round"
-            />
-            <rect
-              x="328"
-              y="328"
-              width="96"
-              height="52"
-              rx="26"
-              fill="url(#p-navy)"
-              mask="url(#p-clasp-cut)"
-            />
-          </svg>
+          <div class="brand-logo-box">
+            <svg viewBox="70 50 375 415" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <rect x="108" y="224" width="316" height="220" rx="44" fill="#111110" />
+              <rect x="164" y="144" width="56" height="116" rx="14" fill="#F26B5B" stroke="#111110" stroke-width="10" />
+              <rect x="236" y="106" width="56" height="154" rx="14" fill="#52B788" stroke="#111110" stroke-width="10" />
+              <rect x="308" y="68" width="56" height="192" rx="14" fill="#F4B942" stroke="#111110" stroke-width="10" />
+              <rect x="96" y="212" width="316" height="216" rx="44" fill="#D8CBB3" stroke="#111110" stroke-width="11" />
+              <rect x="324" y="290" width="102" height="64" rx="32" fill="#282825" stroke="#111110" stroke-width="10" />
+              <circle cx="358" cy="322" r="13" fill="#F4B942" stroke="#111110" stroke-width="7" />
+            </svg>
+          </div>
           <span class="brand-name">TAPX</span>
         </a>
-        <a href="/" class="back-link">Open App</a>
+        <a href="/" class="back-link">Open App &rarr;</a>
       </header>
 
       <div class="hero">
         <span class="badge">Privacy &amp; Data Protection</span>
         <h1>Privacy Policy</h1>
-        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 15, 2026</p>
+        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 18, 2026</p>
       </div>
 
       <div class="summary-card">
@@ -476,8 +488,8 @@ google-site-verification: google40e4585462743276.html
           </li>
           <li>
             <strong>User-Entered Financial Records:</strong> Wallets/accounts, initial and current balances,
-            custom expense or income categories, optional monthly spending limits, currency preferences,
-            transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
+            custom expense or income categories, custom icons, optional monthly spending limits, currency
+            preferences, transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
           </li>
           <li>
             <strong>Automation &amp; Local Storage Data:</strong> A unique, revocable Shortcut Security Token
@@ -900,32 +912,6 @@ dist-ssr
 }
 </file>
 
-<file path="public/manifest.json">
-{
-  "name": "TAPX",
-  "short_name": "TAPX",
-  "start_url": "/?quickAdd=true",
-  "display": "standalone",
-  "background_color": "#1e1e1c",
-  "theme_color": "#1e1e1c",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
-  ]
-}
-</file>
-
 <file path="README.md">
 # TAPX
 
@@ -1137,65 +1123,111 @@ export default defineConfig({
 
 <file path="public/favicon.svg">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <defs>
-    <linearGradient id="bar1" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#10b981" />
-      <stop offset="100%" stop-color="#059669" />
-    </linearGradient>
-    <linearGradient id="bar2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2dd4bf" />
-      <stop offset="100%" stop-color="#0d9488" />
-    </linearGradient>
-    <linearGradient id="bar3" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#1d4ed8" />
-    </linearGradient>
-    <linearGradient id="navyBody" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0f3166" />
-      <stop offset="100%" stop-color="#071d3d" />
-    </linearGradient>
+  <!-- Warm Charcoal Squircle Background (#1e1e1c) -->
+  <rect width="512" height="512" rx="112" fill="#1e1e1c" />
 
-    <!-- True Transparency Mask for Wallet Cutouts -->
-    <mask id="walletCutouts">
-      <rect width="512" height="512" fill="white" />
-      <!-- Top wallet fold slot cutout -->
-      <path d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z" fill="black" />
-      <!-- Center arch outer ring cutout -->
-      <circle cx="298" cy="260" r="60" fill="black" />
-      <!-- Clasp outer surround cutout -->
-      <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
-    </mask>
+  <!-- Hard Cartoon Drop Shadow Behind Wallet -->
+  <rect
+    x="104"
+    y="230"
+    width="316"
+    height="220"
+    rx="44"
+    fill="#111110"
+  />
 
-    <mask id="claspDotCutout">
-      <rect width="512" height="512" fill="white" />
-      <circle cx="358" cy="354" r="12" fill="black" />
-    </mask>
-  </defs>
+  <!-- 3 Rising Chunky Cartoon Bars (Coral, Mint, Sunny Gold) -->
+  <rect
+    x="160"
+    y="148"
+    width="56"
+    height="118"
+    rx="14"
+    fill="#F26B5B"
+    stroke="#111110"
+    stroke-width="10"
+  />
+  <rect
+    x="232"
+    y="110"
+    width="56"
+    height="156"
+    rx="14"
+    fill="#52B788"
+    stroke="#111110"
+    stroke-width="10"
+  />
+  <rect
+    x="304"
+    y="70"
+    width="56"
+    height="196"
+    rx="14"
+    fill="#F4B942"
+    stroke="#111110"
+    stroke-width="10"
+  />
 
-  <g mask="url(#walletCutouts)">
-    <!-- 3 Rising Bars -->
-    <rect x="172" y="152" width="54" height="106" rx="6" fill="url(#bar1)" />
-    <rect x="242" y="114" width="54" height="144" rx="6" fill="url(#bar2)" />
-    <rect x="312" y="74" width="54" height="184" rx="6" fill="url(#bar3)" />
+  <!-- Main Wallet Body in Warm Sand (#D8CBB3) -->
+  <rect
+    x="92"
+    y="218"
+    width="316"
+    height="216"
+    rx="44"
+    fill="#D8CBB3"
+    stroke="#111110"
+    stroke-width="11"
+  />
 
-    <!-- Wallet Base (Deep Navy) -->
-    <path d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z" fill="url(#navyBody)" />
+  <!-- Wallet Clasp in Charcoal (#282825) -->
+  <rect
+    x="320"
+    y="296"
+    width="102"
+    height="64"
+    rx="32"
+    fill="#282825"
+    stroke="#111110"
+    stroke-width="10"
+  />
 
-    <!-- Mid Teal Wave -->
-    <path d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z" fill="#0e7c86" />
-
-    <!-- Right Emerald Wave -->
-    <path d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z" fill="#15a378" />
-  </g>
-
-  <!-- Center Emerald Arch Swoop (sits inside the masked ring) -->
-  <path d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z" fill="#15a378" />
-  <!-- Inner Arch Accent Line -->
-  <path d="M 272 246 A 28 28 0 0 1 324 246" fill="none" stroke="#0c6e5c" stroke-width="7" stroke-linecap="round" />
-
-  <!-- Wallet Clasp with Transparent Button Cutout -->
-  <rect x="328" y="328" width="96" height="52" rx="26" fill="url(#navyBody)" mask="url(#claspDotCutout)" />
+  <!-- Clasp Button Snap in Sunny Gold (#F4B942) -->
+  <circle
+    cx="354"
+    cy="328"
+    r="13"
+    fill="#F4B942"
+    stroke="#111110"
+    stroke-width="7"
+  />
 </svg>
+</file>
+
+<file path="public/manifest.json">
+{
+  "name": "TAPX",
+  "short_name": "TAPX",
+  "start_url": "/?quickAdd=true",
+  "display": "standalone",
+  "background_color": "#1e1e1c",
+  "theme_color": "#1e1e1c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
 </file>
 
 <file path="package.json">
@@ -1953,14 +1985,6 @@ export default async function handler(req, res) {
           ctx.strokeStyle = '#111110';
           ctx.stroke();
 
-          // 5. Inner Stitch / Cartoon Highlight Line
-          ctx.strokeStyle = '#F5EFE6';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(142, 234);
-          ctx.lineTo(368, 234);
-          ctx.stroke();
-
           // 6. Wallet Clasp in Charcoal (#2a2a27) with Sand Button Dot
           ctx.fillStyle = '#2a2a27';
           roundRectPath(324, 298, 102, 64, 32);
@@ -2154,10 +2178,170 @@ import { supabase } from './supabaseClient';
 const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
 
 // Playful Cartoon / Cozy Retro Palette
-const WALLET_COLORS = ['#E07A5F', '#52B788', '#F4B942', '#5C9EAD', '#9B7EDE', '#E56B6F', '#D8CBB3'];
-const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
-const CATEGORY_ICONS = ['🍔', '🛒', '⛽', '🛍️', '🎬', '⚡', '💊', '☕', '📚', '🏠', '💰', '✈️'];
-const CHART_COLORS = ['#F26B5B', '#52B788', '#F4B942', '#5C9EAD', '#9B7EDE', '#E07A5F', '#E56B6F', '#D8CBB3'];
+const WALLET_COLORS = [
+  '#E07A5F',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E56B6F',
+  '#D8CBB3',
+  '#F26B5B',
+  '#4EA8DE',
+  '#80ED99',
+  '#F7A072',
+  '#B5838D'
+];
+
+const CHART_COLORS = [
+  '#F26B5B',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E07A5F',
+  '#E56B6F',
+  '#D8CBB3'
+];
+
+// Full Searchable & Categorized Icon Library (160+ Icons + Custom Emoji Support)
+const ICON_CATALOG = [
+  // Money, Banking & Wallets
+  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
+  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
+  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
+  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
+  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
+  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
+  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
+  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
+  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
+  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
+  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
+  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
+  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
+  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
+  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
+  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
+  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
+  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
+  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
+  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
+
+  // Food & Drinks
+  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
+  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
+  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
+  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
+  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
+  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
+  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowlchinese' },
+  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
+  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
+  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
+  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
+  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
+  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
+  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
+  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
+  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
+  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
+  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
+  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
+  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
+  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
+  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
+  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
+  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
+
+  // Transport & Travel
+  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
+  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
+  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
+  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
+  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
+  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
+  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
+  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
+  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
+  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
+  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
+  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
+  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
+  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
+  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
+  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
+  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
+  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
+
+  // Shopping, Style & Personal
+  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
+  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
+  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
+  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
+  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
+  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
+  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
+  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
+  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
+  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
+  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
+  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
+  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
+  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
+
+  // Entertainment, Gaming & Fun
+  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
+  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
+  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
+  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
+  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
+  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
+  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
+  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
+  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
+  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
+  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
+  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
+  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
+  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
+
+  // Health, Sports & Fitness
+  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
+  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
+  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
+  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
+  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
+  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
+  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
+  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
+  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
+  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
+  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
+  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
+
+  // Tech, Bills, Study & Home
+  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
+  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
+  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
+  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
+  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
+  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
+  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
+  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
+  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
+  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
+  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
+  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
+  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
+  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
+  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
+  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
+  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
+  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
+];
+
+const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
 
 const DEFAULT_WALLETS_TEMPLATE = [
   { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
@@ -2272,7 +2456,10 @@ function findMatchingCategoryObj(categoryName, categoriesList) {
 
 // Assign a playful warm cartoon hex for any category
 function getCategoryAccentColor(cat, index = 0) {
-  if (cat?.color && !['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899'].includes(cat.color)) {
+  if (
+    cat?.color &&
+    !['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899'].includes(cat.color)
+  ) {
     return cat.color;
   }
   const name = String(cat?.name || '').toLowerCase();
@@ -2333,6 +2520,137 @@ function formatTimeOnly(isoString) {
 function escapeCsvCell(val) {
   const str = String(val ?? '').replace(/"/g, '""');
   return `"${str}"`;
+}
+
+// Reusable Full Icon Library + Any-Emoji Input Picker Component
+function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup = 'All' }) {
+  const [activeGroup, setActiveGroup] = useState(defaultGroup);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredIcons = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return ICON_CATALOG.filter((entry) => {
+      if (activeGroup !== 'All' && entry.group !== activeGroup && !q) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        entry.tags.includes(q) ||
+        entry.group.toLowerCase().includes(q) ||
+        entry.icon.includes(q)
+      );
+    });
+  }, [activeGroup, searchQuery]);
+
+  const handleCustomEmojiInput = (e) => {
+    const raw = e.target.value;
+    if (!raw) return;
+    // Extract the last grapheme cluster (so typing a new emoji replaces the previous one cleanly)
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+      const segments = Array.from(segmenter.segment(raw.trim()));
+      if (segments.length > 0) {
+        onSelectIcon(segments[segments.length - 1].segment);
+        return;
+      }
+    }
+    const chars = Array.from(raw.trim());
+    if (chars.length > 0) {
+      onSelectIcon(chars[chars.length - 1]);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
+          Icon ({ICON_CATALOG.length}+ or type any emoji)
+        </label>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>Custom:</span>
+          <input
+            type="text"
+            value={selectedIcon}
+            onChange={handleCustomEmojiInput}
+            placeholder="😀"
+            title="Tap to type any emoji from your keyboard"
+            className={`w-11 h-8 text-center rounded-xl text-base font-bold focus:outline-none ${ui.input}`}
+          />
+        </div>
+      </div>
+
+      {/* Search + Group Pills */}
+      <div className="flex items-center gap-1.5">
+        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl w-32 shrink-0 ${ui.input}`}>
+          <span className="text-[11px] opacity-60">🔍</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search icon..."
+            className="w-full bg-transparent text-xs focus:outline-none scale-[0.85] origin-left"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className={`text-[10px] font-bold ${ui.textMuted}`}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-1 overflow-x-auto no-scrollbar py-0.5">
+          {ICON_GROUPS.map((grp) => {
+            const active = activeGroup === grp && !searchQuery;
+            return (
+              <button
+                key={grp}
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveGroup(grp);
+                }}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-cartoon font-bold shrink-0 key-press ${
+                  active ? ui.pillActive : ui.pillIdle
+                }`}
+              >
+                {grp}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Scrollable Multi-Row Icon Grid */}
+      <div
+        className={`grid grid-cols-7 gap-1.5 max-h-36 overflow-y-auto custom-scroll p-2 rounded-2xl ${ui.cardSubtle}`}
+      >
+        {filteredIcons.length === 0 ? (
+          <div className={`col-span-7 py-4 text-center text-xs font-cartoon ${ui.textMuted}`}>
+            No match—type any emoji in the Custom box above!
+          </div>
+        ) : (
+          filteredIcons.map((item, idx) => {
+            const isSelected = selectedIcon === item.icon;
+            return (
+              <button
+                type="button"
+                key={`${item.icon}-${idx}`}
+                onClick={() => onSelectIcon(item.icon)}
+                className={`h-10 rounded-xl flex items-center justify-center text-lg key-press ${
+                  isSelected ? ui.pillActive : ui.pillIdle
+                }`}
+              >
+                {item.icon}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 }
 
 // Playful Cartoony Vector Wallet Logo (Warm Sand #D8CBB3, Charcoal #1e1e1c, Chunky Outlines)
@@ -2397,26 +2715,7 @@ function TapxLogo({ className = 'w-16 h-16' }) {
         strokeWidth="11"
       />
 
-      {/* Top Cartoon Highlight Stitch */}
-      <path
-        d="M 140 234 H 366"
-        fill="none"
-        stroke="#FAF6EE"
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeDasharray="16 14"
-      />
 
-      {/* Cute Smile / Curve Accent on Wallet */}
-      <path
-        d="M 156 322 Q 204 352 252 322"
-        fill="none"
-        stroke="#1e1e1c"
-        strokeWidth="9"
-        strokeLinecap="round"
-      />
-      <circle cx="150" cy="292" r="8" fill="#1e1e1c" />
-      <circle cx="258" cy="292" r="8" fill="#1e1e1c" />
 
       {/* Wallet Clasp in Charcoal (#282825) */}
       <rect
@@ -2856,14 +3155,14 @@ function TapxMainApp() {
   const [newWalletType, setNewWalletType] = useState('UPI / Wallet');
   const [newWalletBalance, setNewWalletBalance] = useState('');
   const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[0]);
-  const [newWalletIcon, setNewWalletIcon] = useState(WALLET_ICONS[0]);
+  const [newWalletIcon, setNewWalletIcon] = useState('💳');
 
   // Bottom Sheet State: New / Edit Category
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCatId, setEditingCatId] = useState(null);
   const [newCatName, setNewCatName] = useState('');
   const [newCatType, setNewCatType] = useState('expense');
-  const [newCatIcon, setNewCatIcon] = useState(CATEGORY_ICONS[0]);
+  const [newCatIcon, setNewCatIcon] = useState('🍔');
   const [newCatBudget, setNewCatBudget] = useState('');
 
   // Bottom Sheet State: Edit Transaction
@@ -3727,7 +4026,7 @@ function TapxMainApp() {
     setNewWalletType(wallet.type || 'UPI / Wallet');
     setNewWalletBalance(String(wallet.balance ?? 0));
     setNewWalletColor(wallet.color || WALLET_COLORS[0]);
-    setNewWalletIcon(wallet.icon || WALLET_ICONS[0]);
+    setNewWalletIcon(wallet.icon || '💳');
     setShowWalletModal(true);
   };
 
@@ -3737,7 +4036,7 @@ function TapxMainApp() {
     setNewWalletBalance('');
     setNewWalletType('UPI / Wallet');
     setNewWalletColor(WALLET_COLORS[0]);
-    setNewWalletIcon(WALLET_ICONS[0]);
+    setNewWalletIcon('💳');
     setShowWalletModal(false);
   };
 
@@ -3749,7 +4048,7 @@ function TapxMainApp() {
     const balVal = parseFloat(newWalletBalance) || 0;
     const typeVal = newWalletType;
     const colorVal = newWalletColor;
-    const iconVal = newWalletIcon;
+    const iconVal = newWalletIcon || '💳';
     const targetEditId = editingWalletId;
 
     resetWalletModal();
@@ -3821,7 +4120,7 @@ function TapxMainApp() {
     setEditingCatId(cat.id);
     setNewCatName(cat.name || '');
     setNewCatType(cat.type || 'expense');
-    setNewCatIcon(cat.icon || CATEGORY_ICONS[0]);
+    setNewCatIcon(cat.icon || '🍔');
     setNewCatBudget(cat.monthly_budget ? String(cat.monthly_budget) : '');
     setShowCategoryModal(true);
   };
@@ -3831,7 +4130,7 @@ function TapxMainApp() {
     setNewCatName('');
     setNewCatBudget('');
     setNewCatType('expense');
-    setNewCatIcon(CATEGORY_ICONS[0]);
+    setNewCatIcon('🍔');
     setShowCategoryModal(false);
   };
 
@@ -3841,7 +4140,7 @@ function TapxMainApp() {
 
     const nameVal = newCatName.trim();
     const typeVal = newCatType;
-    const iconVal = newCatIcon;
+    const iconVal = newCatIcon || '🍔';
     const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? parseFloat(newCatBudget) : null;
     const targetEditId = editingCatId;
 
@@ -5804,7 +6103,7 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT */}
+      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT (With Full Icon Library & Custom Color Picker) */}
       {showWalletModal && (
         <div
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
@@ -5813,14 +6112,22 @@ function TapxMainApp() {
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveWallet}
-            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
+            className={`w-full max-w-md max-h-[88vh] overflow-y-auto custom-scroll rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
           >
             <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
             <div className="flex items-center justify-between">
-              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                {editingWalletId ? 'Edit Account' : 'New Account'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-9 h-9 rounded-xl border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base"
+                  style={{ backgroundColor: newWalletColor }}
+                >
+                  {newWalletIcon}
+                </span>
+                <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
+                  {editingWalletId ? 'Edit Account' : 'New Account'}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={resetWalletModal}
@@ -5871,39 +6178,40 @@ function TapxMainApp() {
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Sticker Color</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between">
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Sticker Color</label>
+                <label className="flex items-center gap-1 text-[10px] font-cartoon font-bold cursor-pointer">
+                  <span className={ui.textSecondary}>Custom Hex</span>
+                  <input
+                    type="color"
+                    value={newWalletColor}
+                    onChange={(e) => setNewWalletColor(e.target.value)}
+                    className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                </label>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                 {WALLET_COLORS.map((hex) => (
                   <button
                     type="button"
                     key={hex}
                     onClick={() => setNewWalletColor(hex)}
                     style={{ backgroundColor: hex }}
-                    className={`w-8 h-8 rounded-full border-2 border-[#111110] transition-transform key-press ${
-                      newWalletColor === hex ? 'scale-110 ring-2 ring-[#D8CBB3] shadow-[0_3px_0_#111110]' : 'opacity-75'
+                    className={`w-7 h-7 rounded-full border-2 border-[#111110] shrink-0 transition-transform key-press ${
+                      newWalletColor === hex ? 'scale-110 ring-2 ring-[#D8CBB3] shadow-[0_2px_0_#111110]' : 'opacity-75'
                     }`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Icon</label>
-              <div className="flex gap-1.5 justify-between">
-                {WALLET_ICONS.map((ic) => (
-                  <button
-                    type="button"
-                    key={ic}
-                    onClick={() => setNewWalletIcon(ic)}
-                    className={`p-2.5 rounded-xl text-base key-press ${
-                      newWalletIcon === ic ? ui.pillActive : ui.pillIdle
-                    }`}
-                  >
-                    {ic}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Full Categorized & Searchable Icon Picker */}
+            <IconLibraryPicker
+              selectedIcon={newWalletIcon}
+              onSelectIcon={setNewWalletIcon}
+              ui={ui}
+              defaultGroup="Money"
+            />
 
             <div className="flex items-center gap-2 pt-1">
               {editingWalletId && (
@@ -5930,7 +6238,7 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* BOTTOM SHEET 2: CREATE / EDIT CATEGORY */}
+      {/* BOTTOM SHEET 2: CREATE / EDIT CATEGORY (With Full Icon Library) */}
       {showCategoryModal && (
         <div
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
@@ -5939,14 +6247,19 @@ function TapxMainApp() {
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveCategory}
-            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
+            className={`w-full max-w-md max-h-[88vh] overflow-y-auto custom-scroll rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
           >
             <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
             <div className="flex items-center justify-between">
-              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                {editingCatId ? 'Edit Category' : 'New Category'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base">
+                  {newCatIcon}
+                </span>
+                <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
+                  {editingCatId ? 'Edit Category' : 'New Category'}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={resetCategoryModal}
@@ -5992,23 +6305,13 @@ function TapxMainApp() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Icon</label>
-              <div className="flex gap-1.5 overflow-x-auto py-1 no-scrollbar">
-                {CATEGORY_ICONS.map((ic) => (
-                  <button
-                    type="button"
-                    key={ic}
-                    onClick={() => setNewCatIcon(ic)}
-                    className={`p-2.5 rounded-xl shrink-0 text-base key-press ${
-                      newCatIcon === ic ? ui.pillActive : ui.pillIdle
-                    }`}
-                  >
-                    {ic}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Full Categorized & Searchable Icon Picker */}
+            <IconLibraryPicker
+              selectedIcon={newCatIcon}
+              onSelectIcon={setNewCatIcon}
+              ui={ui}
+              defaultGroup="All"
+            />
 
             <button
               type="submit"

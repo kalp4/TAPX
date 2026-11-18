@@ -3,22 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#09090b" />
+    <meta name="theme-color" content="#1e1e1c" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <title>Privacy Policy — TAPX</title>
     <style>
       :root {
-        --bg: #09090b;
-        --surface: #131316;
-        --surface-elevated: #18181c;
-        --border: #232329;
-        --text-primary: #fafafa;
-        --text-secondary: #a1a1aa;
-        --text-muted: #71717a;
-        --accent: #10b981;
-        --accent-soft: rgba(16, 185, 129, 0.12);
-        --accent-border: rgba(16, 185, 129, 0.28);
-        --link: #38bdf8;
+        --bg: #1e1e1c;
+        --surface: #282825;
+        --surface-elevated: #32302b;
+        --outline: #111110;
+        --sand: #D8CBB3;
+        --cream: #F5EFE6;
+        --text-primary: #F5EFE6;
+        --text-secondary: #B8AA93;
+        --text-muted: #877D6E;
+        --coral: #F26B5B;
+        --mint: #52B788;
+        --gold: #F4B942;
+        --sky: #5C9EAD;
       }
 
       * {
@@ -31,15 +39,24 @@
       body {
         background-color: var(--bg);
         color: var(--text-primary);
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+        font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
         line-height: 1.65;
+      }
+
+      h1,
+      h2,
+      .brand-name,
+      .badge,
+      .back-link,
+      .contact-label {
+        font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Plus Jakarta Sans', system-ui, sans-serif;
       }
 
       .container {
         max-width: 740px;
         margin: 0 auto;
-        padding: 48px 20px 80px;
+        padding: 44px 20px 80px;
       }
 
       .topbar {
@@ -48,7 +65,7 @@
         justify-content: space-between;
         margin-bottom: 36px;
         padding-bottom: 20px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 2px dashed #363632;
       }
 
       .brand {
@@ -59,86 +76,124 @@
         color: var(--text-primary);
       }
 
+      .brand-logo-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: var(--surface);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .brand-name {
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 700;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
+        color: var(--cream);
       }
 
       .back-link {
         font-size: 13px;
-        font-weight: 600;
-        color: var(--text-secondary);
+        font-weight: 700;
+        color: #1e1e1c;
         text-decoration: none;
-        padding: 8px 14px;
+        padding: 9px 16px;
         border-radius: 9999px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        transition: color 0.15s ease, border-color 0.15s ease;
+        background: var(--sand);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
       }
 
       .back-link:hover {
-        color: var(--text-primary);
-        border-color: #3f3f46;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 0 var(--outline);
+        text-decoration: none;
+      }
+
+      .back-link:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 var(--outline);
       }
 
       .hero {
-        margin-bottom: 32px;
+        margin-bottom: 28px;
       }
 
       .badge {
         display: inline-block;
         font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
+        font-weight: 700;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: var(--accent);
-        background: var(--accent-soft);
-        border: 1px solid var(--accent-border);
-        padding: 4px 10px;
+        color: #1e1e1c;
+        background: var(--gold);
+        border: 2px solid var(--outline);
+        box-shadow: 0 2px 0 var(--outline);
+        padding: 4px 12px;
         border-radius: 9999px;
         margin-bottom: 14px;
       }
 
       h1 {
-        font-size: 32px;
+        font-size: 34px;
         font-weight: 700;
-        letter-spacing: -0.03em;
-        line-height: 1.2;
-        margin-bottom: 10px;
+        letter-spacing: -0.02em;
+        line-height: 1.18;
+        margin-bottom: 8px;
+        color: var(--cream);
       }
 
       .meta {
         font-size: 13px;
+        font-weight: 600;
         color: var(--text-muted);
       }
 
       .summary-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
+        background: var(--sand);
+        color: #1e1e1c;
+        border: 2.5px solid var(--outline);
+        box-shadow: 0 5px 0 var(--outline);
+        border-radius: 24px;
         padding: 20px 22px;
-        margin-bottom: 32px;
+        margin-bottom: 28px;
       }
 
       .summary-card p {
         font-size: 14px;
-        color: var(--text-secondary);
+        font-weight: 600;
+        color: #282825;
+      }
+
+      .summary-card strong {
+        color: #111110;
+        font-weight: 800;
+      }
+
+      .summary-card a {
+        color: #111110;
+        text-decoration: underline;
+        font-weight: 700;
       }
 
       section {
         background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
+        border: 2px solid var(--outline);
+        box-shadow: 0 4px 0 var(--outline);
+        border-radius: 24px;
         padding: 24px 24px;
-        margin-bottom: 16px;
+        margin-bottom: 18px;
       }
 
       h2 {
-        font-size: 17px;
-        font-weight: 650;
-        letter-spacing: -0.015em;
-        color: var(--text-primary);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--sand);
         margin-bottom: 10px;
       }
 
@@ -173,12 +228,23 @@
       }
 
       strong {
-        color: var(--text-primary);
-        font-weight: 600;
+        color: var(--cream);
+        font-weight: 700;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12.5px;
+        background: #181816;
+        color: var(--gold);
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid var(--outline);
       }
 
       a {
-        color: var(--link);
+        color: var(--gold);
+        font-weight: 600;
         text-decoration: none;
       }
 
@@ -188,22 +254,23 @@
 
       .contact-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         gap: 12px;
-        margin-top: 12px;
+        margin-top: 14px;
       }
 
       .contact-item {
         background: var(--surface-elevated);
-        border: 1px solid var(--border);
-        border-radius: 14px;
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        border-radius: 16px;
         padding: 12px 14px;
       }
 
       .contact-label {
         display: block;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--text-muted);
@@ -212,19 +279,20 @@
 
       .contact-value {
         font-size: 13px;
-        color: var(--text-primary);
-        font-weight: 500;
+        color: var(--cream);
+        font-weight: 600;
       }
 
       footer {
         margin-top: 36px;
         padding-top: 20px;
-        border-top: 1px solid var(--border);
+        border-top: 2px dashed #363632;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
         gap: 12px;
         font-size: 12px;
+        font-weight: 600;
         color: var(--text-muted);
       }
 
@@ -233,7 +301,7 @@
           padding: 28px 16px 56px;
         }
         h1 {
-          font-size: 26px;
+          font-size: 28px;
         }
         section {
           padding: 20px 18px;
@@ -245,82 +313,26 @@
     <div class="container">
       <header class="topbar">
         <a href="/" class="brand">
-          <svg viewBox="85 60 345 395" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="p-bar1" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#10b981" />
-                <stop offset="100%" stop-color="#059669" />
-              </linearGradient>
-              <linearGradient id="p-bar2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#2dd4bf" />
-                <stop offset="100%" stop-color="#0d9488" />
-              </linearGradient>
-              <linearGradient id="p-bar3" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#38bdf8" />
-                <stop offset="100%" stop-color="#2563eb" />
-              </linearGradient>
-              <linearGradient id="p-navy" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#163e7a" />
-                <stop offset="100%" stop-color="#0a2347" />
-              </linearGradient>
-              <mask id="p-wallet-cut">
-                <rect x="0" y="0" width="512" height="512" fill="white" />
-                <path d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z" fill="black" />
-                <circle cx="298" cy="260" r="60" fill="black" />
-                <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
-              </mask>
-              <mask id="p-clasp-cut">
-                <rect x="0" y="0" width="512" height="512" fill="white" />
-                <circle cx="358" cy="354" r="12" fill="black" />
-              </mask>
-            </defs>
-            <g mask="url(#p-wallet-cut)">
-              <rect x="172" y="152" width="54" height="106" rx="6" fill="url(#p-bar1)" />
-              <rect x="242" y="114" width="54" height="144" rx="6" fill="url(#p-bar2)" />
-              <rect x="312" y="74" width="54" height="184" rx="6" fill="url(#p-bar3)" />
-              <path
-                d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z"
-                fill="url(#p-navy)"
-              />
-              <path
-                d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z"
-                fill="#0e7c86"
-              />
-              <path
-                d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z"
-                fill="#15a378"
-              />
-            </g>
-            <path
-              d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z"
-              fill="#15a378"
-            />
-            <path
-              d="M 272 246 A 28 28 0 0 1 324 246"
-              fill="none"
-              stroke="#0a5c4c"
-              stroke-width="7"
-              stroke-linecap="round"
-            />
-            <rect
-              x="328"
-              y="328"
-              width="96"
-              height="52"
-              rx="26"
-              fill="url(#p-navy)"
-              mask="url(#p-clasp-cut)"
-            />
-          </svg>
+          <div class="brand-logo-box">
+            <svg viewBox="70 50 375 415" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <rect x="108" y="224" width="316" height="220" rx="44" fill="#111110" />
+              <rect x="164" y="144" width="56" height="116" rx="14" fill="#F26B5B" stroke="#111110" stroke-width="10" />
+              <rect x="236" y="106" width="56" height="154" rx="14" fill="#52B788" stroke="#111110" stroke-width="10" />
+              <rect x="308" y="68" width="56" height="192" rx="14" fill="#F4B942" stroke="#111110" stroke-width="10" />
+              <rect x="96" y="212" width="316" height="216" rx="44" fill="#D8CBB3" stroke="#111110" stroke-width="11" />
+              <rect x="324" y="290" width="102" height="64" rx="32" fill="#282825" stroke="#111110" stroke-width="10" />
+              <circle cx="358" cy="322" r="13" fill="#F4B942" stroke="#111110" stroke-width="7" />
+            </svg>
+          </div>
           <span class="brand-name">TAPX</span>
         </a>
-        <a href="/" class="back-link">Open App</a>
+        <a href="/" class="back-link">Open App &rarr;</a>
       </header>
 
       <div class="hero">
         <span class="badge">Privacy &amp; Data Protection</span>
         <h1>Privacy Policy</h1>
-        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 15, 2026</p>
+        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 18, 2026</p>
       </div>
 
       <div class="summary-card">
@@ -348,8 +360,8 @@
           </li>
           <li>
             <strong>User-Entered Financial Records:</strong> Wallets/accounts, initial and current balances,
-            custom expense or income categories, optional monthly spending limits, currency preferences,
-            transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
+            custom expense or income categories, custom icons, optional monthly spending limits, currency
+            preferences, transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
           </li>
           <li>
             <strong>Automation &amp; Local Storage Data:</strong> A unique, revocable Shortcut Security Token

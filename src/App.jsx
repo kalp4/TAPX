@@ -5,10 +5,170 @@ import { supabase } from './supabaseClient';
 const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
 
 // Playful Cartoon / Cozy Retro Palette
-const WALLET_COLORS = ['#E07A5F', '#52B788', '#F4B942', '#5C9EAD', '#9B7EDE', '#E56B6F', '#D8CBB3'];
-const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
-const CATEGORY_ICONS = ['🍔', '🛒', '⛽', '🛍️', '🎬', '⚡', '💊', '☕', '📚', '🏠', '💰', '✈️'];
-const CHART_COLORS = ['#F26B5B', '#52B788', '#F4B942', '#5C9EAD', '#9B7EDE', '#E07A5F', '#E56B6F', '#D8CBB3'];
+const WALLET_COLORS = [
+  '#E07A5F',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E56B6F',
+  '#D8CBB3',
+  '#F26B5B',
+  '#4EA8DE',
+  '#80ED99',
+  '#F7A072',
+  '#B5838D'
+];
+
+const CHART_COLORS = [
+  '#F26B5B',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E07A5F',
+  '#E56B6F',
+  '#D8CBB3'
+];
+
+// Full Searchable & Categorized Icon Library (160+ Icons + Custom Emoji Support)
+const ICON_CATALOG = [
+  // Money, Banking & Wallets
+  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
+  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
+  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
+  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
+  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
+  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
+  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
+  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
+  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
+  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
+  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
+  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
+  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
+  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
+  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
+  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
+  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
+  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
+  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
+  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
+
+  // Food & Drinks
+  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
+  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
+  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
+  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
+  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
+  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
+  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowlchinese' },
+  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
+  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
+  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
+  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
+  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
+  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
+  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
+  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
+  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
+  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
+  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
+  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
+  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
+  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
+  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
+  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
+  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
+
+  // Transport & Travel
+  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
+  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
+  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
+  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
+  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
+  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
+  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
+  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
+  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
+  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
+  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
+  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
+  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
+  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
+  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
+  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
+  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
+  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
+
+  // Shopping, Style & Personal
+  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
+  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
+  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
+  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
+  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
+  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
+  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
+  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
+  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
+  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
+  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
+  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
+  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
+  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
+
+  // Entertainment, Gaming & Fun
+  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
+  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
+  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
+  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
+  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
+  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
+  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
+  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
+  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
+  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
+  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
+  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
+  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
+  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
+
+  // Health, Sports & Fitness
+  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
+  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
+  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
+  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
+  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
+  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
+  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
+  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
+  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
+  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
+  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
+  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
+
+  // Tech, Bills, Study & Home
+  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
+  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
+  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
+  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
+  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
+  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
+  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
+  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
+  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
+  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
+  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
+  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
+  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
+  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
+  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
+  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
+  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
+  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
+];
+
+const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
 
 const DEFAULT_WALLETS_TEMPLATE = [
   { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
@@ -123,7 +283,10 @@ function findMatchingCategoryObj(categoryName, categoriesList) {
 
 // Assign a playful warm cartoon hex for any category
 function getCategoryAccentColor(cat, index = 0) {
-  if (cat?.color && !['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899'].includes(cat.color)) {
+  if (
+    cat?.color &&
+    !['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899'].includes(cat.color)
+  ) {
     return cat.color;
   }
   const name = String(cat?.name || '').toLowerCase();
@@ -184,6 +347,137 @@ function formatTimeOnly(isoString) {
 function escapeCsvCell(val) {
   const str = String(val ?? '').replace(/"/g, '""');
   return `"${str}"`;
+}
+
+// Reusable Full Icon Library + Any-Emoji Input Picker Component
+function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup = 'All' }) {
+  const [activeGroup, setActiveGroup] = useState(defaultGroup);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredIcons = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return ICON_CATALOG.filter((entry) => {
+      if (activeGroup !== 'All' && entry.group !== activeGroup && !q) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        entry.tags.includes(q) ||
+        entry.group.toLowerCase().includes(q) ||
+        entry.icon.includes(q)
+      );
+    });
+  }, [activeGroup, searchQuery]);
+
+  const handleCustomEmojiInput = (e) => {
+    const raw = e.target.value;
+    if (!raw) return;
+    // Extract the last grapheme cluster (so typing a new emoji replaces the previous one cleanly)
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+      const segments = Array.from(segmenter.segment(raw.trim()));
+      if (segments.length > 0) {
+        onSelectIcon(segments[segments.length - 1].segment);
+        return;
+      }
+    }
+    const chars = Array.from(raw.trim());
+    if (chars.length > 0) {
+      onSelectIcon(chars[chars.length - 1]);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
+          Icon ({ICON_CATALOG.length}+ or type any emoji)
+        </label>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>Custom:</span>
+          <input
+            type="text"
+            value={selectedIcon}
+            onChange={handleCustomEmojiInput}
+            placeholder="😀"
+            title="Tap to type any emoji from your keyboard"
+            className={`w-11 h-8 text-center rounded-xl text-base font-bold focus:outline-none ${ui.input}`}
+          />
+        </div>
+      </div>
+
+      {/* Search + Group Pills */}
+      <div className="flex items-center gap-1.5">
+        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl w-32 shrink-0 ${ui.input}`}>
+          <span className="text-[11px] opacity-60">🔍</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search icon..."
+            className="w-full bg-transparent text-xs focus:outline-none scale-[0.85] origin-left"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className={`text-[10px] font-bold ${ui.textMuted}`}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-1 overflow-x-auto no-scrollbar py-0.5">
+          {ICON_GROUPS.map((grp) => {
+            const active = activeGroup === grp && !searchQuery;
+            return (
+              <button
+                key={grp}
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveGroup(grp);
+                }}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-cartoon font-bold shrink-0 key-press ${
+                  active ? ui.pillActive : ui.pillIdle
+                }`}
+              >
+                {grp}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Scrollable Multi-Row Icon Grid */}
+      <div
+        className={`grid grid-cols-7 gap-1.5 max-h-36 overflow-y-auto custom-scroll p-2 rounded-2xl ${ui.cardSubtle}`}
+      >
+        {filteredIcons.length === 0 ? (
+          <div className={`col-span-7 py-4 text-center text-xs font-cartoon ${ui.textMuted}`}>
+            No match—type any emoji in the Custom box above!
+          </div>
+        ) : (
+          filteredIcons.map((item, idx) => {
+            const isSelected = selectedIcon === item.icon;
+            return (
+              <button
+                type="button"
+                key={`${item.icon}-${idx}`}
+                onClick={() => onSelectIcon(item.icon)}
+                className={`h-10 rounded-xl flex items-center justify-center text-lg key-press ${
+                  isSelected ? ui.pillActive : ui.pillIdle
+                }`}
+              >
+                {item.icon}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 }
 
 // Playful Cartoony Vector Wallet Logo (Warm Sand #D8CBB3, Charcoal #1e1e1c, Chunky Outlines)
@@ -248,26 +542,7 @@ function TapxLogo({ className = 'w-16 h-16' }) {
         strokeWidth="11"
       />
 
-      {/* Top Cartoon Highlight Stitch */}
-      <path
-        d="M 140 234 H 366"
-        fill="none"
-        stroke="#FAF6EE"
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeDasharray="16 14"
-      />
 
-      {/* Cute Smile / Curve Accent on Wallet */}
-      <path
-        d="M 156 322 Q 204 352 252 322"
-        fill="none"
-        stroke="#1e1e1c"
-        strokeWidth="9"
-        strokeLinecap="round"
-      />
-      <circle cx="150" cy="292" r="8" fill="#1e1e1c" />
-      <circle cx="258" cy="292" r="8" fill="#1e1e1c" />
 
       {/* Wallet Clasp in Charcoal (#282825) */}
       <rect
@@ -707,14 +982,14 @@ function TapxMainApp() {
   const [newWalletType, setNewWalletType] = useState('UPI / Wallet');
   const [newWalletBalance, setNewWalletBalance] = useState('');
   const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[0]);
-  const [newWalletIcon, setNewWalletIcon] = useState(WALLET_ICONS[0]);
+  const [newWalletIcon, setNewWalletIcon] = useState('💳');
 
   // Bottom Sheet State: New / Edit Category
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCatId, setEditingCatId] = useState(null);
   const [newCatName, setNewCatName] = useState('');
   const [newCatType, setNewCatType] = useState('expense');
-  const [newCatIcon, setNewCatIcon] = useState(CATEGORY_ICONS[0]);
+  const [newCatIcon, setNewCatIcon] = useState('🍔');
   const [newCatBudget, setNewCatBudget] = useState('');
 
   // Bottom Sheet State: Edit Transaction
@@ -1578,7 +1853,7 @@ function TapxMainApp() {
     setNewWalletType(wallet.type || 'UPI / Wallet');
     setNewWalletBalance(String(wallet.balance ?? 0));
     setNewWalletColor(wallet.color || WALLET_COLORS[0]);
-    setNewWalletIcon(wallet.icon || WALLET_ICONS[0]);
+    setNewWalletIcon(wallet.icon || '💳');
     setShowWalletModal(true);
   };
 
@@ -1588,7 +1863,7 @@ function TapxMainApp() {
     setNewWalletBalance('');
     setNewWalletType('UPI / Wallet');
     setNewWalletColor(WALLET_COLORS[0]);
-    setNewWalletIcon(WALLET_ICONS[0]);
+    setNewWalletIcon('💳');
     setShowWalletModal(false);
   };
 
@@ -1600,7 +1875,7 @@ function TapxMainApp() {
     const balVal = parseFloat(newWalletBalance) || 0;
     const typeVal = newWalletType;
     const colorVal = newWalletColor;
-    const iconVal = newWalletIcon;
+    const iconVal = newWalletIcon || '💳';
     const targetEditId = editingWalletId;
 
     resetWalletModal();
@@ -1672,7 +1947,7 @@ function TapxMainApp() {
     setEditingCatId(cat.id);
     setNewCatName(cat.name || '');
     setNewCatType(cat.type || 'expense');
-    setNewCatIcon(cat.icon || CATEGORY_ICONS[0]);
+    setNewCatIcon(cat.icon || '🍔');
     setNewCatBudget(cat.monthly_budget ? String(cat.monthly_budget) : '');
     setShowCategoryModal(true);
   };
@@ -1682,7 +1957,7 @@ function TapxMainApp() {
     setNewCatName('');
     setNewCatBudget('');
     setNewCatType('expense');
-    setNewCatIcon(CATEGORY_ICONS[0]);
+    setNewCatIcon('🍔');
     setShowCategoryModal(false);
   };
 
@@ -1692,7 +1967,7 @@ function TapxMainApp() {
 
     const nameVal = newCatName.trim();
     const typeVal = newCatType;
-    const iconVal = newCatIcon;
+    const iconVal = newCatIcon || '🍔';
     const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? parseFloat(newCatBudget) : null;
     const targetEditId = editingCatId;
 
@@ -3655,7 +3930,7 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT */}
+      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT (With Full Icon Library & Custom Color Picker) */}
       {showWalletModal && (
         <div
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
@@ -3664,14 +3939,22 @@ function TapxMainApp() {
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveWallet}
-            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
+            className={`w-full max-w-md max-h-[88vh] overflow-y-auto custom-scroll rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
           >
             <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
             <div className="flex items-center justify-between">
-              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                {editingWalletId ? 'Edit Account' : 'New Account'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-9 h-9 rounded-xl border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base"
+                  style={{ backgroundColor: newWalletColor }}
+                >
+                  {newWalletIcon}
+                </span>
+                <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
+                  {editingWalletId ? 'Edit Account' : 'New Account'}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={resetWalletModal}
@@ -3722,39 +4005,40 @@ function TapxMainApp() {
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Sticker Color</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between">
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Sticker Color</label>
+                <label className="flex items-center gap-1 text-[10px] font-cartoon font-bold cursor-pointer">
+                  <span className={ui.textSecondary}>Custom Hex</span>
+                  <input
+                    type="color"
+                    value={newWalletColor}
+                    onChange={(e) => setNewWalletColor(e.target.value)}
+                    className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                </label>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                 {WALLET_COLORS.map((hex) => (
                   <button
                     type="button"
                     key={hex}
                     onClick={() => setNewWalletColor(hex)}
                     style={{ backgroundColor: hex }}
-                    className={`w-8 h-8 rounded-full border-2 border-[#111110] transition-transform key-press ${
-                      newWalletColor === hex ? 'scale-110 ring-2 ring-[#D8CBB3] shadow-[0_3px_0_#111110]' : 'opacity-75'
+                    className={`w-7 h-7 rounded-full border-2 border-[#111110] shrink-0 transition-transform key-press ${
+                      newWalletColor === hex ? 'scale-110 ring-2 ring-[#D8CBB3] shadow-[0_2px_0_#111110]' : 'opacity-75'
                     }`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Icon</label>
-              <div className="flex gap-1.5 justify-between">
-                {WALLET_ICONS.map((ic) => (
-                  <button
-                    type="button"
-                    key={ic}
-                    onClick={() => setNewWalletIcon(ic)}
-                    className={`p-2.5 rounded-xl text-base key-press ${
-                      newWalletIcon === ic ? ui.pillActive : ui.pillIdle
-                    }`}
-                  >
-                    {ic}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Full Categorized & Searchable Icon Picker */}
+            <IconLibraryPicker
+              selectedIcon={newWalletIcon}
+              onSelectIcon={setNewWalletIcon}
+              ui={ui}
+              defaultGroup="Money"
+            />
 
             <div className="flex items-center gap-2 pt-1">
               {editingWalletId && (
@@ -3781,7 +4065,7 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* BOTTOM SHEET 2: CREATE / EDIT CATEGORY */}
+      {/* BOTTOM SHEET 2: CREATE / EDIT CATEGORY (With Full Icon Library) */}
       {showCategoryModal && (
         <div
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
@@ -3790,14 +4074,19 @@ function TapxMainApp() {
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveCategory}
-            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
+            className={`w-full max-w-md max-h-[88vh] overflow-y-auto custom-scroll rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
           >
             <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
             <div className="flex items-center justify-between">
-              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                {editingCatId ? 'Edit Category' : 'New Category'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base">
+                  {newCatIcon}
+                </span>
+                <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
+                  {editingCatId ? 'Edit Category' : 'New Category'}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={resetCategoryModal}
@@ -3843,23 +4132,13 @@ function TapxMainApp() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Icon</label>
-              <div className="flex gap-1.5 overflow-x-auto py-1 no-scrollbar">
-                {CATEGORY_ICONS.map((ic) => (
-                  <button
-                    type="button"
-                    key={ic}
-                    onClick={() => setNewCatIcon(ic)}
-                    className={`p-2.5 rounded-xl shrink-0 text-base key-press ${
-                      newCatIcon === ic ? ui.pillActive : ui.pillIdle
-                    }`}
-                  >
-                    {ic}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Full Categorized & Searchable Icon Picker */}
+            <IconLibraryPicker
+              selectedIcon={newCatIcon}
+              onSelectIcon={setNewCatIcon}
+              ui={ui}
+              defaultGroup="All"
+            />
 
             <button
               type="submit"
