@@ -4,15 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TAPX" />
-    <meta name="theme-color" content="#09090b" id="theme-color-meta" />
+    <meta name="theme-color" content="#1e1e1c" id="theme-color-meta" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" id="ios-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <title>TAPX</title>
     <script>
-      // Synchronously generate a 512x512 PNG for iOS Home Screen (Safari requires PNG for apple-touch-icon)
+      // Synchronously generate a 512x512 Cartoony Charcoal & Sand PNG for iOS Home Screen
       (function () {
         try {
           var c = document.createElement('canvas');
@@ -30,116 +36,64 @@
             ctx.closePath();
           }
 
-          // 1. Dark iOS App Icon Background (#09090b - no white box)
-          ctx.fillStyle = '#09090b';
+          // 1. Warm Charcoal App Icon Background (#1e1e1c)
+          ctx.fillStyle = '#1e1e1c';
           ctx.fillRect(0, 0, 512, 512);
 
-          // Center the logo artwork nicely inside the 512x512 icon grid
           ctx.save();
-          ctx.translate(-6, 4);
+          ctx.translate(-4, 8);
 
-          // 2. Rising Bar Chart (Emerald, Teal, Blue)
-          var g1 = ctx.createLinearGradient(0, 148, 0, 260);
-          g1.addColorStop(0, '#10b981');
-          g1.addColorStop(1, '#059669');
-          ctx.fillStyle = g1;
-          roundRectPath(172, 148, 54, 112, 6);
+          // 2. Hard Cartoon Drop Shadow Behind Wallet
+          ctx.fillStyle = '#111110';
+          roundRectPath(106, 224, 316, 224, 46);
           ctx.fill();
 
-          var g2 = ctx.createLinearGradient(0, 110, 0, 260);
-          g2.addColorStop(0, '#2dd4bf');
-          g2.addColorStop(1, '#0d9488');
-          ctx.fillStyle = g2;
-          roundRectPath(242, 110, 54, 150, 6);
+          // 3. Rising Chunky Cartoon Bars (Coral, Mint, Gold) with Dark Outlines
+          var bars = [
+            { x: 168, y: 146, w: 56, h: 120, color: '#F26B5B' },
+            { x: 240, y: 108, w: 56, h: 158, color: '#52B788' },
+            { x: 312, y: 68, w: 56, h: 198, color: '#F4B942' }
+          ];
+          bars.forEach(function (b) {
+            ctx.fillStyle = b.color;
+            roundRectPath(b.x, b.y, b.w, b.h, 14);
+            ctx.fill();
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = '#111110';
+            ctx.stroke();
+          });
+
+          // 4. Main Wallet Body in Warm Sand (#D8CBB3)
+          ctx.fillStyle = '#D8CBB3';
+          roundRectPath(100, 216, 316, 218, 44);
           ctx.fill();
-
-          var g3 = ctx.createLinearGradient(0, 70, 0, 260);
-          g3.addColorStop(0, '#38bdf8');
-          g3.addColorStop(1, '#2563eb');
-          ctx.fillStyle = g3;
-          roundRectPath(312, 70, 54, 190, 6);
-          ctx.fill();
-
-          // 3. Wallet Top-Left Lip
-          var navyGrad = ctx.createLinearGradient(100, 214, 416, 440);
-          navyGrad.addColorStop(0, '#163e7a');
-          navyGrad.addColorStop(1, '#0a2347');
-          ctx.fillStyle = navyGrad;
-          roundRectPath(100, 214, 78, 84, 38);
-          ctx.fill();
-
-          // 4. Wallet Main Body (Clipped for Internal Teal & Emerald Waves)
-          ctx.save();
-          roundRectPath(100, 256, 316, 184, 42);
-          ctx.clip();
-
-          ctx.fillStyle = navyGrad;
-          ctx.fillRect(100, 256, 316, 184);
-
-          // Mid Teal Wave
-          ctx.fillStyle = '#0e7c86';
-          ctx.beginPath();
-          ctx.moveTo(226, 256);
-          ctx.lineTo(416, 256);
-          ctx.lineTo(416, 440);
-          ctx.lineTo(314, 440);
-          ctx.bezierCurveTo(264, 410, 236, 344, 226, 256);
-          ctx.closePath();
-          ctx.fill();
-
-          // Right Emerald Wave
-          ctx.fillStyle = '#15a378';
-          ctx.beginPath();
-          ctx.moveTo(296, 256);
-          ctx.lineTo(416, 256);
-          ctx.lineTo(416, 440);
-          ctx.lineTo(338, 440);
-          ctx.bezierCurveTo(304, 408, 292, 336, 296, 256);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-
-          // 5. Cutouts (Top Wallet Fold Slot & Center Arch Ring)
-          ctx.fillStyle = '#09090b';
-          roundRectPath(130, 236, 180, 22, 11);
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.arc(298, 258, 58, 0, Math.PI * 2);
-          ctx.fill();
-
-          // 6. Center Emerald Arch Swoop
-          ctx.fillStyle = '#15a378';
-          ctx.beginPath();
-          ctx.arc(298, 258, 44, Math.PI, 0, false);
-          ctx.bezierCurveTo(342, 332, 326, 398, 338, 440);
-          ctx.lineTo(312, 440);
-          ctx.bezierCurveTo(274, 406, 254, 334, 254, 258);
-          ctx.closePath();
-          ctx.fill();
-
-          // Inner Arch Accent Curve
-          ctx.strokeStyle = '#0a5c4c';
-          ctx.lineWidth = 7;
-          ctx.lineCap = 'round';
-          ctx.beginPath();
-          ctx.arc(298, 258, 28, Math.PI * 1.15, Math.PI * 1.85, false);
+          ctx.lineWidth = 10;
+          ctx.strokeStyle = '#111110';
           ctx.stroke();
 
-          // 7. Clasp Surround Cutout
-          ctx.fillStyle = '#09090b';
-          roundRectPath(312, 312, 124, 84, 42);
-          ctx.fill();
-
-          // 8. Navy Wallet Clasp & Button Dot
-          ctx.fillStyle = navyGrad;
-          roundRectPath(328, 328, 96, 52, 26);
-          ctx.fill();
-
-          ctx.fillStyle = '#09090b';
+          // 5. Inner Stitch / Cartoon Highlight Line
+          ctx.strokeStyle = '#F5EFE6';
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.arc(358, 354, 12, 0, Math.PI * 2);
+          ctx.moveTo(142, 234);
+          ctx.lineTo(368, 234);
+          ctx.stroke();
+
+          // 6. Wallet Clasp in Charcoal (#2a2a27) with Sand Button Dot
+          ctx.fillStyle = '#2a2a27';
+          roundRectPath(324, 298, 102, 64, 32);
           ctx.fill();
+          ctx.lineWidth = 9;
+          ctx.strokeStyle = '#111110';
+          ctx.stroke();
+
+          ctx.fillStyle = '#F4B942';
+          ctx.beginPath();
+          ctx.arc(358, 330, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#111110';
+          ctx.stroke();
 
           ctx.restore();
 
@@ -168,8 +122,11 @@
         overflow: hidden;
         overscroll-behavior: none;
         touch-action: manipulation;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+        font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
+      }
+      .font-cartoon {
+        font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Plus Jakarta Sans', system-ui, sans-serif;
       }
       .no-scrollbar::-webkit-scrollbar {
         display: none;
@@ -182,128 +139,64 @@
         font-variant-numeric: tabular-nums;
       }
 
-      /* Native iOS Spring Physics */
+      /* Bouncy Cartoon Spring Physics */
       .ios-spring {
-        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
       }
 
-      /* iOS Liquid Glass Bar Track (Dark & Light) */
-      .ios-glass-bar-dark {
-        background: rgba(14, 14, 18, 0.52);
-        backdrop-filter: blur(42px) saturate(210%);
-        -webkit-backdrop-filter: blur(42px) saturate(210%);
-        border: 1px solid rgba(255, 255, 255, 0.09);
+      /* Chunky Cartoon Dock Track (Dark: Charcoal & Sand, Light: Cream & Charcoal) */
+      .cartoon-dock-dark {
+        background: #282825;
+        border: 2.5px solid #111110;
         box-shadow:
-          inset 0 1px 0.5px rgba(255, 255, 255, 0.18),
-          inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.05),
-          0 20px 50px -8px rgba(0, 0, 0, 0.85);
+          inset 0 2px 0 rgba(216, 203, 179, 0.14),
+          0 6px 0 #111110,
+          0 14px 28px rgba(0, 0, 0, 0.55);
       }
 
-      .ios-glass-bar-light {
-        background: rgba(245, 245, 250, 0.58);
-        backdrop-filter: blur(42px) saturate(200%);
-        -webkit-backdrop-filter: blur(42px) saturate(200%);
-        border: 1px solid rgba(255, 255, 255, 0.65);
+      .cartoon-dock-light {
+        background: #FAF6EE;
+        border: 2.5px solid #1e1e1c;
         box-shadow:
-          inset 0 1px 0.5px rgba(255, 255, 255, 0.9),
-          inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.05),
-          0 16px 40px -8px rgba(0, 0, 0, 0.12);
+          inset 0 2px 0 #ffffff,
+          0 6px 0 #1e1e1c,
+          0 12px 24px rgba(30, 30, 28, 0.16);
       }
 
-      /* True Optical Crystal Lens (Dark Mode) — Clear center, refractive Fresnel rim */
-      .ios-magnifying-lens-dark {
-        background: radial-gradient(
-          100% 100% at 50% 50%,
-          rgba(255, 255, 255, 0.015) 0%,
-          rgba(255, 255, 255, 0.03) 62%,
-          rgba(255, 255, 255, 0.12) 92%,
-          rgba(255, 255, 255, 0.22) 100%
-        );
-        backdrop-filter: blur(4px) saturate(260%) brightness(1.16) contrast(1.14);
-        -webkit-backdrop-filter: blur(4px) saturate(260%) brightness(1.16) contrast(1.14);
+      /* Active Pill Bubble Inside Dock */
+      .cartoon-pill-lens-dark {
+        background: #D8CBB3;
+        border: 2px solid #111110;
         box-shadow:
-          inset 0 1px 0.5px rgba(255, 255, 255, 0.75),
-          inset 0 -1px 0.5px rgba(255, 255, 255, 0.28),
-          inset 1.5px 0 3px rgba(130, 210, 255, 0.16),
-          inset -1.5px 0 3px rgba(255, 150, 230, 0.12),
-          0 10px 28px -4px rgba(0, 0, 0, 0.7);
+          inset 0 2px 0 rgba(255, 255, 255, 0.45),
+          0 3px 0 #111110;
       }
 
-      /* Razor-thin 1px Diagonal Specular Crystal Rim */
-      .ios-magnifying-lens-dark::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.88) 0%,
-          rgba(255, 255, 255, 0.12) 32%,
-          rgba(255, 255, 255, 0.04) 68%,
-          rgba(255, 255, 255, 0.58) 100%
-        );
-        -webkit-mask:
-          linear-gradient(#fff 0 0) content-box,
-          linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-      }
-
-      /* True Optical Crystal Lens (Light Mode) */
-      .ios-magnifying-lens-light {
-        background: radial-gradient(
-          100% 100% at 50% 50%,
-          rgba(255, 255, 255, 0.18) 0%,
-          rgba(255, 255, 255, 0.28) 65%,
-          rgba(255, 255, 255, 0.68) 94%,
-          rgba(255, 255, 255, 0.9) 100%
-        );
-        backdrop-filter: blur(4px) saturate(240%) brightness(1.05) contrast(1.08);
-        -webkit-backdrop-filter: blur(4px) saturate(240%) brightness(1.05) contrast(1.08);
+      .cartoon-pill-lens-light {
+        background: #1e1e1c;
+        border: 2px solid #1e1e1c;
         box-shadow:
-          inset 0 1px 0.5px rgba(255, 255, 255, 1),
-          inset 0 -1px 0.5px rgba(255, 255, 255, 0.7),
-          inset 1.5px 0 3px rgba(0, 140, 255, 0.1),
-          inset -1.5px 0 3px rgba(255, 100, 200, 0.08),
-          0 8px 22px -4px rgba(0, 0, 0, 0.14);
+          inset 0 1.5px 0 rgba(255, 255, 255, 0.2),
+          0 3px 0 #877D6E;
       }
 
-      .ios-magnifying-lens-light::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 1) 0%,
-          rgba(0, 0, 0, 0.08) 45%,
-          rgba(0, 0, 0, 0.04) 65%,
-          rgba(255, 255, 255, 0.95) 100%
-        );
-        -webkit-mask:
-          linear-gradient(#fff 0 0) content-box,
-          linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-      }
-
+      /* Tactile Arcade / Cartoon Squish & Press */
       .key-press {
-        transition: transform 110ms cubic-bezier(0.2, 0, 0, 1), background-color 110ms ease;
-        will-change: transform;
+        transition:
+          transform 95ms cubic-bezier(0.34, 1.56, 0.64, 1),
+          box-shadow 95ms cubic-bezier(0.34, 1.56, 0.64, 1),
+          background-color 110ms ease;
+        will-change: transform, box-shadow;
       }
       .key-press:active {
-        transform: scale(0.92);
+        transform: translate3d(0, 3px, 0) scale(0.97);
       }
 
-      /* Directional Tab Transitions */
+      /* Directional Bouncy Tab Transitions */
       @keyframes tabSlideRight {
         0% {
           opacity: 0;
-          transform: translate3d(22px, 0, 0) scale(0.985);
+          transform: translate3d(24px, 0, 0) scale(0.97);
         }
         100% {
           opacity: 1;
@@ -314,7 +207,7 @@
       @keyframes tabSlideLeft {
         0% {
           opacity: 0;
-          transform: translate3d(-22px, 0, 0) scale(0.985);
+          transform: translate3d(-24px, 0, 0) scale(0.97);
         }
         100% {
           opacity: 1;
@@ -325,7 +218,7 @@
       @keyframes tabFadeUp {
         0% {
           opacity: 0;
-          transform: translate3d(0, 10px, 0) scale(0.99);
+          transform: translate3d(0, 12px, 0) scale(0.96);
         }
         100% {
           opacity: 1;
@@ -334,33 +227,33 @@
       }
 
       .animate-tab-right {
-        animation: tabSlideRight 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: tabSlideRight 300ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
         will-change: transform, opacity;
       }
 
       .animate-tab-left {
-        animation: tabSlideLeft 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: tabSlideLeft 300ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
         will-change: transform, opacity;
       }
 
       .animate-tab {
-        animation: tabFadeUp 260ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: tabFadeUp 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
         will-change: transform, opacity;
       }
 
       @keyframes amountPop {
         0% {
-          transform: scale(0.95);
+          transform: scale(0.92) rotate(-1deg);
         }
         60% {
-          transform: scale(1.02);
+          transform: scale(1.05) rotate(0.5deg);
         }
         100% {
-          transform: scale(1);
+          transform: scale(1) rotate(0deg);
         }
       }
       .animate-pop {
-        animation: amountPop 160ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: amountPop 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
       }
     </style>
   </head>

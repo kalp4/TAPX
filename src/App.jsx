@@ -4,25 +4,26 @@ import { supabase } from './supabaseClient';
 // Shared iCloud Shortcut Link for 1-Tap Setup
 const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
 
-const WALLET_COLORS = ['#2563eb', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0891b2', '#3f3f46'];
+// Playful Cartoon / Cozy Retro Palette
+const WALLET_COLORS = ['#E07A5F', '#52B788', '#F4B942', '#5C9EAD', '#9B7EDE', '#E56B6F', '#D8CBB3'];
 const WALLET_ICONS = ['💳', '💵', '🏦', '⚡', '🪙', '📱', '💎'];
 const CATEGORY_ICONS = ['🍔', '🛒', '⛽', '🛍️', '🎬', '⚡', '💊', '☕', '📚', '🏠', '💰', '✈️'];
-const CHART_COLORS = ['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899', '#6366f1'];
+const CHART_COLORS = ['#F26B5B', '#52B788', '#F4B942', '#5C9EAD', '#9B7EDE', '#E07A5F', '#E56B6F', '#D8CBB3'];
 
 const DEFAULT_WALLETS_TEMPLATE = [
-  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#2563eb', icon: '⚡' },
-  { name: 'Cash', type: 'Cash', balance: 0, color: '#059669', icon: '💵' }
+  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
+  { name: 'Cash', type: 'Cash', balance: 0, color: '#52B788', icon: '💵' }
 ];
 
 const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#f43f5e', monthly_budget: null },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#10b981', monthly_budget: null },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#f59e0b', monthly_budget: null },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#8b5cf6', monthly_budget: null },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#ec4899', monthly_budget: null },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#06b6d4', monthly_budget: null },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#3b82f6', monthly_budget: null },
-  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#10b981', monthly_budget: null }
+  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#F26B5B', monthly_budget: null },
+  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#52B788', monthly_budget: null },
+  { name: 'Transport', type: 'expense', icon: '⛽', color: '#F4B942', monthly_budget: null },
+  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#9B7EDE', monthly_budget: null },
+  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#E56B6F', monthly_budget: null },
+  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#5C9EAD', monthly_budget: null },
+  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#E07A5F', monthly_budget: null },
+  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#52B788', monthly_budget: null }
 ];
 
 const NAV_TABS = [
@@ -120,18 +121,20 @@ function findMatchingCategoryObj(categoryName, categoriesList) {
   return partial || null;
 }
 
-// Assign a semantic accent hex for any category
+// Assign a playful warm cartoon hex for any category
 function getCategoryAccentColor(cat, index = 0) {
-  if (cat?.color) return cat.color;
+  if (cat?.color && !['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899'].includes(cat.color)) {
+    return cat.color;
+  }
   const name = String(cat?.name || '').toLowerCase();
-  if (name.includes('food') || name.includes('drink') || name.includes('dining')) return '#f43f5e';
-  if (name.includes('grocer')) return '#10b981';
-  if (name.includes('transport') || name.includes('fuel') || name.includes('cab')) return '#f59e0b';
-  if (name.includes('shop')) return '#8b5cf6';
-  if (name.includes('entertain') || name.includes('movie')) return '#ec4899';
-  if (name.includes('bill') || name.includes('recharge')) return '#06b6d4';
-  if (name.includes('health') || name.includes('fitness')) return '#3b82f6';
-  if (name.includes('income') || name.includes('allowance') || name.includes('salary')) return '#10b981';
+  if (name.includes('food') || name.includes('drink') || name.includes('dining')) return '#F26B5B';
+  if (name.includes('grocer')) return '#52B788';
+  if (name.includes('transport') || name.includes('fuel') || name.includes('cab')) return '#F4B942';
+  if (name.includes('shop')) return '#9B7EDE';
+  if (name.includes('entertain') || name.includes('movie')) return '#E56B6F';
+  if (name.includes('bill') || name.includes('recharge')) return '#5C9EAD';
+  if (name.includes('health') || name.includes('fitness')) return '#E07A5F';
+  if (name.includes('income') || name.includes('allowance') || name.includes('salary')) return '#52B788';
   return CHART_COLORS[index % CHART_COLORS.length];
 }
 
@@ -183,108 +186,120 @@ function escapeCsvCell(val) {
   return `"${str}"`;
 }
 
-// Frameless, 100% Transparent-Cutout Vector Logo
+// Playful Cartoony Vector Wallet Logo (Warm Sand #D8CBB3, Charcoal #1e1e1c, Chunky Outlines)
 function TapxLogo({ className = 'w-16 h-16' }) {
-  const uid = React.useId().replace(/:/g, '');
-  const walletMaskId = `wallet-cut-${uid}`;
-  const claspMaskId = `clasp-cut-${uid}`;
-  const bar1Id = `b1-${uid}`;
-  const bar2Id = `b2-${uid}`;
-  const bar3Id = `b3-${uid}`;
-  const navyId = `nv-${uid}`;
-
   return (
     <svg
-      viewBox="85 60 345 395"
+      viewBox="70 50 375 415"
       className={`${className} shrink-0 select-none`}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <defs>
-        <linearGradient id={bar1Id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#10b981" />
-          <stop offset="100%" stopColor="#059669" />
-        </linearGradient>
-        <linearGradient id={bar2Id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#2dd4bf" />
-          <stop offset="100%" stopColor="#0d9488" />
-        </linearGradient>
-        <linearGradient id={bar3Id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#2563eb" />
-        </linearGradient>
-        <linearGradient id={navyId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#163e7a" />
-          <stop offset="100%" stopColor="#0a2347" />
-        </linearGradient>
-
-        <mask id={walletMaskId}>
-          <rect x="0" y="0" width="512" height="512" fill="white" />
-          <path
-            d="M 142 238 H 300 A 11 11 0 0 1 300 260 H 142 A 11 11 0 0 1 142 238 Z"
-            fill="black"
-          />
-          <circle cx="298" cy="260" r="60" fill="black" />
-          <rect x="312" y="312" width="124" height="84" rx="42" fill="black" />
-        </mask>
-
-        <mask id={claspMaskId}>
-          <rect x="0" y="0" width="512" height="512" fill="white" />
-          <circle cx="358" cy="354" r="12" fill="black" />
-        </mask>
-      </defs>
-
-      <g mask={`url(#${walletMaskId})`}>
-        <rect x="172" y="152" width="54" height="106" rx="6" fill={`url(#${bar1Id})`} />
-        <rect x="242" y="114" width="54" height="144" rx="6" fill={`url(#${bar2Id})`} />
-        <rect x="312" y="74" width="54" height="184" rx="6" fill={`url(#${bar3Id})`} />
-
-        <path
-          d="M 142 214 H 170 A 8 8 0 0 1 178 222 V 238 H 142 A 11 11 0 0 0 142 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 142 A 42 42 0 0 1 100 398 V 256 A 42 42 0 0 1 142 214 Z"
-          fill={`url(#${navyId})`}
-        />
-
-        <path
-          d="M 228 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 316 C 266 410 238 344 228 260 Z"
-          fill="#0e7c86"
-        />
-
-        <path
-          d="M 298 260 H 374 A 42 42 0 0 1 416 302 V 398 A 42 42 0 0 1 374 440 H 338 C 306 408 294 336 298 260 Z"
-          fill="#15a378"
-        />
-      </g>
-
-      <path
-        d="M 254 260 A 44 44 0 0 1 342 260 C 342 332 324 398 338 440 H 316 C 276 406 254 334 254 260 Z"
-        fill="#15a378"
+      {/* Hard Cartoon Drop Shadow */}
+      <rect
+        x="108"
+        y="224"
+        width="316"
+        height="220"
+        rx="44"
+        fill="#111110"
       />
+
+      {/* 3 Rising Chunky Cartoon Bars with Bold Outlines */}
+      <rect
+        x="164"
+        y="144"
+        width="56"
+        height="116"
+        rx="14"
+        fill="#F26B5B"
+        stroke="#111110"
+        strokeWidth="10"
+      />
+      <rect
+        x="236"
+        y="106"
+        width="56"
+        height="154"
+        rx="14"
+        fill="#52B788"
+        stroke="#111110"
+        strokeWidth="10"
+      />
+      <rect
+        x="308"
+        y="68"
+        width="56"
+        height="192"
+        rx="14"
+        fill="#F4B942"
+        stroke="#111110"
+        strokeWidth="10"
+      />
+
+      {/* Main Wallet Body in Warm Sand (#D8CBB3) */}
+      <rect
+        x="96"
+        y="212"
+        width="316"
+        height="216"
+        rx="44"
+        fill="#D8CBB3"
+        stroke="#111110"
+        strokeWidth="11"
+      />
+
+      {/* Top Cartoon Highlight Stitch */}
       <path
-        d="M 272 246 A 28 28 0 0 1 324 246"
+        d="M 140 234 H 366"
         fill="none"
-        stroke="#0a5c4c"
-        strokeWidth="7"
+        stroke="#FAF6EE"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray="16 14"
+      />
+
+      {/* Cute Smile / Curve Accent on Wallet */}
+      <path
+        d="M 156 322 Q 204 352 252 322"
+        fill="none"
+        stroke="#1e1e1c"
+        strokeWidth="9"
         strokeLinecap="round"
       />
+      <circle cx="150" cy="292" r="8" fill="#1e1e1c" />
+      <circle cx="258" cy="292" r="8" fill="#1e1e1c" />
 
+      {/* Wallet Clasp in Charcoal (#282825) */}
       <rect
-        x="328"
-        y="328"
-        width="96"
-        height="52"
-        rx="26"
-        fill={`url(#${navyId})`}
-        mask={`url(#${claspMaskId})`}
+        x="324"
+        y="290"
+        width="102"
+        height="64"
+        rx="32"
+        fill="#282825"
+        stroke="#111110"
+        strokeWidth="10"
+      />
+
+      {/* Clasp Button Snap in Sunny Gold */}
+      <circle
+        cx="358"
+        cy="322"
+        r="13"
+        fill="#F4B942"
+        stroke="#111110"
+        strokeWidth="7"
       />
     </svg>
   );
 }
 
-// Authentic iOS SF Symbols Icon Set
+// Chunky Rounded Cartoon Navigation Icons
 function NavIcon({ id, active }) {
   const sizeClass = 'w-[21px] h-[21px]';
 
   if (id === 'pad') {
-    const r = active ? '2.15' : '1.75';
+    const r = active ? '2.4' : '1.9';
     return (
       <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
         <circle cx="6.5" cy="4.5" r={r} />
@@ -302,41 +317,37 @@ function NavIcon({ id, active }) {
   }
 
   if (id === 'wallets') {
-    if (active) {
-      return (
-        <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
-          <path d="M4.5 3.75A2.25 2.25 0 0 0 2.25 6v1.5h19.5V6a2.25 2.25 0 0 0-2.25-2.25H4.5Z" />
-          <path
-            fillRule="evenodd"
-            d="M2.25 9.75v8.25A2.25 2.25 0 0 0 4.5 20.25h15a2.25 2.25 0 0 0 2.25-2.25V9.75H2.25Zm3.75 4.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Z"
-            clipRule="evenodd"
-          />
-        </svg>
-      );
-    }
     return (
-      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.85">
-        <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
-        <path strokeLinecap="round" d="M2.5 9.25h19M6.5 14.5h3.5" />
+      <svg
+        className={sizeClass}
+        fill={active ? 'currentColor' : 'none'}
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={active ? '1.6' : '2.2'}
+      >
+        <rect x="2.5" y="4.5" width="19" height="15" rx="3.5" />
+        <path
+          strokeLinecap="round"
+          stroke={active ? '#1e1e1c' : 'currentColor'}
+          strokeWidth="2.2"
+          d="M2.5 9.5h19M6.5 14.5h4"
+        />
       </svg>
     );
   }
 
   if (id === 'analytics') {
-    if (active) {
-      return (
-        <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
-          <rect x="3.5" y="12" width="4.2" height="8.5" rx="1.4" />
-          <rect x="9.9" y="7.5" width="4.2" height="13" rx="1.4" />
-          <rect x="16.3" y="3.5" width="4.2" height="17" rx="1.4" />
-        </svg>
-      );
-    }
     return (
-      <svg className={sizeClass} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.85">
-        <rect x="3.75" y="12.25" width="3.75" height="8" rx="1.1" />
-        <rect x="10.12" y="7.75" width="3.75" height="12.5" rx="1.1" />
-        <rect x="16.5" y="3.75" width="3.75" height="16.5" rx="1.1" />
+      <svg
+        className={sizeClass}
+        fill={active ? 'currentColor' : 'none'}
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth="2.2"
+      >
+        <rect x="3.5" y="12" width="4.2" height="8.5" rx="1.8" />
+        <rect x="9.9" y="7.5" width="4.2" height="13" rx="1.8" />
+        <rect x="16.3" y="3.5" width="4.2" height="17" rx="1.8" />
       </svg>
     );
   }
@@ -344,24 +355,17 @@ function NavIcon({ id, active }) {
   return (
     <svg
       className={sizeClass}
-      fill={active ? 'currentColor' : 'none'}
+      fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
-      strokeWidth={active ? '1.2' : '1.85'}
+      strokeWidth={active ? '2.4' : '2.1'}
     >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"
       />
-      <circle
-        cx="12"
-        cy="12"
-        r="3"
-        fill={active ? '#09090b' : 'none'}
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2.2" />
     </svg>
   );
 }
@@ -386,14 +390,14 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-full w-full bg-[#09090b] text-zinc-100 flex flex-col items-center justify-center p-6 max-w-md mx-auto text-center space-y-4 overflow-hidden">
-          <p className="text-sm font-semibold text-white">Application Error</p>
-          <p className="text-xs text-rose-400 bg-rose-950/40 border border-rose-500/30 p-3 rounded-xl font-mono break-all">
+        <div className="h-full w-full bg-[#1e1e1c] text-[#D8CBB3] flex flex-col items-center justify-center p-6 max-w-md mx-auto text-center space-y-4 overflow-hidden">
+          <p className="text-base font-cartoon font-bold text-[#F5EFE6]">Oops! Something tripped up</p>
+          <p className="text-xs text-[#F26B5B] bg-[#282825] border-2 border-[#111110] p-3 rounded-2xl font-mono break-all shadow-[0_4px_0_#111110]">
             {this.state.errorMessage}
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-5 py-2.5 rounded-xl bg-white text-zinc-950 text-xs font-semibold"
+            className="px-5 py-2.5 rounded-2xl bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] text-xs font-bold key-press"
           >
             Reload TAPX
           </button>
@@ -442,7 +446,7 @@ function TapxMainApp() {
 
   // Theme Mode: 'system' | 'dark' | 'light'
   const [themePref, setThemePref] = useState(() => {
-    return localStorage.getItem(THEME_KEY) || 'system';
+    return localStorage.getItem(THEME_KEY) || 'dark';
   });
   const [systemIsDark, setSystemIsDark] = useState(() => {
     return window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true;
@@ -458,69 +462,77 @@ function TapxMainApp() {
 
   const isDark = themePref === 'system' ? systemIsDark : themePref === 'dark';
 
-  // Sync theme color with iOS Status Bar
+  // Sync theme color (#1e1e1c in dark mode, #EFE7DA in light mode) with iOS Status Bar
   useEffect(() => {
     localStorage.setItem(THEME_KEY, themePref);
-    const bgHex = isDark ? '#09090b' : '#f4f4f8';
+    const bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
     document.documentElement.style.backgroundColor = bgHex;
     document.body.style.backgroundColor = bgHex;
     const meta = document.getElementById('theme-color-meta');
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Tactile, Dimensional Fintech Surface System (Glass Depth, Specular Top Edges, Semantic Glows)
+  // Fun Cartoony / Tactile Cozy Theme System (Charcoal #1e1e1c & Sand #D8CBB3)
   const ui = useMemo(() => {
     if (isDark) {
       return {
-        bg: 'bg-[#09090b] text-zinc-100',
-        sheetBg: 'bg-[#121217]/95 backdrop-blur-2xl border-[#282833] text-zinc-100',
-        card: 'bg-gradient-to-b from-[#17171d] to-[#121216] border-[#24242d] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_20px_-6px_rgba(0,0,0,0.55)]',
-        cardElevated: 'bg-gradient-to-b from-[#1e1e26] to-[#15151b] border-[#2e2e3a] shadow-[inset_0_1px_0_rgba(255,255,255,0.09),0_10px_24px_-6px_rgba(0,0,0,0.65)]',
-        cardSubtle: 'bg-[#1b1b22]/90 border-[#282832] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-        input: 'bg-[#121216] border-[#292933] text-zinc-100 placeholder-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)]',
-        pillIdle: 'bg-[#15151b] border-[#262630] text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-        pillActive: 'bg-zinc-100 border-white text-zinc-950 shadow-[0_4px_14px_rgba(255,255,255,0.14)]',
-        numpadKey: 'bg-gradient-to-b from-[#1a1a22] to-[#14141a] border-[#262630] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_3px_6px_rgba(0,0,0,0.4)] active:from-[#24242f] active:to-[#1d1d26]',
-        segmentedBg: 'bg-[#121216] border-[#23232c] shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]',
-        segmentedThumb: 'bg-gradient-to-b from-[#2b2b36] to-[#23232c] border border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.45)]',
-        textPrimary: 'text-zinc-50',
-        textSecondary: 'text-zinc-400',
-        textMuted: 'text-zinc-500',
-        islandBar: 'ios-glass-bar-dark',
-        islandLens: 'ios-magnifying-lens-dark',
-        islandTextActive: 'text-white drop-shadow-[0_1px_8px_rgba(255,255,255,0.28)]',
-        islandTextIdle: 'text-zinc-400/80',
-        primaryBtnExpense: 'bg-gradient-to-b from-white to-zinc-200 text-zinc-950 shadow-[0_6px_20px_-4px_rgba(255,255,255,0.22)]',
-        primaryBtnIncome: 'bg-gradient-to-b from-emerald-400 to-emerald-500 text-zinc-950 shadow-[0_6px_20px_-4px_rgba(16,185,129,0.38)]',
-        primaryBtnTransfer: 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-[0_6px_20px_-4px_rgba(59,130,246,0.4)]',
-        divider: 'border-[#22222b]',
-        stickyHeader: 'bg-[#09090b]/85 backdrop-blur-md'
+        bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
+        sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6]',
+        card: 'bg-[#282825] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
+        cardElevated: 'bg-[#30302c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        cardSubtle: 'bg-[#22221f] border-2 border-[#111110]/80',
+        heroCard: 'bg-[#282825] border-2 border-[#D8CBB3]/35 shadow-[0_5px_0_#111110]',
+        input: 'bg-[#181816] border-2 border-[#111110] text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
+        pillIdle: 'bg-[#282825] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_3px_0_#111110] active:shadow-none',
+        pillActive: 'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[0_3px_0_#111110] active:shadow-none',
+        numpadKey: 'bg-[#282825] border-2 border-[#111110] text-[#F5EFE6] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#30302c]',
+        numpadKeySpecial: 'bg-[#32302b] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        segmentedBg: 'bg-[#161614] border-2 border-[#111110] shadow-[inset_0_2px_0_rgba(0,0,0,0.5)]',
+        segmentedThumb: 'bg-[#D8CBB3] border-2 border-[#111110] shadow-[0_2px_0_#111110]',
+        segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
+        textPrimary: 'text-[#F5EFE6]',
+        textSand: 'text-[#D8CBB3]',
+        textSecondary: 'text-[#B8AA93]',
+        textMuted: 'text-[#877D6E]',
+        islandBar: 'cartoon-dock-dark',
+        islandLens: 'cartoon-pill-lens-dark',
+        islandTextActive: 'text-[#1e1e1c]',
+        islandTextIdle: 'text-[#B8AA93]',
+        primaryBtnExpense: 'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        primaryBtnIncome: 'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        primaryBtnTransfer: 'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        divider: 'border-[#363632]',
+        stickyHeader: 'bg-[#1e1e1c]/95 backdrop-blur-sm'
       };
     }
     return {
-      bg: 'bg-[#f4f4f8] text-zinc-900',
-      sheetBg: 'bg-white/95 backdrop-blur-2xl border-zinc-200 text-zinc-900',
-      card: 'bg-gradient-to-b from-white to-[#fafafa] border-zinc-200/85 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_4px_14px_-4px_rgba(0,0,0,0.05)]',
-      cardElevated: 'bg-white border-zinc-200 shadow-[0_8px_22px_-6px_rgba(0,0,0,0.07)]',
-      cardSubtle: 'bg-zinc-100/90 border-zinc-200/75',
-      input: 'bg-white border-zinc-200/90 text-zinc-900 placeholder-zinc-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]',
-      pillIdle: 'bg-white border-zinc-200/90 text-zinc-600 shadow-[0_1px_3px_rgba(0,0,0,0.03)]',
-      pillActive: 'bg-zinc-900 border-zinc-900 text-white shadow-[0_4px_12px_rgba(0,0,0,0.16)]',
-      numpadKey: 'bg-gradient-to-b from-white to-zinc-50/90 border-zinc-200/90 text-zinc-900 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_2px_4px_rgba(0,0,0,0.05)] active:bg-zinc-100',
-      segmentedBg: 'bg-zinc-200/75 border-zinc-300/50 shadow-inner',
-      segmentedThumb: 'bg-white shadow-[0_2px_6px_rgba(0,0,0,0.09)]',
-      textPrimary: 'text-zinc-900',
-      textSecondary: 'text-zinc-500',
-      textMuted: 'text-zinc-400',
-      islandBar: 'ios-glass-bar-light',
-      islandLens: 'ios-magnifying-lens-light',
-      islandTextActive: 'text-[#007AFF] drop-shadow-[0_1px_4px_rgba(0,122,255,0.18)]',
-      islandTextIdle: 'text-zinc-500/85',
-      primaryBtnExpense: 'bg-gradient-to-b from-zinc-800 to-zinc-950 text-white shadow-[0_6px_18px_-4px_rgba(0,0,0,0.25)]',
-      primaryBtnIncome: 'bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_6px_18px_-4px_rgba(16,185,129,0.35)]',
-      primaryBtnTransfer: 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-[0_6px_18px_-4px_rgba(37,99,235,0.35)]',
-      divider: 'border-zinc-200/80',
-      stickyHeader: 'bg-[#f4f4f8]/85 backdrop-blur-md'
+      bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
+      sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c]',
+      card: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
+      cardElevated: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      cardSubtle: 'bg-[#E5DEC9] border-2 border-[#1e1e1c]',
+      heroCard: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_5px_0_#1e1e1c]',
+      input: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
+      pillIdle: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
+      pillActive: 'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#524E46] active:shadow-none',
+      numpadKey: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      numpadKeySpecial: 'bg-[#D8CBB3] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      segmentedBg: 'bg-[#D8CBB3] border-2 border-[#1e1e1c]',
+      segmentedThumb: 'bg-[#1e1e1c] border-2 border-[#1e1e1c]',
+      segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
+      textPrimary: 'text-[#1e1e1c]',
+      textSand: 'text-[#1e1e1c]',
+      textSecondary: 'text-[#524E46]',
+      textMuted: 'text-[#7A7367]',
+      islandBar: 'cartoon-dock-light',
+      islandLens: 'cartoon-pill-lens-light',
+      islandTextActive: 'text-[#D8CBB3]',
+      islandTextIdle: 'text-[#524E46]',
+      primaryBtnExpense: 'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#524E46] active:shadow-[0_1px_0_#524E46]',
+      primaryBtnIncome: 'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      primaryBtnTransfer: 'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      divider: 'border-[#1e1e1c]/20',
+      stickyHeader: 'bg-[#EFE7DA]/95 backdrop-blur-sm'
     };
   }, [isDark]);
 
@@ -532,7 +544,7 @@ function TapxMainApp() {
   const [dbError, setDbError] = useState('');
   const seedingRef = useRef(false);
 
-  // Navigation, Magnifying Lens & Scrubbing State
+  // Navigation, Bouncy Pill & Scrubbing State
   const [activeTab, setActiveTab] = useState('pad');
   const [tabDirection, setTabDirection] = useState('right');
   const [lensBulge, setLensBulge] = useState(false);
@@ -555,7 +567,7 @@ function TapxMainApp() {
   const triggerAmountPulse = useCallback(() => {
     setAmountPulse(true);
     if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
-    pulseTimerRef.current = setTimeout(() => setAmountPulse(false), 110);
+    pulseTimerRef.current = setTimeout(() => setAmountPulse(false), 120);
   }, []);
 
   const triggerLensMagnification = useCallback((duration = 280) => {
@@ -589,7 +601,7 @@ function TapxMainApp() {
   const getClampedIndexFromClientX = useCallback((clientX) => {
     if (!navBarRef.current) return 0;
     const rect = navBarRef.current.getBoundingClientRect();
-    const pad = 5;
+    const pad = 6;
     const innerWidth = rect.width - pad * 2;
     const slotWidth = innerWidth / 4;
     const rawIndex = (clientX - rect.left - pad - slotWidth / 2) / slotWidth;
@@ -819,7 +831,6 @@ function TapxMainApp() {
 
             if (error) throw error;
 
-            // Update wallet balances in Supabase
             if (item.fromWalletId && item.expectedFromBalance !== undefined) {
               await supabase
                 .from('wallets')
@@ -849,7 +860,7 @@ function TapxMainApp() {
       setIsSyncingBg(false);
 
       if (remaining.length === 0 && currentQueue.length > 0) {
-        showToast(`Synced ${currentQueue.length} offline ${currentQueue.length === 1 ? 'entry' : 'entries'}`);
+        showToast(`Synced ${currentQueue.length} offline ${currentQueue.length === 1 ? 'entry' : 'entries'}!`);
       }
     },
     [showToast]
@@ -866,7 +877,6 @@ function TapxMainApp() {
       setIsSyncingBg(true);
       setDbError('');
       try {
-        // First flush any pending offline transactions before pulling fresh state
         await flushOfflineQueue(userId);
 
         let { data: userSettings, error: settingsError } = await supabase
@@ -1219,17 +1229,17 @@ function TapxMainApp() {
 
     const numericAmount = parseFloat(amountStr);
     if (!numericAmount || numericAmount <= 0) {
-      showToast('Enter an amount above 0');
+      showToast('Pop in an amount above 0!');
       return;
     }
     if (!selectedWalletId) {
-      showToast('Create an account first');
+      showToast('Create an account first!');
       resetWalletModal();
       setShowWalletModal(true);
       return;
     }
     if (entryType === 'transfer' && (!toWalletId || toWalletId === selectedWalletId)) {
-      showToast('Select two different accounts');
+      showToast('Pick two different accounts!');
       return;
     }
 
@@ -1302,7 +1312,7 @@ function TapxMainApp() {
       setTransactions((prev) =>
         prev.map((tx) => (tx.id === tempId ? { ...tx, pendingSync: true } : tx))
       );
-      showToast('Saved offline · Will sync when online');
+      showToast('Saved offline · Will sync when back!');
     };
 
     if (currentlyOffline) {
@@ -1311,7 +1321,7 @@ function TapxMainApp() {
     }
 
     const actionPrefix = currentType === 'income' ? '+' : currentType === 'expense' ? '-' : '⇄ ';
-    showToast(`${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} saved`);
+    showToast(`${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged!`);
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
@@ -1320,7 +1330,6 @@ function TapxMainApp() {
       .maybeSingle();
 
     if (error) {
-      // Queue offline instead of losing the user's transaction
       enqueueOfflineItem();
       return;
     }
@@ -1419,7 +1428,7 @@ function TapxMainApp() {
       }
     }
 
-    showToast('Transaction deleted', async () => {
+    showToast('Entry popped!', async () => {
       setToast(null);
       const { id: _oldId, pendingSync: _ps, ...reinsertPayload } = targetTx;
       const { data: restoredRow } = await supabase
@@ -1451,7 +1460,7 @@ function TapxMainApp() {
           return w;
         })
       );
-      showToast('Transaction restored');
+      showToast('Entry restored!');
     });
   };
 
@@ -1487,7 +1496,7 @@ function TapxMainApp() {
     const nextCategoryId = oldTx.type === 'transfer' ? null : editTxCategoryId || null;
 
     if (oldTx.type === 'transfer' && nextWalletId === nextToWalletId) {
-      showToast('Select two different accounts');
+      showToast('Pick two different accounts');
       return;
     }
 
@@ -1543,7 +1552,7 @@ function TapxMainApp() {
     );
 
     setEditingTx(null);
-    showToast('Transaction updated');
+    showToast('Transaction updated!');
 
     if (!String(oldTx.id).startsWith('temp-')) {
       await supabase
@@ -1604,7 +1613,7 @@ function TapxMainApp() {
             : w
         )
       );
-      showToast('Account updated');
+      showToast('Account updated!');
 
       const { error } = await supabase
         .from('wallets')
@@ -1639,7 +1648,7 @@ function TapxMainApp() {
         if (!selectedWalletId) setSelectedWalletId(createdWallet.id);
         return updated;
       });
-      showToast('Account created');
+      showToast('Account created!');
     } else if (error) {
       showToast(error.message);
     }
@@ -1655,7 +1664,7 @@ function TapxMainApp() {
     setWallets((prev) => prev.filter((w) => w.id !== id));
     if (activityWalletFilter === id) setActivityWalletFilter('all');
     if (editingWalletId === id) resetWalletModal();
-    showToast('Account deleted');
+    showToast('Account removed');
     await supabase.from('wallets').delete().eq('id', id);
   };
 
@@ -1697,7 +1706,7 @@ function TapxMainApp() {
             : c
         )
       );
-      showToast('Category updated');
+      showToast('Category updated!');
 
       const { error } = await supabase
         .from('categories')
@@ -1733,7 +1742,7 @@ function TapxMainApp() {
         }
         return updated;
       });
-      showToast('Category created');
+      showToast('Category created!');
     } else if (error) {
       showToast(error.message);
     }
@@ -1758,7 +1767,7 @@ function TapxMainApp() {
       .join('');
 
     setSettings((prev) => ({ ...prev, shortcut_token: randomHex }));
-    showToast('Token updated');
+    showToast('Token refreshed!');
 
     await supabase
       .from('user_settings')
@@ -1769,7 +1778,7 @@ function TapxMainApp() {
   const copyToClipboard = (text, label) => {
     navigator.clipboard.writeText(text || '');
     setCopiedField(label);
-    showToast('Copied to clipboard');
+    showToast('Copied to clipboard!');
     setTimeout(() => setCopiedField(''), 2000);
   };
 
@@ -2051,7 +2060,7 @@ function TapxMainApp() {
     };
   }, [transactions, categories, wallets, analyticsRange, resolveTxCategory]);
 
-  // 1-Tap CSV Export Handler (Exports current analytics period or full monthly ledger)
+  // 1-Tap CSV Export Handler
   const handleExportCsv = useCallback(() => {
     const sourceRows = analyticsData.filteredTx.length > 0 ? analyticsData.filteredTx : transactions;
     if (sourceRows.length === 0) {
@@ -2077,7 +2086,7 @@ function TapxMainApp() {
     sourceRows.forEach((tx) => {
       const d = tx.created_at ? new Date(tx.created_at) : new Date();
       const dateStr = !isNaN(d.getTime())
-        ? d.toLocaleDateString('en-CA') // YYYY-MM-DD
+        ? d.toLocaleDateString('en-CA')
         : '';
       const timeStr = !isNaN(d.getTime())
         ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -2116,7 +2125,7 @@ function TapxMainApp() {
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 1500);
 
-    showToast(`Exported ${sourceRows.length} entries to CSV`);
+    showToast(`Exported ${sourceRows.length} entries to CSV!`);
   }, [analyticsData.filteredTx, transactions, wallets, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
 
   const currencySymbol = settings?.currency || '₹';
@@ -2139,55 +2148,17 @@ function TapxMainApp() {
   const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
   const settingsSubIndex = settingsSection === 'shortcut' ? 0 : 1;
 
-  // Dynamic ambient top light color reactive to active tab & entry mode
-  const ambientGlowStyle = useMemo(() => {
-    if (!isDark) {
-      return {
-        background:
-          'radial-gradient(120% 90% at 50% 0%, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.04) 45%, transparent 80%)'
-      };
-    }
-    if (activeTab === 'pad') {
-      if (entryType === 'income') {
-        return {
-          background:
-            'radial-gradient(110% 85% at 50% 0%, rgba(16, 185, 129, 0.16) 0%, rgba(13, 148, 136, 0.05) 48%, transparent 80%)'
-        };
-      }
-      if (entryType === 'transfer') {
-        return {
-          background:
-            'radial-gradient(110% 85% at 50% 0%, rgba(59, 130, 246, 0.16) 0%, rgba(99, 102, 241, 0.05) 48%, transparent 80%)'
-        };
-      }
-      return {
-        background:
-          'radial-gradient(110% 85% at 50% 0%, rgba(244, 63, 94, 0.12) 0%, rgba(245, 158, 11, 0.04) 48%, transparent 80%)'
-      };
-    }
-    if (activeTab === 'analytics') {
-      return {
-        background:
-          'radial-gradient(110% 85% at 50% 0%, rgba(56, 189, 248, 0.14) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)'
-      };
-    }
-    return {
-      background:
-        'radial-gradient(110% 85% at 50% 0%, rgba(37, 99, 235, 0.13) 0%, rgba(16, 185, 129, 0.04) 50%, transparent 80%)'
-    };
-  }, [isDark, activeTab, entryType]);
-
   // Show boot screen while verifying initial auth or completing an OAuth redirect
   if ((isAuthChecking && !session) || (isLoggingIn && !session)) {
     return (
       <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
-        <TapxLogo className="w-16 h-16 animate-pulse" />
-        <div className="w-5 h-5 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
+        <TapxLogo className="w-20 h-20 animate-bounce" />
+        <div className="w-6 h-6 rounded-full border-3 border-[#D8CBB3] border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  // LOGIN SCREEN WITH 1-TAP SAVED GOOGLE ACCOUNT PICKER
+  // CARTOONY LOGIN SCREEN WITH 1-TAP SAVED GOOGLE ACCOUNT PICKER
   if (!session) {
     return (
       <div
@@ -2197,53 +2168,51 @@ function TapxMainApp() {
           paddingBottom: 'max(env(safe-area-inset-bottom), 28px)'
         }}
       >
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-72 transition-all duration-700"
-          style={{
-            background:
-              'radial-gradient(100% 80% at 50% 0%, rgba(16, 185, 129, 0.16) 0%, rgba(37, 99, 235, 0.06) 50%, transparent 85%)'
-          }}
-        />
         <div />
 
         <div className="relative z-10 flex flex-col items-center text-center space-y-3">
-          <TapxLogo className="w-24 h-24 mb-1 drop-shadow-[0_12px_28px_rgba(16,185,129,0.22)]" />
-          <h1 className={`text-3xl font-bold tracking-tight ${ui.textPrimary}`}>
+          <div className="p-3 rounded-[32px] bg-[#282825] border-2 border-[#111110] shadow-[0_6px_0_#111110] mb-1">
+            <TapxLogo className="w-24 h-24" />
+          </div>
+          <span className="px-3 py-1 rounded-full text-[11px] font-cartoon font-bold uppercase tracking-wider bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_2px_0_#111110]">
+            Pocket Expense Buddy
+          </span>
+          <h1 className={`text-4xl font-cartoon font-bold tracking-tight ${ui.textPrimary}`}>
             TAPX
           </h1>
-          <p className={`text-sm max-w-[240px] leading-relaxed ${ui.textSecondary}`}>
-            Instant multi-wallet expense tracking with iPhone Back Tap.
+          <p className={`text-sm max-w-[250px] font-medium leading-relaxed ${ui.textSecondary}`}>
+            Playful multi-wallet expense tracking with instant iPhone Back Tap logging.
           </p>
         </div>
 
         <div className="relative z-10 space-y-3">
           {savedAccounts.length > 0 && (
             <div className="space-y-2 pb-1">
-              <p className={`text-[11px] font-semibold uppercase tracking-wider px-1 ${ui.textMuted}`}>
-                Choose an account
+              <p className={`text-[11px] font-cartoon font-bold uppercase tracking-wider px-1 ${ui.textMuted}`}>
+                Jump right back in
               </p>
               <div className="space-y-2">
                 {savedAccounts.map((acc) => (
                   <div
                     key={acc.email}
                     onClick={() => handleGoogleLogin(acc.email)}
-                    className={`w-full p-3 rounded-2xl border flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
+                    className={`w-full p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {acc.avatar ? (
                         <img
                           src={acc.avatar}
                           alt={acc.name}
-                          className="w-9 h-9 rounded-full object-cover shrink-0 border border-white/10"
+                          className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-[#111110]"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-sm flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] font-cartoon font-bold text-sm flex items-center justify-center shrink-0">
                           {String(acc.name || acc.email || 'U').charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0 text-left">
-                        <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
+                        <p className={`text-xs font-bold truncate ${ui.textPrimary}`}>
                           {acc.name}
                         </p>
                         <p className={`text-[11px] truncate ${ui.textSecondary}`}>
@@ -2254,7 +2223,7 @@ function TapxMainApp() {
                     <button
                       type="button"
                       onClick={(e) => handleRemoveSavedAccount(acc.email, e)}
-                      className={`p-1.5 text-xs rounded-lg ${ui.textMuted} hover:text-rose-500`}
+                      className={`p-1.5 text-xs rounded-xl font-bold ${ui.textMuted} hover:text-[#F26B5B]`}
                       title="Remove saved account"
                     >
                       ✕
@@ -2268,11 +2237,9 @@ function TapxMainApp() {
           <button
             type="button"
             onClick={() => handleGoogleLogin('')}
-            className={`w-full py-4 px-5 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 key-press ${
-              isDark ? 'bg-white text-zinc-950 shadow-lg' : 'bg-zinc-900 text-white shadow-lg'
-            }`}
+            className={`w-full py-4 px-5 font-cartoon font-bold text-base rounded-2xl flex items-center justify-center gap-3 key-press ${ui.primaryBtnExpense}`}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
@@ -2297,14 +2264,14 @@ function TapxMainApp() {
             TAPX uses Google Sign-In solely to sync your private account across devices. Read our{' '}
             <a
               href="/privacy.html"
-              className={`underline font-medium ${ui.textSecondary}`}
+              className={`underline font-bold ${ui.textSecondary}`}
             >
               Privacy Policy
             </a>
             {' · '}
             <a
               href="mailto:kalppatel132008@gmail.com"
-              className={`underline font-medium ${ui.textSecondary}`}
+              className={`underline font-bold ${ui.textSecondary}`}
             >
               Support
             </a>
@@ -2324,7 +2291,7 @@ function TapxMainApp() {
     null;
 
   // SVG Donut geometry
-  const donutRadius = 46;
+  const donutRadius = 45;
   const donutCircumference = 2 * Math.PI * donutRadius;
   let donutCumulativeShare = 0;
 
@@ -2332,15 +2299,9 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'max(env(safe-area-inset-top), 18px)'
+        paddingTop: 'max(env(safe-area-inset-top), 16px)'
       }}
     >
-      {/* Dynamic Ambient Top Glow */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-64 transition-all duration-500"
-        style={ambientGlowStyle}
-      />
-
       {/* Self-contained UX helper styles */}
       <style>{`
         @media screen and (max-width: 768px) {
@@ -2353,15 +2314,15 @@ function TapxMainApp() {
           100% { opacity: 1; transform: translate3d(0, 0, 0); }
         }
         .animate-sheet-up {
-          animation: sheetSlideUp 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: sheetSlideUp 280ms cubic-bezier(0.34, 1.35, 0.64, 1) forwards;
         }
       `}</style>
 
-      {/* Floating Toast Pill with Optional Undo */}
+      {/* Chunky Cartoon Toast Pill with Optional Undo */}
       {toast && (
         <div
-          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-3 animate-tab ${
-            isDark ? 'bg-zinc-100 text-zinc-950' : 'bg-zinc-900 text-white'
+          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_4px_0_#111110] flex items-center gap-3 animate-tab ${
+            isDark ? 'bg-[#D8CBB3] text-[#1e1e1c]' : 'bg-[#1e1e1c] text-[#D8CBB3]'
           }`}
         >
           <span>{toast.message}</span>
@@ -2369,7 +2330,7 @@ function TapxMainApp() {
             <button
               type="button"
               onClick={toast.onUndo}
-              className="px-2 py-0.5 rounded-full bg-emerald-500 text-zinc-950 font-bold text-[11px] key-press"
+              className="px-2.5 py-0.5 rounded-full bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] font-bold text-[11px] key-press"
             >
               Undo
             </button>
@@ -2379,32 +2340,32 @@ function TapxMainApp() {
 
       {/* Database Error Banner */}
       {dbError && (
-        <div className="relative z-10 mx-5 mt-1 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center justify-between shrink-0">
+        <div className="relative z-10 mx-5 mt-1 p-2.5 rounded-2xl bg-[#F26B5B]/20 border-2 border-[#F26B5B] text-[#F26B5B] text-xs font-bold flex items-center justify-between shrink-0">
           <span className="truncate">{dbError}</span>
           <button
             type="button"
             onClick={() => fetchUserData(session.user.id)}
-            className="ml-2 underline font-semibold shrink-0"
+            className="ml-2 underline font-extrabold shrink-0"
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* Crisp Top Header with Live Offline Queue & Sync Badge */}
-      <header className="relative z-10 px-5 pt-1.5 pb-2.5 flex items-center justify-between shrink-0">
+      {/* Top Header with Total Balance & Chunky "+ Account" Button */}
+      <header className="relative z-10 px-5 pt-1 pb-2.5 flex items-center justify-between shrink-0">
         <div
           onClick={() => handleSelectTab('wallets')}
           className="cursor-pointer group"
         >
           <div className="flex items-center gap-2">
-            <span className={`text-[11px] font-medium tracking-tight ${ui.textSecondary}`}>
-              Total Balance
+            <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
+              Total Stash
             </span>
             {!isOnline ? (
-              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                Offline{offlineQueue.length > 0 ? ` · ${offlineQueue.length} queued` : ''}
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#F4B942] text-[#1e1e1c] border border-[#111110] flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1e1e1c]" />
+                Offline{offlineQueue.length > 0 ? ` · ${offlineQueue.length}` : ''}
               </span>
             ) : offlineQueue.length > 0 ? (
               <button
@@ -2413,22 +2374,20 @@ function TapxMainApp() {
                   e.stopPropagation();
                   flushOfflineQueue(session.user.id);
                 }}
-                className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center gap-1"
+                className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#5C9EAD] text-[#1e1e1c] border border-[#111110] flex items-center gap-1"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1e1e1c] animate-ping" />
                 Syncing {offlineQueue.length}
               </button>
             ) : (
               <span
-                className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                  isSyncingBg
-                    ? 'bg-amber-400 animate-pulse'
-                    : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]'
+                className={`w-2.5 h-2.5 rounded-full border border-[#111110] transition-colors duration-300 ${
+                  isSyncingBg ? 'bg-[#F4B942] animate-pulse' : 'bg-[#52B788]'
                 }`}
               />
             )}
           </div>
-          <h2 className={`text-[26px] leading-tight font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
+          <h2 className={`text-[28px] leading-tight font-cartoon font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
             {currencySymbol}
             {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </h2>
@@ -2440,7 +2399,7 @@ function TapxMainApp() {
             resetWalletModal();
             setShowWalletModal(true);
           }}
-          className={`px-3.5 py-2 rounded-full border text-xs font-semibold key-press ${ui.cardElevated} ${ui.textPrimary}`}
+          className={`px-3.5 py-2 rounded-2xl text-xs font-cartoon font-bold key-press ${ui.pillActive}`}
         >
           + Account
         </button>
@@ -2450,22 +2409,22 @@ function TapxMainApp() {
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 84px)'
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 86px)'
         }}
       >
         {/* TAB 1: KEYPAD */}
         {activeTab === 'pad' && (
           <div key="tab-pad" className={`flex-1 min-h-0 flex flex-col justify-between overflow-hidden ${tabAnimClass}`}>
-            {/* Hardware-Accelerated Sliding Segmented Control */}
-            <div className={`relative grid grid-cols-3 p-1 rounded-2xl border shrink-0 ${ui.segmentedBg}`}>
+            {/* Chunky Sliding Segmented Control */}
+            <div className={`relative grid grid-cols-3 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
               <div
                 className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
                 style={{ transform: `translate3d(${entryIndex * 100}%, 0, 0)` }}
               />
               {[
-                { id: 'expense', label: 'Expense' },
-                { id: 'income', label: 'Income' },
-                { id: 'transfer', label: 'Transfer' }
+                { id: 'expense', label: '💸 Expense' },
+                { id: 'income', label: '💰 Income' },
+                { id: 'transfer', label: '⇄ Transfer' }
               ].map((t) => (
                 <button
                   key={t.id}
@@ -2477,8 +2436,8 @@ function TapxMainApp() {
                     );
                     if (firstMatch) setSelectedCategoryId(firstMatch.id);
                   }}
-                  className={`relative z-10 py-1.5 text-xs font-semibold rounded-xl transition-colors duration-200 ${
-                    entryType === t.id ? ui.textPrimary : ui.textSecondary
+                  className={`relative z-10 py-1.5 text-xs font-cartoon rounded-xl transition-colors duration-200 ${
+                    entryType === t.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
                   }`}
                 >
                   {t.label}
@@ -2486,22 +2445,10 @@ function TapxMainApp() {
               ))}
             </div>
 
-            {/* Center Amount Hero Card with Mode-Tinted Specular Glow */}
+            {/* Center Cartoon Amount Display Card */}
             <div
-              className={`my-auto py-3.5 px-4 rounded-3xl border flex flex-col items-center justify-center relative shrink-0 overflow-hidden ${ui.card}`}
+              className={`my-auto py-3 px-4 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden ${ui.heroCard}`}
             >
-              <div
-                className="pointer-events-none absolute -top-12 inset-x-0 h-24 opacity-40 blur-2xl"
-                style={{
-                  background:
-                    entryType === 'income'
-                      ? 'radial-gradient(circle, #10b981 0%, transparent 70%)'
-                      : entryType === 'transfer'
-                      ? 'radial-gradient(circle, #3b82f6 0%, transparent 70%)'
-                      : 'radial-gradient(circle, #f43f5e 0%, transparent 70%)'
-                }}
-              />
-
               {amountStr !== '0' && (
                 <button
                   type="button"
@@ -2509,24 +2456,24 @@ function TapxMainApp() {
                     e.preventDefault();
                     handleDigitPress('CLEAR');
                   }}
-                  className={`absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                  className={`absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
                 >
                   Reset
                 </button>
               )}
 
               <div
-                className={`${amountFontSizeClass} leading-none font-bold tracking-tight tabular-nums transition-transform duration-100 ${
-                  amountPulse ? 'scale-[1.035]' : 'scale-100'
+                className={`${amountFontSizeClass} leading-none font-cartoon font-bold tracking-tight tabular-nums transition-transform duration-100 ${
+                  amountPulse ? 'scale-[1.06] -rotate-1' : 'scale-100'
                 } ${
                   entryType === 'income'
-                    ? 'text-emerald-400'
+                    ? 'text-[#52B788]'
                     : entryType === 'transfer'
-                    ? 'text-blue-400'
-                    : ui.textPrimary
+                    ? 'text-[#F4B942]'
+                    : ui.textSand
                 }`}
               >
-                <span className={`text-2xl mr-1 font-medium ${ui.textMuted}`}>
+                <span className={`text-2xl mr-1 font-cartoon ${ui.textMuted}`}>
                   {entryType === 'income' ? '+' : entryType === 'expense' && amountStr !== '0' ? '-' : ''}
                   {currencySymbol}
                 </span>
@@ -2540,17 +2487,17 @@ function TapxMainApp() {
                 placeholder={
                   entryType === 'transfer'
                     ? 'Transfer note (e.g. ATM withdrawal)...'
-                    : 'Add a note...'
+                    : 'Write a quick note...'
                 }
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') e.currentTarget.blur();
                 }}
-                className={`mt-1.5 bg-transparent text-center text-xs focus:outline-none w-4/5 scale-[0.82] origin-center ${ui.textSecondary}`}
+                className={`mt-1 bg-transparent text-center text-xs font-semibold focus:outline-none w-4/5 scale-[0.84] origin-center ${ui.textSecondary}`}
               />
 
-              {/* Quick Add Chips */}
+              {/* Quick Add Sticker Chips */}
               <div className="flex items-center gap-1.5 mt-1.5">
                 {[50, 100, 500, 1000].map((val) => (
                   <button
@@ -2560,7 +2507,7 @@ function TapxMainApp() {
                       e.preventDefault();
                       handleQuickAddAmount(val);
                     }}
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border tabular-nums key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
                   >
                     +{currencySymbol}{val >= 1000 ? '1k' : val}
                   </button>
@@ -2568,13 +2515,13 @@ function TapxMainApp() {
               </div>
 
               {selectedWalletObj && (
-                <div className={`mt-2.5 pt-2 border-t w-full flex items-center justify-center gap-1.5 text-[11px] ${ui.divider} ${ui.textMuted}`}>
+                <div className={`mt-2.5 pt-2 border-t-2 border-dashed w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold ${ui.divider} ${ui.textMuted}`}>
                   <span>{selectedWalletObj.icon}</span>
-                  <span className={`font-medium ${ui.textSecondary}`}>{selectedWalletObj.name}</span>
+                  <span className={`font-bold ${ui.textSecondary}`}>{selectedWalletObj.name}</span>
                   <span>·</span>
                   <span className="tabular-nums">
                     {currencySymbol}
-                    {Number(selectedWalletObj.balance || 0).toLocaleString('en-IN')} available
+                    {Number(selectedWalletObj.balance || 0).toLocaleString('en-IN')} in pocket
                   </span>
                 </div>
               )}
@@ -2585,20 +2532,20 @@ function TapxMainApp() {
               {/* Wallet Row */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between px-0.5">
-                  <span className={`text-[10px] uppercase tracking-wider font-semibold ${ui.textMuted}`}>
-                    {entryType === 'transfer' ? 'From Account → To Account' : 'Account'}
+                  <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
+                    {entryType === 'transfer' ? 'From Account → To Account' : 'Pick Account'}
                   </span>
                   {entryType === 'transfer' && wallets.length > 1 && (
                     <button
                       type="button"
                       onClick={handleSwapTransferWallets}
-                      className="text-[10px] font-semibold text-blue-400 key-press"
+                      className="text-[10px] font-cartoon font-bold text-[#F4B942] key-press"
                     >
                       ⇄ Swap
                     </button>
                   )}
                 </div>
-                <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                   {wallets.length === 0 ? (
                     <button
                       type="button"
@@ -2606,7 +2553,7 @@ function TapxMainApp() {
                         resetWalletModal();
                         setShowWalletModal(true);
                       }}
-                      className={`px-3.5 py-2 rounded-full text-xs font-medium border shrink-0 key-press ${ui.pillIdle}`}
+                      className={`px-3.5 py-2 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
                     >
                       + Add your first account
                     </button>
@@ -2623,19 +2570,20 @@ function TapxMainApp() {
                             active
                               ? {
                                   backgroundColor: wColor,
-                                  borderColor: wColor,
-                                  color: '#ffffff',
-                                  boxShadow: `0 4px 14px -2px ${wColor}55`
+                                  borderColor: '#111110',
+                                  color: '#1e1e1c'
                                 }
                               : undefined
                           }
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 border transition-all duration-150 key-press ${
-                            active ? '' : ui.pillIdle
+                          className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
+                            active
+                              ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]'
+                              : ui.pillIdle
                           }`}
                         >
                           <span>{w.icon}</span>
                           <span>{w.name}</span>
-                          <span className={`text-[10px] tabular-nums ${active ? 'opacity-90' : 'opacity-70'}`}>
+                          <span className={`text-[10px] tabular-nums ${active ? 'opacity-90 font-extrabold' : 'opacity-75'}`}>
                             {currencySymbol}
                             {Number(w.balance || 0).toLocaleString('en-IN')}
                           </span>
@@ -2647,7 +2595,7 @@ function TapxMainApp() {
 
                 {/* Transfer Destination Row */}
                 {entryType === 'transfer' && wallets.length > 1 && (
-                  <div className="flex gap-1.5 overflow-x-auto pt-1 no-scrollbar">
+                  <div className="flex gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
                     {wallets
                       .filter((w) => w.id !== selectedWalletId)
                       .map((w) => (
@@ -2655,7 +2603,7 @@ function TapxMainApp() {
                           key={w.id}
                           type="button"
                           onClick={() => setToWalletId(w.id)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 shrink-0 border transition-colors duration-150 key-press ${
+                          className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1 shrink-0 transition-colors duration-150 key-press ${
                             toWalletId === w.id ? ui.pillActive : ui.pillIdle
                           }`}
                         >
@@ -2666,11 +2614,11 @@ function TapxMainApp() {
                 )}
               </div>
 
-              {/* Category Row with Semantic Color Accents */}
+              {/* Category Row with Cartoon Badges */}
               {entryType !== 'transfer' && (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between px-0.5">
-                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${ui.textMuted}`}>
+                    <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
                       {entryType === 'income' ? 'Income Category' : 'Expense Category'}
                     </span>
                     <button
@@ -2680,12 +2628,12 @@ function TapxMainApp() {
                         setNewCatType(entryType === 'income' ? 'income' : 'expense');
                         setShowCategoryModal(true);
                       }}
-                      className={`text-[10px] font-semibold ${ui.textSecondary} key-press`}
+                      className={`text-[10px] font-cartoon font-bold ${ui.textSecondary} key-press`}
                     >
                       + Custom
                     </button>
                   </div>
-                  <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                     {filteredCategories.map((c, idx) => {
                       const active = selectedCategoryId === c.id;
                       const accent = getCategoryAccentColor(c, idx);
@@ -2697,15 +2645,16 @@ function TapxMainApp() {
                           style={
                             active
                               ? {
-                                  backgroundColor: `${accent}24`,
-                                  borderColor: accent,
-                                  color: isDark ? '#ffffff' : '#18181b',
-                                  boxShadow: `0 4px 12px -2px ${accent}35`
+                                  backgroundColor: accent,
+                                  borderColor: '#111110',
+                                  color: '#1e1e1c'
                                 }
                               : undefined
                           }
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shrink-0 border transition-all duration-150 key-press ${
-                            active ? 'font-semibold' : ui.pillIdle
+                          className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
+                            active
+                              ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]'
+                              : ui.pillIdle
                           }`}
                         >
                           <span>{c.icon}</span>
@@ -2718,8 +2667,8 @@ function TapxMainApp() {
               )}
             </div>
 
-            {/* Zero-Latency Tactile Numpad (Hold DEL to Clear) */}
-            <div className="grid grid-cols-3 gap-2 pt-2 shrink-0">
+            {/* Tactile Arcade Cartoon Numpad (Hold DEL to Clear) */}
+            <div className="grid grid-cols-3 gap-2 pt-1.5 shrink-0">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
                 <button
                   key={key}
@@ -2744,10 +2693,12 @@ function TapxMainApp() {
                       clearTimeout(delHoldTimerRef.current);
                     }
                   }}
-                  className={`h-11 rounded-2xl border text-lg font-semibold tabular-nums flex items-center justify-center key-press ${ui.numpadKey}`}
+                  className={`h-11 rounded-2xl text-lg font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
+                    key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
+                  }`}
                 >
                   {key === 'DEL' ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
                     </svg>
                   ) : (
@@ -2757,13 +2708,13 @@ function TapxMainApp() {
               ))}
             </div>
 
-            {/* Submit Button */}
+            {/* Chunky Sand / Mint / Gold Action Button */}
             <button
               type="button"
               onClick={handleLogTransaction}
-              className={`w-full py-3.5 mt-2 rounded-2xl font-semibold text-sm key-press shrink-0 ${primaryButtonClass}`}
+              className={`w-full py-3.5 mt-2 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass}`}
             >
-              Save {entryType === 'transfer' ? 'Transfer' : entryType === 'income' ? 'Income' : 'Expense'}
+              Save {entryType === 'transfer' ? 'Transfer ⇄' : entryType === 'income' ? 'Income 💰' : 'Expense 💸'}
             </button>
           </div>
         )}
@@ -2771,24 +2722,24 @@ function TapxMainApp() {
         {/* TAB 2: ACCOUNTS & ACTIVITY */}
         {activeTab === 'wallets' && (
           <div key="tab-wallets" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
-            {/* Apple-Wallet Style Tinted Account Cards */}
+            {/* Cartoon Sticker Account Cards */}
             <div className="shrink-0 space-y-1.5">
               <div className="flex items-center justify-between">
-                <h3 className={`text-xs font-semibold uppercase tracking-wider ${ui.textSecondary}`}>
-                  Accounts ({wallets.length})
+                <h3 className={`text-xs font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
+                  Your Accounts ({wallets.length})
                 </h3>
                 {activityWalletFilter !== 'all' && (
                   <button
                     type="button"
                     onClick={() => setActivityWalletFilter('all')}
-                    className="text-[11px] text-blue-400 font-semibold key-press"
+                    className="text-[11px] text-[#F4B942] font-cartoon font-bold key-press"
                   >
-                    Show All Accounts
+                    Show All
                   </button>
                 )}
               </div>
 
-              <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-0.5">
+              <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
                 {wallets.map((w, idx) => {
                   const isFiltered = activityWalletFilter === w.id;
                   const cardAccent = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
@@ -2799,31 +2750,25 @@ function TapxMainApp() {
                         setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id))
                       }
                       style={{
-                        background: isDark
-                          ? `linear-gradient(145deg, ${cardAccent}28 0%, #141419 75%)`
-                          : `linear-gradient(145deg, ${cardAccent}18 0%, #ffffff 78%)`,
-                        borderColor: isFiltered ? cardAccent : isDark ? `${cardAccent}45` : `${cardAccent}35`
+                        backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
                       }}
-                      className={`min-w-[162px] p-3.5 rounded-2xl border flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
-                        isFiltered ? 'ring-1 ring-white/30 shadow-lg' : 'shadow-sm'
-                      }`}
+                      className={`min-w-[164px] p-3.5 rounded-2xl border-2 border-[#111110] shadow-[0_4px_0_#111110] flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press`}
                     >
-                      <div
-                        className="pointer-events-none absolute -right-4 -bottom-4 w-16 h-16 rounded-full opacity-20 blur-xl"
-                        style={{ backgroundColor: cardAccent }}
-                      />
                       <div className="flex items-center justify-between gap-2 relative z-10">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span
-                            className="w-7 h-7 rounded-xl flex items-center justify-center text-sm shrink-0"
+                            className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
                             style={{
-                              backgroundColor: `${cardAccent}25`,
-                              border: `1px solid ${cardAccent}40`
+                              backgroundColor: isFiltered ? '#FAF6EE' : cardAccent
                             }}
                           >
                             {w.icon}
                           </span>
-                          <span className={`font-semibold text-xs truncate ${ui.textPrimary}`}>
+                          <span
+                            className={`font-cartoon font-bold text-xs truncate ${
+                              isFiltered ? 'text-[#1e1e1c]' : ui.textPrimary
+                            }`}
+                          >
                             {w.name}
                           </span>
                         </div>
@@ -2833,24 +2778,35 @@ function TapxMainApp() {
                             e.stopPropagation();
                             openEditWallet(w);
                           }}
-                          className={`px-1.5 py-0.5 rounded-md border text-[10px] font-medium ${ui.cardSubtle} ${ui.textSecondary}`}
+                          className={`px-2 py-0.5 rounded-lg border-2 border-[#111110] text-[10px] font-cartoon font-bold ${
+                            isFiltered
+                              ? 'bg-[#1e1e1c] text-[#D8CBB3]'
+                              : 'bg-[#D8CBB3] text-[#1e1e1c]'
+                          }`}
                         >
                           Edit
                         </button>
                       </div>
                       <div className="mt-3 relative z-10 flex items-baseline justify-between gap-2">
                         <div>
-                          <p className={`font-bold text-sm tabular-nums ${ui.textPrimary}`}>
+                          <p
+                            className={`font-cartoon font-bold text-sm tabular-nums ${
+                              isFiltered ? 'text-[#1e1e1c]' : ui.textPrimary
+                            }`}
+                          >
                             {currencySymbol}
                             {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </p>
-                          <p className={`text-[10px] ${ui.textMuted}`}>{w.type}</p>
+                          <p
+                            className={`text-[10px] font-semibold ${
+                              isFiltered ? 'text-[#1e1e1c]/75' : ui.textMuted
+                            }`}
+                          >
+                            {w.type}
+                          </p>
                         </div>
                         {isFiltered && (
-                          <span
-                            className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
-                            style={{ backgroundColor: `${cardAccent}30`, color: isDark ? '#fff' : cardAccent }}
-                          >
+                          <span className="text-[9px] px-2 py-0.5 rounded-full font-cartoon font-bold bg-[#1e1e1c] text-[#D8CBB3]">
                             Active
                           </span>
                         )}
@@ -2865,18 +2821,18 @@ function TapxMainApp() {
                     resetWalletModal();
                     setShowWalletModal(true);
                   }}
-                  className={`min-w-[114px] p-3 rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                  className={`min-w-[118px] p-3 rounded-2xl border-2 border-dashed border-[#D8CBB3]/50 flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.textSecondary}`}
                 >
-                  <span className="text-lg font-medium">+</span>
-                  <span className="text-[11px] font-semibold">New Account</span>
+                  <span className="text-xl font-cartoon font-bold">+</span>
+                  <span className="text-[11px] font-cartoon font-bold">New Account</span>
                 </button>
               </div>
             </div>
 
             {/* Search + Type Filter Pills */}
             <div className="flex items-center gap-2 shrink-0">
-              <div className={`flex-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${ui.input}`}>
-                <svg className={`w-3.5 h-3.5 shrink-0 ${ui.textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <div className={`flex-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${ui.input}`}>
+                <svg className={`w-3.5 h-3.5 shrink-0 ${ui.textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
                 <input
@@ -2884,20 +2840,20 @@ function TapxMainApp() {
                   placeholder="Search note, category, amount..."
                   value={activitySearch}
                   onChange={(e) => setActivitySearch(e.target.value)}
-                  className="w-full bg-transparent text-xs focus:outline-none scale-[0.85] origin-left"
+                  className="w-full bg-transparent text-xs font-medium focus:outline-none scale-[0.85] origin-left"
                 />
                 {activitySearch && (
                   <button
                     type="button"
                     onClick={() => setActivitySearch('')}
-                    className={`text-[11px] ${ui.textMuted}`}
+                    className={`text-[11px] font-bold ${ui.textMuted}`}
                   >
                     ✕
                   </button>
                 )}
               </div>
 
-              <div className={`flex p-0.5 rounded-xl border shrink-0 ${ui.segmentedBg}`}>
+              <div className={`flex p-0.5 rounded-xl shrink-0 ${ui.segmentedBg}`}>
                 {[
                   { id: 'all', label: 'All' },
                   { id: 'expense', label: 'Out' },
@@ -2907,8 +2863,8 @@ function TapxMainApp() {
                     key={f.id}
                     type="button"
                     onClick={() => setActivityTypeFilter(f.id)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${
-                      activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-cartoon font-bold transition-all ${
+                      activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
                     }`}
                   >
                     {f.label}
@@ -2917,18 +2873,18 @@ function TapxMainApp() {
               </div>
             </div>
 
-            {/* Full-Height Date-Grouped Transactions Feed with Colored Category Icon Wells */}
-            <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
+            {/* Date-Grouped Activity Feed */}
+            <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
               {groupedTransactions.length === 0 ? (
-                <div className={`p-6 rounded-2xl border text-center text-xs ${ui.card} ${ui.textMuted}`}>
-                  No matching transactions found.
+                <div className={`p-6 rounded-2xl text-center text-xs font-cartoon ${ui.card} ${ui.textMuted}`}>
+                  No transactions here yet! Tap the Keypad to pop one in.
                 </div>
               ) : (
                 groupedTransactions.map((group) => (
-                  <div key={group.label} className="space-y-1.5">
-                    <div className={`sticky top-0 z-10 py-1 px-1 flex items-center justify-between text-[11px] font-semibold ${ui.stickyHeader}`}>
+                  <div key={group.label} className="space-y-2">
+                    <div className={`sticky top-0 z-10 py-1 px-1 flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.stickyHeader}`}>
                       <span className={ui.textSecondary}>{group.label}</span>
-                      <span className={`tabular-nums ${group.netSpend > 0 ? 'text-emerald-500' : ui.textMuted}`}>
+                      <span className={`tabular-nums ${group.netSpend > 0 ? 'text-[#52B788]' : ui.textMuted}`}>
                         {group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}
                         {currencySymbol}
                         {Math.abs(group.netSpend).toLocaleString('en-IN')}
@@ -2941,46 +2897,43 @@ function TapxMainApp() {
                       const { category: c, cleanNote } = resolveTxCategory(tx);
                       const catAccent =
                         tx.type === 'transfer'
-                          ? '#3b82f6'
+                          ? '#F4B942'
                           : tx.type === 'income'
-                          ? '#10b981'
+                          ? '#52B788'
                           : getCategoryAccentColor(c, idx);
 
                       return (
                         <div
                           key={tx.id}
                           onClick={() => openEditTransaction(tx)}
-                          className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer key-press ${ui.card}`}
+                          className={`p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.card}`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <div
-                              className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
-                              style={{
-                                backgroundColor: `${catAccent}1f`,
-                                border: `1px solid ${catAccent}3d`
-                              }}
+                              className="w-10 h-10 rounded-xl border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base shrink-0"
+                              style={{ backgroundColor: catAccent }}
                             >
                               {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
+                                <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
                                   {tx.type === 'transfer'
                                     ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
                                     : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
                                 </p>
                                 {tx.pendingSync && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold shrink-0">
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#F4B942] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
                                     Queued
                                   </span>
                                 )}
                                 {tx.source === 'shortcut' && (
-                                  <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${ui.cardSubtle} ${ui.textSecondary}`}>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
                                     Back Tap
                                   </span>
                                 )}
                               </div>
-                              <p className={`text-[10px] truncate ${ui.textMuted}`}>
+                              <p className={`text-[10px] font-medium truncate ${ui.textMuted}`}>
                                 {w?.name || 'Account'}
                                 {cleanNote && c?.name ? ` · ${c.name}` : ''}
                                 {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
@@ -2989,12 +2942,12 @@ function TapxMainApp() {
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <span
-                              className={`text-xs font-semibold tabular-nums ${
+                              className={`text-xs font-cartoon font-bold tabular-nums ${
                                 tx.type === 'income'
-                                  ? 'text-emerald-400'
+                                  ? 'text-[#52B788]'
                                   : tx.type === 'transfer'
-                                  ? 'text-blue-400'
-                                  : ui.textPrimary
+                                  ? 'text-[#F4B942]'
+                                  : ui.textSand
                               }`}
                             >
                               {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
@@ -3007,7 +2960,7 @@ function TapxMainApp() {
                                 e.stopPropagation();
                                 handleDeleteTransaction(tx.id);
                               }}
-                              className={`p-1 rounded-lg text-xs key-press ${ui.textMuted} hover:text-rose-500`}
+                              className={`p-1 rounded-lg text-xs font-bold key-press ${ui.textMuted} hover:text-[#F26B5B]`}
                               title="Delete"
                             >
                               ✕
@@ -3023,12 +2976,12 @@ function TapxMainApp() {
           </div>
         )}
 
-        {/* TAB 3: UPGRADED ANALYTICS & 1-TAP CSV EXPORT */}
+        {/* TAB 3: INSIGHTS & 1-TAP CSV EXPORT */}
         {activeTab === 'analytics' && (
           <div key="tab-analytics" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
             {/* Top Bar: Period Selector + 1-Tap CSV Export */}
             <div className="flex items-center justify-between gap-2 shrink-0">
-              <div className={`flex p-0.5 rounded-xl border ${ui.segmentedBg}`}>
+              <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
                 {[
                   { id: 'week', label: '7D' },
                   { id: 'month', label: 'This Month' },
@@ -3038,8 +2991,8 @@ function TapxMainApp() {
                     key={tab.id}
                     type="button"
                     onClick={() => setAnalyticsRange(tab.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
-                      analyticsRange === tab.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                      analyticsRange === tab.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
                     }`}
                   >
                     {tab.label}
@@ -3050,56 +3003,56 @@ function TapxMainApp() {
               <button
                 type="button"
                 onClick={handleExportCsv}
-                className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold flex items-center gap-1.5 key-press ${ui.cardElevated} ${ui.textPrimary}`}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold flex items-center gap-1.5 key-press ${ui.pillActive}`}
               >
-                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
                 Export CSV
               </button>
             </div>
 
-            {/* Scrollable Rich Insights Cards */}
-            <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5">
+            {/* Scrollable Cartoon Insights Cards */}
+            <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
               {/* Hero Cashflow & Pacing Card */}
-              <div className={`p-4 rounded-3xl border space-y-3 relative overflow-hidden ${ui.card}`}>
+              <div className={`p-4 rounded-3xl space-y-3 relative overflow-hidden ${ui.card}`}>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <p className={`text-[10px] font-medium uppercase tracking-wider ${ui.textMuted}`}>Spent</p>
-                    <p className={`text-base font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
+                    <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>Spent</p>
+                    <p className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
                       {currencySymbol}
                       {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </p>
-                    <p className={`text-[10px] tabular-nums ${ui.textMuted}`}>
+                    <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
                       {currencySymbol}
                       {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/day
                     </p>
                   </div>
 
                   <div>
-                    <p className={`text-[10px] font-medium uppercase tracking-wider ${ui.textMuted}`}>Income</p>
-                    <p className="text-base font-bold tabular-nums text-emerald-400 mt-0.5 truncate">
+                    <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>Income</p>
+                    <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5 truncate">
                       +{currencySymbol}
                       {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </p>
-                    <p className={`text-[10px] tabular-nums ${ui.textMuted}`}>
+                    <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
                       {analyticsData.savingsRate !== null
                         ? `${analyticsData.savingsRate}% saved`
-                        : `${analyticsData.expenseCount} txns`}
+                        : `${analyticsData.expenseCount} entries`}
                     </p>
                   </div>
 
                   <div>
-                    <p className={`text-[10px] font-medium uppercase tracking-wider ${ui.textMuted}`}>
+                    <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
                       {analyticsRange === 'month' ? 'Est. Month' : 'Net Flow'}
                     </p>
                     <p
-                      className={`text-base font-bold tabular-nums mt-0.5 truncate ${
+                      className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${
                         analyticsRange === 'month'
-                          ? ui.textPrimary
+                          ? ui.textSand
                           : analyticsData.netFlow >= 0
-                          ? 'text-emerald-400'
-                          : 'text-rose-400'
+                          ? 'text-[#52B788]'
+                          : 'text-[#F26B5B]'
                       }`}
                     >
                       {analyticsRange === 'month' ? (
@@ -3115,19 +3068,19 @@ function TapxMainApp() {
                         </>
                       )}
                     </p>
-                    <p className={`text-[10px] ${ui.textMuted}`}>
-                      {analyticsRange === 'month' ? 'Projected pace' : `${analyticsData.shortcutPct}% Back Tap`}
+                    <p className={`text-[10px] font-semibold ${ui.textMuted}`}>
+                      {analyticsRange === 'month' ? 'Monthly pace' : `${analyticsData.shortcutPct}% Back Tap`}
                     </p>
                   </div>
                 </div>
 
-                {/* Cashflow Ratio Bar */}
+                {/* Chunky Cashflow Ratio Bar */}
                 {(analyticsData.totalExpense > 0 || analyticsData.totalIncome > 0) && (
                   <div className="space-y-1 pt-1">
-                    <div className="w-full h-2 rounded-full overflow-hidden flex bg-zinc-800/60 p-0.5 gap-0.5">
+                    <div className="w-full h-3.5 rounded-full overflow-hidden flex bg-[#161614] border-2 border-[#111110] p-0.5 gap-0.5">
                       {analyticsData.totalIncome > 0 && (
                         <div
-                          className="h-full rounded-l-full bg-emerald-500 transition-all duration-500"
+                          className="h-full rounded-l-full bg-[#52B788] transition-all duration-500"
                           style={{
                             width: `${Math.max(
                               8,
@@ -3142,7 +3095,7 @@ function TapxMainApp() {
                       )}
                       {analyticsData.totalExpense > 0 && (
                         <div
-                          className="h-full rounded-r-full bg-rose-500 transition-all duration-500"
+                          className="h-full rounded-r-full bg-[#F26B5B] transition-all duration-500"
                           style={{
                             width: `${Math.max(
                               8,
@@ -3161,19 +3114,18 @@ function TapxMainApp() {
               </div>
 
               {/* Interactive SVG Category Donut + Breakdown Card */}
-              <div className={`p-4 rounded-3xl border space-y-3.5 ${ui.card}`}>
+              <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
                 <div className="flex items-center justify-between">
-                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Category Breakdown</h4>
-                  <span className={`text-[10px] ${ui.textMuted}`}>Tap category to inspect</span>
+                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Where It Went</h4>
+                  <span className={`text-[10px] font-semibold ${ui.textMuted}`}>Tap a slice to inspect</span>
                 </div>
 
                 {analyticsData.categoryBreakdown.length === 0 ? (
-                  <p className={`text-xs py-3 text-center ${ui.textMuted}`}>
+                  <p className={`text-xs py-3 text-center font-cartoon ${ui.textMuted}`}>
                     No expenses recorded in this period.
                   </p>
                 ) : (
                   <>
-                    {/* Interactive Donut Ring + Focused Category Callout */}
                     <div className="flex items-center gap-4 py-1">
                       <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
                         <svg className="w-28 h-28 -rotate-90" viewBox="0 0 112 112">
@@ -3182,13 +3134,13 @@ function TapxMainApp() {
                             cy="56"
                             r={donutRadius}
                             fill="none"
-                            stroke={isDark ? '#22222a' : '#e4e4e7'}
-                            strokeWidth="12"
+                            stroke={isDark ? '#181816' : '#D8CBB3'}
+                            strokeWidth="14"
                           />
                           {analyticsData.categoryBreakdown.map((item) => {
                             const strokeLen = Math.max(
                               0,
-                              item.exactShare * donutCircumference - (analyticsData.categoryBreakdown.length > 1 ? 2.5 : 0)
+                              item.exactShare * donutCircumference - (analyticsData.categoryBreakdown.length > 1 ? 3 : 0)
                             );
                             const dashOffset = -donutCumulativeShare * donutCircumference;
                             donutCumulativeShare += item.exactShare;
@@ -3202,7 +3154,7 @@ function TapxMainApp() {
                                 r={donutRadius}
                                 fill="none"
                                 stroke={item.color}
-                                strokeWidth={isFocused ? '14.5' : '11.5'}
+                                strokeWidth={isFocused ? '16' : '12.5'}
                                 strokeDasharray={`${strokeLen} ${donutCircumference}`}
                                 strokeDashoffset={dashOffset}
                                 strokeLinecap="round"
@@ -3214,8 +3166,8 @@ function TapxMainApp() {
                         </svg>
                         {activeDonutCat && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-2">
-                            <span className="text-base leading-none">{activeDonutCat.icon}</span>
-                            <span className={`text-xs font-bold tabular-nums mt-0.5 ${ui.textPrimary}`}>
+                            <span className="text-lg leading-none">{activeDonutCat.icon}</span>
+                            <span className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textPrimary}`}>
                               {activeDonutCat.pct}%
                             </span>
                           </div>
@@ -3226,21 +3178,21 @@ function TapxMainApp() {
                         <div className="flex-1 min-w-0 space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              className="w-3 h-3 rounded-full border border-[#111110] shrink-0"
                               style={{ backgroundColor: activeDonutCat.color }}
                             />
-                            <p className={`text-xs font-bold truncate ${ui.textPrimary}`}>
+                            <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
                               {activeDonutCat.name}
                             </p>
                           </div>
-                          <p className={`text-lg font-bold tabular-nums leading-tight ${ui.textPrimary}`}>
+                          <p className={`text-lg font-cartoon font-bold tabular-nums leading-tight ${ui.textSand}`}>
                             {currencySymbol}
                             {activeDonutCat.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                           </p>
-                          <div className={`text-[10px] space-y-0.5 ${ui.textSecondary}`}>
-                            <p>{activeDonutCat.count} {activeDonutCat.count === 1 ? 'transaction' : 'transactions'}</p>
+                          <div className={`text-[10px] font-semibold space-y-0.5 ${ui.textSecondary}`}>
+                            <p>{activeDonutCat.count} {activeDonutCat.count === 1 ? 'entry' : 'entries'}</p>
                             <p className="tabular-nums">
-                              Avg {currencySymbol}{activeDonutCat.avgTicket.toLocaleString('en-IN')}/entry
+                              Avg {currencySymbol}{activeDonutCat.avgTicket.toLocaleString('en-IN')}/spend
                             </p>
                           </div>
                         </div>
@@ -3248,7 +3200,7 @@ function TapxMainApp() {
                     </div>
 
                     {/* Interactive Category Rows */}
-                    <div className="space-y-1.5 pt-1">
+                    <div className="space-y-2 pt-1">
                       {analyticsData.categoryBreakdown.map((item) => {
                         const isFocused = activeDonutCat?.id === item.id;
                         return (
@@ -3256,34 +3208,28 @@ function TapxMainApp() {
                             key={item.id}
                             type="button"
                             onClick={() => setSelectedDonutCatId(item.id)}
-                            className={`w-full p-2 rounded-xl border flex items-center justify-between text-xs transition-all key-press ${
-                              isFocused ? ui.cardElevated : 'border-transparent hover:border-zinc-800/40'
+                            className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-all key-press ${
+                              isFocused ? ui.cardElevated : ui.cardSubtle
                             }`}
                           >
-                            <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
                               <span
-                                className="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0"
-                                style={{
-                                  backgroundColor: `${item.color}22`,
-                                  border: `1px solid ${item.color}44`
-                                }}
+                                className="w-7 h-7 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
+                                style={{ backgroundColor: item.color }}
                               >
                                 {item.icon}
                               </span>
-                              <span className={`font-medium truncate ${ui.textPrimary}`}>{item.name}</span>
-                              <span className={`text-[10px] ${ui.textMuted}`}>({item.count})</span>
+                              <span className={`font-cartoon font-bold truncate ${ui.textPrimary}`}>{item.name}</span>
+                              <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({item.count})</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0 tabular-nums">
-                              <span className={`font-semibold ${ui.textPrimary}`}>
+                              <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
                                 {currencySymbol}
                                 {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                               </span>
                               <span
-                                className="text-[10px] px-1.5 py-0.5 rounded-md font-mono w-10 text-right font-semibold"
-                                style={{
-                                  backgroundColor: `${item.color}20`,
-                                  color: item.color
-                                }}
+                                className="text-[10px] px-2 py-0.5 rounded-lg border border-[#111110] font-cartoon font-bold text-[#1e1e1c]"
+                                style={{ backgroundColor: item.color }}
                               >
                                 {item.pct}%
                               </span>
@@ -3297,22 +3243,22 @@ function TapxMainApp() {
               </div>
 
               {/* Interactive 7-Day Trend Bar Chart */}
-              <div className={`p-4 rounded-3xl border space-y-3 ${ui.card}`}>
+              <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Last 7 Days Rhythm</h4>
+                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Last 7 Days Rhythm</h4>
                     {selectedDayObj && (
-                      <p className={`text-[10px] tabular-nums ${ui.textSecondary}`}>
+                      <p className={`text-[10px] font-semibold tabular-nums ${ui.textSecondary}`}>
                         {selectedDayObj.fullDateLabel}:{' '}
-                        <span className={`font-semibold ${ui.textPrimary}`}>
+                        <span className={`font-bold ${ui.textSand}`}>
                           {currencySymbol}
                           {selectedDayObj.amount.toLocaleString('en-IN')}
                         </span>
                       </p>
                     )}
                   </div>
-                  <span className={`text-[10px] font-medium tabular-nums ${ui.textMuted}`}>
-                    7D Avg: {currencySymbol}
+                  <span className={`text-[10px] font-cartoon font-bold tabular-nums ${ui.textMuted}`}>
+                    Avg: {currencySymbol}
                     {Math.round(analyticsData.sevenDayAvg).toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -3322,8 +3268,8 @@ function TapxMainApp() {
                     const isSelected = selectedBarIdx === idx;
                     const heightPct =
                       day.amount > 0
-                        ? Math.max(14, Math.round((day.amount / analyticsData.maxDaySpend) * 100))
-                        : 6;
+                        ? Math.max(16, Math.round((day.amount / analyticsData.maxDaySpend) * 100))
+                        : 8;
                     return (
                       <button
                         key={idx}
@@ -3331,7 +3277,7 @@ function TapxMainApp() {
                         onClick={() => setSelectedBarIdx(idx)}
                         className="flex flex-col items-center justify-end h-full gap-1 key-press"
                       >
-                        <span className={`text-[9px] font-mono tabular-nums truncate max-w-full ${isSelected ? ui.textPrimary : ui.textMuted}`}>
+                        <span className={`text-[9px] font-cartoon font-bold tabular-nums truncate max-w-full ${isSelected ? ui.textSand : ui.textMuted}`}>
                           {day.amount > 0
                             ? day.amount >= 1000
                               ? `${(day.amount / 1000).toFixed(1)}k`
@@ -3339,28 +3285,26 @@ function TapxMainApp() {
                             : ''}
                         </span>
                         <div
-                          className={`w-full rounded-xl h-16 flex items-end p-0.5 border transition-colors ${
-                            isSelected ? 'border-emerald-500/60' : ''
-                          } ${ui.cardSubtle}`}
+                          className={`w-full rounded-xl h-16 flex items-end p-0.5 border-2 border-[#111110] ${
+                            isSelected ? 'bg-[#181816]' : ui.cardSubtle
+                          }`}
                         >
                           <div
-                            className={`w-full rounded-lg transition-all duration-500 ios-spring ${
+                            className={`w-full rounded-lg border border-[#111110] transition-all duration-500 ios-spring ${
                               isSelected
-                                ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.45)]'
+                                ? 'bg-[#F4B942]'
                                 : day.isToday
-                                ? isDark
-                                  ? 'bg-zinc-100'
-                                  : 'bg-zinc-900'
+                                ? 'bg-[#D8CBB3]'
                                 : day.amount > 0
-                                ? 'bg-gradient-to-t from-blue-600/80 to-sky-400/80'
-                                : 'bg-transparent'
+                                ? 'bg-[#52B788]'
+                                : 'bg-transparent border-transparent'
                             }`}
                             style={{ height: `${heightPct}%` }}
                           />
                         </div>
                         <span
-                          className={`text-[10px] font-medium ${
-                            isSelected || day.isToday ? ui.textPrimary : ui.textMuted
+                          className={`text-[10px] font-cartoon font-bold ${
+                            isSelected || day.isToday ? ui.textSand : ui.textMuted
                           }`}
                         >
                           {day.isToday ? 'Today' : day.label}
@@ -3373,25 +3317,25 @@ function TapxMainApp() {
 
               {/* Account Share Breakdown */}
               {analyticsData.walletBreakdown.length > 0 && (
-                <div className={`p-4 rounded-3xl border space-y-2.5 ${ui.card}`}>
-                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Account Share</h4>
+                <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
+                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Account Share</h4>
                   <div className="space-y-2.5">
                     {analyticsData.walletBreakdown.map((w) => (
                       <div key={w.id} className="space-y-1">
                         <div className="flex items-center justify-between text-xs tabular-nums">
-                          <span className={`font-medium ${ui.textPrimary}`}>
+                          <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
                             {w.icon} {w.name}
                           </span>
-                          <span className={`font-semibold ${ui.textPrimary}`}>
+                          <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
                             {currencySymbol}
                             {w.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}{' '}
-                            <span className={`text-[10px] font-normal ${ui.textMuted}`}>({w.pct}%)</span>
+                            <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({w.pct}%)</span>
                           </span>
                         </div>
-                        <div className={`w-full h-2 rounded-full overflow-hidden ${ui.cardSubtle}`}>
+                        <div className="w-full h-3 rounded-full overflow-hidden bg-[#181816] border-2 border-[#111110] p-0.5">
                           <div
                             className="h-full rounded-full transition-all duration-500 ios-spring"
-                            style={{ width: `${w.pct}%`, backgroundColor: w.color }}
+                            style={{ width: `${Math.max(6, w.pct)}%`, backgroundColor: w.color }}
                           />
                         </div>
                       </div>
@@ -3402,8 +3346,8 @@ function TapxMainApp() {
 
               {/* Largest Spends in Period */}
               {analyticsData.topExpenses.length > 0 && (
-                <div className={`p-4 rounded-3xl border space-y-2.5 ${ui.card}`}>
-                  <h4 className={`text-xs font-semibold ${ui.textPrimary}`}>Largest Spends</h4>
+                <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
+                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Biggest Splurges</h4>
                   <div className="space-y-2">
                     {analyticsData.topExpenses.map((tx, idx) => {
                       const w = wallets.find((item) => item.id === tx.wallet_id);
@@ -3413,25 +3357,25 @@ function TapxMainApp() {
                         <div
                           key={tx.id}
                           onClick={() => openEditTransaction(tx)}
-                          className={`p-2.5 rounded-2xl border flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
+                          className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span
-                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0"
-                              style={{ backgroundColor: `${accent}25` }}
+                              className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
+                              style={{ backgroundColor: accent }}
                             >
                               {c?.icon || '💸'}
                             </span>
                             <div className="min-w-0">
-                              <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>
+                              <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
                                 {cleanNote || c?.name || 'Expense'}
                               </p>
-                              <p className={`text-[10px] truncate ${ui.textMuted}`}>
+                              <p className={`text-[10px] font-semibold truncate ${ui.textMuted}`}>
                                 {w?.name || 'Account'} · {formatDayGroupLabel(tx.created_at)}
                               </p>
                             </div>
                           </div>
-                          <span className={`text-xs font-bold tabular-nums shrink-0 ${ui.textPrimary}`}>
+                          <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
                             -{currencySymbol}
                             {Number(tx.amount || 0).toLocaleString('en-IN')}
                           </span>
@@ -3449,23 +3393,23 @@ function TapxMainApp() {
         {activeTab === 'settings' && (
           <div key="tab-settings" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
             {/* Appearance Mode Selector */}
-            <div className={`p-3 rounded-2xl border flex items-center justify-between shrink-0 ${ui.card}`}>
+            <div className={`p-3.5 rounded-2xl flex items-center justify-between shrink-0 ${ui.card}`}>
               <div>
-                <p className={`text-xs font-semibold ${ui.textPrimary}`}>Appearance</p>
-                <p className={`text-[10px] ${ui.textMuted}`}>Light, Dark, or iPhone System</p>
+                <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
+                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Charcoal #1e1e1c &amp; Sand #D8CBB3</p>
               </div>
-              <div className={`flex p-0.5 rounded-xl border ${ui.segmentedBg}`}>
+              <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
                 {[
                   { id: 'system', label: 'Auto' },
-                  { id: 'light', label: 'Light' },
-                  { id: 'dark', label: 'Dark' }
+                  { id: 'light', label: 'Sand' },
+                  { id: 'dark', label: 'Charcoal' }
                 ].map((m) => (
                   <button
                     key={m.id}
                     type="button"
                     onClick={() => setThemePref(m.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
-                      themePref === m.id ? `${ui.segmentedThumb} ${ui.textPrimary}` : ui.textSecondary
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                      themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
                     }`}
                   >
                     {m.label}
@@ -3475,7 +3419,7 @@ function TapxMainApp() {
             </div>
 
             {/* Animated Sliding Sub-Section Switcher */}
-            <div className={`relative grid grid-cols-2 p-1 rounded-2xl border shrink-0 ${ui.segmentedBg}`}>
+            <div className={`relative grid grid-cols-2 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
               <div
                 className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
                 style={{ transform: `translate3d(${settingsSubIndex * 100}%, 0, 0)` }}
@@ -3483,41 +3427,41 @@ function TapxMainApp() {
               <button
                 type="button"
                 onClick={() => setSettingsSection('shortcut')}
-                className={`relative z-10 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-200 ${
-                  settingsSection === 'shortcut' ? ui.textPrimary : ui.textSecondary
+                className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
+                  settingsSection === 'shortcut' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
                 }`}
               >
-                Back Tap Setup
+                ⚡ Back Tap Setup
               </button>
               <button
                 type="button"
                 onClick={() => setSettingsSection('budgets')}
-                className={`relative z-10 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-200 ${
-                  settingsSection === 'budgets' ? ui.textPrimary : ui.textSecondary
+                className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
+                  settingsSection === 'budgets' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
                 }`}
               >
-                Categories
+                🏷️ Categories
               </button>
             </div>
 
             {/* SUB-VIEW 1: BACK TAP SHORTCUT */}
             {settingsSection === 'shortcut' && (
-              <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 animate-tab-left">
-                <div className={`p-4 rounded-2xl border space-y-3 ${ui.card}`}>
+              <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab-left">
+                <div className={`p-4 rounded-2xl space-y-3 ${ui.card}`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className={`text-xs font-semibold ${ui.textPrimary}`}>1-Tap Back Tap Installer</h3>
-                      <p className={`text-[10px] ${ui.textMuted}`}>
-                        Asks Spent/Earned, Account, Category &amp; Amount on Lock Screen
+                      <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>1-Tap Back Tap Installer</h3>
+                      <p className={`text-[10px] font-medium ${ui.textMuted}`}>
+                        Log from Lock Screen with double-tap on the back of your iPhone
                       </p>
                     </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${ui.cardSubtle} ${ui.textSecondary}`}>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] font-cartoon font-bold">
                       iOS
                     </span>
                   </div>
 
                   <div className="space-y-1">
-                    <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
+                    <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                       Your Personal Shortcut URL
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -3525,14 +3469,14 @@ function TapxMainApp() {
                         type="text"
                         readOnly
                         value={personalApiUrl}
-                        className={`flex-1 border rounded-xl px-2.5 py-2 text-[11px] font-mono ${ui.input}`}
+                        className={`flex-1 rounded-xl px-2.5 py-2 text-[11px] font-mono ${ui.input}`}
                       />
                       <button
                         type="button"
                         onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
-                        className={`px-3 py-2 rounded-xl text-xs font-semibold shrink-0 key-press ${ui.cardSubtle} ${ui.textPrimary} border`}
+                        className={`px-3 py-2 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
                       >
-                        {copiedField === 'apiUrl' ? 'Copied' : 'Copy'}
+                        {copiedField === 'apiUrl' ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
                   </div>
@@ -3540,14 +3484,14 @@ function TapxMainApp() {
                   <button
                     type="button"
                     onClick={handleOneTapShortcut}
-                    className={`w-full py-3 px-4 rounded-xl font-semibold text-xs key-press ${ui.primaryBtnExpense}`}
+                    className={`w-full py-3 px-4 rounded-xl font-cartoon font-bold text-xs key-press ${ui.primaryBtnExpense}`}
                   >
                     Copy Personal URL &amp; Install Shortcut
                   </button>
 
-                  <div className={`pt-2 border-t space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
-                    <p className={`font-semibold ${ui.textPrimary}`}>Quick Setup (10 Seconds):</p>
-                    <ol className="list-decimal list-inside space-y-1 leading-relaxed">
+                  <div className={`pt-2 border-t-2 border-dashed space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
+                    <p className={`font-cartoon font-bold ${ui.textPrimary}`}>Quick Setup (10 Seconds):</p>
+                    <ol className="list-decimal list-inside space-y-1 leading-relaxed font-medium">
                       <li>Tap the button above (your Personal URL copies automatically).</li>
                       <li>When Apple Shortcuts opens, tap <strong>Paste</strong> into the setup prompt and tap <strong>Add Shortcut</strong>.</li>
                       <li>Go to iPhone <strong>Settings → Accessibility → Touch → Back Tap → Double Tap</strong> and select <strong>Log to TAPX</strong>.</li>
@@ -3556,8 +3500,8 @@ function TapxMainApp() {
                 </div>
 
                 {/* Token Box */}
-                <div className={`p-3.5 rounded-2xl border space-y-1.5 ${ui.card}`}>
-                  <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>
+                <div className={`p-3.5 rounded-2xl space-y-1.5 ${ui.card}`}>
+                  <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                     Shortcut Security Token
                   </label>
                   <div className="flex items-center gap-2">
@@ -3565,19 +3509,19 @@ function TapxMainApp() {
                       type="text"
                       readOnly
                       value={settings?.shortcut_token || ''}
-                      className={`flex-1 border rounded-xl px-3 py-1.5 text-xs font-mono ${ui.input}`}
+                      className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-mono ${ui.input}`}
                     />
                     <button
                       type="button"
                       onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
-                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold key-press ${ui.cardSubtle} ${ui.textPrimary}`}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
                     >
-                      {copiedField === 'token' ? 'Copied' : 'Copy'}
+                      {copiedField === 'token' ? 'Copied!' : 'Copy'}
                     </button>
                     <button
                       type="button"
                       onClick={handleRegenerateToken}
-                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold key-press ${ui.cardSubtle} ${ui.textPrimary}`}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
                       title="Regenerate Token"
                     >
                       ↻
@@ -3591,7 +3535,7 @@ function TapxMainApp() {
             {settingsSection === 'budgets' && (
               <div key="sub-budgets" className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden animate-tab-right">
                 <div className="flex items-center justify-between shrink-0">
-                  <span className={`text-[11px] font-medium ${ui.textMuted}`}>
+                  <span className={`text-[11px] font-cartoon font-bold ${ui.textMuted}`}>
                     {categories.length} Categories
                   </span>
                   <button
@@ -3600,13 +3544,13 @@ function TapxMainApp() {
                       resetCategoryModal();
                       setShowCategoryModal(true);
                     }}
-                    className={`text-xs px-3 py-1 rounded-full border font-semibold key-press ${ui.cardElevated} ${ui.textPrimary}`}
+                    className={`text-xs px-3 py-1 rounded-full font-cartoon font-bold key-press ${ui.pillActive}`}
                   >
                     + Add Category
                   </button>
                 </div>
 
-                <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5">
+                <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5 pb-1">
                   {categories.map((c, idx) => {
                     const spent = currentMonthSpendByCat[c.id] || 0;
                     const budget = Number(c.monthly_budget) || 0;
@@ -3617,22 +3561,19 @@ function TapxMainApp() {
                       <div
                         key={c.id}
                         onClick={() => openEditCategory(c)}
-                        className={`p-3 rounded-2xl border space-y-2 cursor-pointer key-press ${ui.card}`}
+                        className={`p-3 rounded-2xl space-y-2 cursor-pointer key-press ${ui.card}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span
-                              className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
-                              style={{
-                                backgroundColor: `${accent}20`,
-                                border: `1px solid ${accent}40`
-                              }}
+                              className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
+                              style={{ backgroundColor: accent }}
                             >
                               {c.icon}
                             </span>
                             <div className="min-w-0">
-                              <p className={`text-xs font-semibold truncate ${ui.textPrimary}`}>{c.name}</p>
-                              <p className={`text-[10px] capitalize ${ui.textMuted}`}>
+                              <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>{c.name}</p>
+                              <p className={`text-[10px] font-semibold capitalize ${ui.textMuted}`}>
                                 {c.type} {budget > 0 ? `· ${pct}% of limit` : ''}
                               </p>
                             </div>
@@ -3642,7 +3583,7 @@ function TapxMainApp() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             {c.type === 'expense' && (
-                              <span className={`text-xs font-semibold mr-1 ${ui.textPrimary}`}>
+                              <span className={`text-xs font-cartoon font-bold mr-1 ${ui.textSand}`}>
                                 {currencySymbol}
                                 {spent.toLocaleString('en-IN')}
                                 {budget > 0 ? ` / ${currencySymbol}${budget.toLocaleString('en-IN')}` : ''}
@@ -3651,17 +3592,17 @@ function TapxMainApp() {
                             <button
                               type="button"
                               onClick={() => openEditCategory(c)}
-                              className={`px-2 py-1 rounded-lg border text-[10px] font-medium key-press ${ui.cardSubtle} ${ui.textSecondary}`}
+                              className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
                             >
                               Edit
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteCategory(c.id)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold key-press ${
+                              className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${
                                 confirmDeleteId === c.id
-                                  ? 'bg-rose-500 text-white'
-                                  : `${ui.textMuted} hover:text-rose-500`
+                                  ? 'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110]'
+                                  : `${ui.textMuted} hover:text-[#F26B5B]`
                               }`}
                             >
                               {confirmDeleteId === c.id ? 'Sure?' : '✕'}
@@ -3669,10 +3610,10 @@ function TapxMainApp() {
                           </div>
                         </div>
                         {budget > 0 && c.type === 'expense' && (
-                          <div className={`w-full h-1.5 rounded-full overflow-hidden ${ui.cardSubtle}`}>
+                          <div className="w-full h-2.5 rounded-full overflow-hidden bg-[#181816] border border-[#111110] p-0.5">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ios-spring ${
-                                pct >= 90 ? 'bg-rose-500' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500'
+                                pct >= 90 ? 'bg-[#F26B5B]' : pct >= 75 ? 'bg-[#F4B942]' : 'bg-[#52B788]'
                               }`}
                               style={{ width: `${pct}%` }}
                             />
@@ -3686,8 +3627,8 @@ function TapxMainApp() {
             )}
 
             {/* Account Footer */}
-            <div className={`pt-2 border-t flex items-center justify-between shrink-0 ${ui.divider}`}>
-              <span className={`text-[11px] truncate max-w-[180px] ${ui.textMuted}`}>
+            <div className={`pt-2 border-t-2 border-dashed flex items-center justify-between shrink-0 ${ui.divider}`}>
+              <span className={`text-[11px] font-semibold truncate max-w-[180px] ${ui.textMuted}`}>
                 {session?.user?.email}
               </span>
               <div className="flex items-center gap-2">
@@ -3695,16 +3636,16 @@ function TapxMainApp() {
                   type="button"
                   onClick={() => {
                     fetchUserData(session.user.id);
-                    showToast('Synced');
+                    showToast('Synced!');
                   }}
-                  className={`px-3 py-1.5 rounded-full border text-xs font-medium key-press ${ui.cardElevated} ${ui.textPrimary}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
                 >
                   Sync
                 </button>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-semibold key-press"
+                  className="px-3 py-1.5 rounded-full bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] text-xs font-cartoon font-bold key-press"
                 >
                   Sign Out
                 </button>
@@ -3714,51 +3655,51 @@ function TapxMainApp() {
         )}
       </main>
 
-      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT (With Accent Color Picker) */}
+      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT */}
       {showWalletModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-3"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
           onClick={resetWalletModal}
         >
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveWallet}
-            className={`w-full max-w-md rounded-3xl border p-5 space-y-3.5 shadow-2xl animate-sheet-up ${ui.sheetBg}`}
+            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
           >
-            <div className="w-10 h-1 rounded-full bg-zinc-500/30 mx-auto" />
+            <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
             <div className="flex items-center justify-between">
-              <h3 className={`text-sm font-bold ${ui.textPrimary}`}>
+              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
                 {editingWalletId ? 'Edit Account' : 'New Account'}
               </h3>
               <button
                 type="button"
                 onClick={resetWalletModal}
-                className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${ui.cardSubtle} ${ui.textSecondary}`}
+                className={`text-xs font-cartoon font-bold px-3 py-1 rounded-full key-press ${ui.pillIdle}`}
               >
                 Close
               </button>
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Account Name</label>
+              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Account Name</label>
               <input
                 type="text"
                 placeholder="e.g. UPI, Cash, FamPay, HDFC"
                 value={newWalletName}
                 onChange={(e) => setNewWalletName(e.target.value)}
-                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Type</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Type</label>
                 <select
                   value={newWalletType}
                   onChange={(e) => setNewWalletType(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 >
                   <option>UPI / Wallet</option>
                   <option>Cash</option>
@@ -3768,20 +3709,20 @@ function TapxMainApp() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Current Balance</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Current Balance</label>
                 <input
                   type="number"
                   step="0.01"
                   placeholder="0.00"
                   value={newWalletBalance}
                   onChange={(e) => setNewWalletBalance(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Card Color</label>
+              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Sticker Color</label>
               <div className="flex items-center gap-2">
                 {WALLET_COLORS.map((hex) => (
                   <button
@@ -3789,8 +3730,8 @@ function TapxMainApp() {
                     key={hex}
                     onClick={() => setNewWalletColor(hex)}
                     style={{ backgroundColor: hex }}
-                    className={`w-7 h-7 rounded-full transition-transform key-press ${
-                      newWalletColor === hex ? 'scale-110 ring-2 ring-white' : 'opacity-70'
+                    className={`w-8 h-8 rounded-full border-2 border-[#111110] transition-transform key-press ${
+                      newWalletColor === hex ? 'scale-110 ring-2 ring-[#D8CBB3] shadow-[0_3px_0_#111110]' : 'opacity-75'
                     }`}
                   />
                 ))}
@@ -3798,14 +3739,14 @@ function TapxMainApp() {
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Icon</label>
+              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Icon</label>
               <div className="flex gap-1.5 justify-between">
                 {WALLET_ICONS.map((ic) => (
                   <button
                     type="button"
                     key={ic}
                     onClick={() => setNewWalletIcon(ic)}
-                    className={`p-2.5 rounded-xl border text-base key-press ${
+                    className={`p-2.5 rounded-xl text-base key-press ${
                       newWalletIcon === ic ? ui.pillActive : ui.pillIdle
                     }`}
                   >
@@ -3820,10 +3761,10 @@ function TapxMainApp() {
                 <button
                   type="button"
                   onClick={() => handleDeleteWallet(editingWalletId)}
-                  className={`px-4 py-3 rounded-xl text-xs font-semibold border key-press ${
+                  className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_3px_0_#111110] key-press ${
                     confirmDeleteId === editingWalletId
-                      ? 'bg-rose-500 text-white border-rose-500'
-                      : 'border-rose-500/30 text-rose-500 bg-rose-500/10'
+                      ? 'bg-[#F26B5B] text-[#1e1e1c]'
+                      : 'bg-[#F26B5B]/20 text-[#F26B5B]'
                   }`}
                 >
                   {confirmDeleteId === editingWalletId ? 'Tap to Confirm' : 'Delete'}
@@ -3831,7 +3772,7 @@ function TapxMainApp() {
               )}
               <button
                 type="submit"
-                className={`flex-1 py-3 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
+                className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
               >
                 {editingWalletId ? 'Save Changes' : 'Create Account'}
               </button>
@@ -3843,74 +3784,74 @@ function TapxMainApp() {
       {/* BOTTOM SHEET 2: CREATE / EDIT CATEGORY */}
       {showCategoryModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-3"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
           onClick={resetCategoryModal}
         >
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveCategory}
-            className={`w-full max-w-md rounded-3xl border p-5 space-y-3.5 shadow-2xl animate-sheet-up ${ui.sheetBg}`}
+            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
           >
-            <div className="w-10 h-1 rounded-full bg-zinc-500/30 mx-auto" />
+            <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
             <div className="flex items-center justify-between">
-              <h3 className={`text-sm font-bold ${ui.textPrimary}`}>
+              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
                 {editingCatId ? 'Edit Category' : 'New Category'}
               </h3>
               <button
                 type="button"
                 onClick={resetCategoryModal}
-                className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${ui.cardSubtle} ${ui.textSecondary}`}
+                className={`text-xs font-cartoon font-bold px-3 py-1 rounded-full key-press ${ui.pillIdle}`}
               >
                 Close
               </button>
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Category Name</label>
+              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Category Name</label>
               <input
                 type="text"
                 placeholder="e.g. Dining Out, Subscriptions"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
-                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Type</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Type</label>
                 <select
                   value={newCatType}
                   onChange={(e) => setNewCatType(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 >
                   <option value="expense">Expense</option>
                   <option value="income">Income</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Monthly Limit (Optional)</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Monthly Limit (Optional)</label>
                 <input
                   type="number"
                   placeholder="No limit"
                   value={newCatBudget}
                   onChange={(e) => setNewCatBudget(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Icon</label>
-              <div className="flex gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
+              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Icon</label>
+              <div className="flex gap-1.5 overflow-x-auto py-1 no-scrollbar">
                 {CATEGORY_ICONS.map((ic) => (
                   <button
                     type="button"
                     key={ic}
                     onClick={() => setNewCatIcon(ic)}
-                    className={`p-2.5 rounded-xl border shrink-0 text-base key-press ${
+                    className={`p-2.5 rounded-xl shrink-0 text-base key-press ${
                       newCatIcon === ic ? ui.pillActive : ui.pillIdle
                     }`}
                   >
@@ -3922,7 +3863,7 @@ function TapxMainApp() {
 
             <button
               type="submit"
-              className={`w-full py-3 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
+              className={`w-full py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
             >
               {editingCatId ? 'Update Category' : 'Save Category'}
             </button>
@@ -3933,24 +3874,24 @@ function TapxMainApp() {
       {/* BOTTOM SHEET 3: EDIT TRANSACTION */}
       {editingTx && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-3"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
           onClick={() => setEditingTx(null)}
         >
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveEditedTransaction}
-            className={`w-full max-w-md rounded-3xl border p-5 space-y-3.5 shadow-2xl animate-sheet-up ${ui.sheetBg}`}
+            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
           >
-            <div className="w-10 h-1 rounded-full bg-zinc-500/30 mx-auto" />
+            <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
             <div className="flex items-center justify-between">
-              <h3 className={`text-sm font-bold capitalize ${ui.textPrimary}`}>
+              <h3 className={`text-base font-cartoon font-bold capitalize ${ui.textPrimary}`}>
                 Edit {editingTx.type}
               </h3>
               <button
                 type="button"
                 onClick={() => setEditingTx(null)}
-                className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${ui.cardSubtle} ${ui.textSecondary}`}
+                className={`text-xs font-cartoon font-bold px-3 py-1 rounded-full key-press ${ui.pillIdle}`}
               >
                 Close
               </button>
@@ -3958,22 +3899,22 @@ function TapxMainApp() {
 
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Amount ({currencySymbol})</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Amount ({currencySymbol})</label>
                 <input
                   type="number"
                   step="0.01"
                   value={editTxAmount}
                   onChange={(e) => setEditTxAmount(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm font-semibold tabular-nums focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-cartoon font-bold tabular-nums focus:outline-none ${ui.input}`}
                   required
                 />
               </div>
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Account</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Account</label>
                 <select
                   value={editTxWalletId}
                   onChange={(e) => setEditTxWalletId(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 >
                   {wallets.map((w) => (
                     <option key={w.id} value={w.id}>
@@ -3986,11 +3927,11 @@ function TapxMainApp() {
 
             {editingTx.type === 'transfer' ? (
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>To Account</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>To Account</label>
                 <select
                   value={editTxToWalletId}
                   onChange={(e) => setEditTxToWalletId(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 >
                   {wallets
                     .filter((w) => w.id !== editTxWalletId)
@@ -4003,11 +3944,11 @@ function TapxMainApp() {
               </div>
             ) : (
               <div className="space-y-1">
-                <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Category</label>
+                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Category</label>
                 <select
                   value={editTxCategoryId}
                   onChange={(e) => setEditTxCategoryId(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
                 >
                   {categories
                     .filter((c) => c.type === editingTx.type)
@@ -4021,13 +3962,13 @@ function TapxMainApp() {
             )}
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-semibold uppercase ${ui.textMuted}`}>Note</label>
+              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Note</label>
               <input
                 type="text"
                 placeholder="Optional note"
                 value={editTxNote}
                 onChange={(e) => setEditTxNote(e.target.value)}
-                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none ${ui.input}`}
+                className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
               />
             </div>
 
@@ -4035,13 +3976,13 @@ function TapxMainApp() {
               <button
                 type="button"
                 onClick={() => handleDeleteTransaction(editingTx.id)}
-                className="px-4 py-3 rounded-xl text-xs font-semibold border border-rose-500/30 text-rose-500 bg-rose-500/10 key-press"
+                className="px-4 py-3 rounded-xl text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_3px_0_#111110] text-[#1e1e1c] bg-[#F26B5B] key-press"
               >
                 Delete
               </button>
               <button
                 type="submit"
-                className={`flex-1 py-3 rounded-xl text-xs font-semibold key-press ${ui.primaryBtnExpense}`}
+                className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
               >
                 Save Changes
               </button>
@@ -4050,7 +3991,7 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* iOS LIQUID GLASS TAB BAR WITH REFINED GLIDE & SCRUBBING */}
+      {/* CHUNKY CARTOON DOCK BAR WITH BOUNCY SAND PILL & SCRUBBING */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
@@ -4064,20 +4005,20 @@ function TapxMainApp() {
           onPointerUp={handleNavPointerUpOrCancel}
           onPointerCancel={handleNavPointerUpOrCancel}
           className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[64px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
-            lensBulge ? 'scale-[1.012]' : 'scale-100'
+            lensBulge ? 'scale-[1.02]' : 'scale-100'
           } ${ui.islandBar}`}
         >
-          {/* Optical Crystal Magnifying Bubble Lens */}
+          {/* Bouncy Sand / Charcoal Cartoon Pill Indicator */}
           <div
             className={`absolute top-[5px] bottom-[5px] left-[5px] w-[calc(25%-2.5px)] rounded-full pointer-events-none z-20 ${ui.islandLens}`}
             style={{
               transition:
                 scrubProgress !== null
-                  ? 'transform 120ms cubic-bezier(0.22, 1, 0.36, 1)'
-                  : 'transform 380ms cubic-bezier(0.22, 1.08, 0.36, 1)',
+                  ? 'transform 110ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  : 'transform 360ms cubic-bezier(0.34, 1.45, 0.64, 1)',
               transform: `translate3d(${visualLensIndex * 100}%, 0, 0) scale3d(${
-                scrubProgress !== null ? 1.12 : lensBulge ? 1.06 : 1.0
-              }, ${scrubProgress !== null ? 1.16 : lensBulge ? 1.08 : 1.0}, 1)`
+                scrubProgress !== null ? 1.06 : lensBulge ? 1.03 : 1.0
+              }, ${scrubProgress !== null ? 1.08 : lensBulge ? 1.04 : 1.0}, 1)`
             }}
           />
 
@@ -4085,32 +4026,32 @@ function TapxMainApp() {
             const active = activeTab === item.id;
             const distance = Math.abs(visualLensIndex - idx);
             const proximity = Math.max(0, 1 - distance);
-            const totalScale = 0.94 + proximity * 0.1 + (active && lensBulge ? 0.04 : 0);
+            const totalScale = 0.94 + proximity * 0.08 + (active && lensBulge ? 0.04 : 0);
 
             return (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => handleSelectTab(item.id)}
-                className={`relative z-30 h-full flex flex-col items-center justify-center gap-[3px] rounded-full transition-colors duration-200 ${
+                className={`relative z-30 h-full flex flex-col items-center justify-center gap-[2px] rounded-full transition-colors duration-200 ${
                   active ? ui.islandTextActive : ui.islandTextIdle
                 }`}
               >
                 <div
-                  className="flex flex-col items-center justify-center gap-[3px]"
+                  className="flex flex-col items-center justify-center gap-[2px]"
                   style={{
                     transition:
                       scrubProgress !== null
-                        ? 'transform 120ms cubic-bezier(0.22, 1, 0.36, 1)'
-                        : 'transform 360ms cubic-bezier(0.22, 1.08, 0.36, 1)',
+                        ? 'transform 110ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+                        : 'transform 340ms cubic-bezier(0.34, 1.45, 0.64, 1)',
                     transform: `scale3d(${totalScale.toFixed(3)}, ${totalScale.toFixed(
                       3
-                    )}, 1) translate3d(0, ${active ? '-0.5px' : '0px'}, 0)`
+                    )}, 1) translate3d(0, ${active ? '-1px' : '0px'}, 0)`
                   }}
                 >
                   <NavIcon id={item.id} active={active} />
                   <span
-                    className={`text-[10.5px] leading-none tracking-[-0.015em] ${
+                    className={`text-[10.5px] font-cartoon leading-none tracking-tight ${
                       active ? 'font-bold' : 'font-medium'
                     }`}
                   >
