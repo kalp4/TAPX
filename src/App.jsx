@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { supabase } from './supabaseClient';
 import {
+  SHARED_ICLOUD_SHORTCUT_URL,
   WALLET_COLORS,
   DEFAULT_WALLETS_TEMPLATE,
   DEFAULT_CATEGORIES_TEMPLATE,
@@ -11,26 +12,27 @@ import {
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
   getUiTheme
-} from './constants/theme';
+} from './constants';
 import {
   getInitialSyncSession,
   hasOAuthParamsInUrl,
   parseShortcutCategoryTag,
   cleanCategoryString,
   findMatchingCategoryObj,
-  getCategoryAccentColor,
   formatDisplayAmount,
   formatDayGroupLabel,
-  escapeCsvCell
-} from './utils/formatters';
-import TapxLogo from './components/TapxLogo';
-import NavIcon from './components/NavIcon';
-import LoginScreen from './components/LoginScreen';
-import KeypadTab from './components/KeypadTab';
-import AccountsTab from './components/AccountsTab';
-import InsightsTab from './components/InsightsTab';
-import SettingsTab from './components/SettingsTab';
-import { WalletModal, CategoryModal, EditTransactionModal } from './components/Modals';
+  escapeCsvCell,
+  computeAnalytics
+} from './analytics';
+import {
+  TapxLogo,
+  NavIcon,
+  LoginScreen,
+  WalletModal,
+  CategoryModal,
+  EditTransactionModal
+} from './components/Modals';
+import { KeypadTab, AccountsTab, InsightsTab, SettingsTab } from './components/Tabs';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -149,6 +151,12 @@ function TapxMainApp() {
 
   const [settingsSection, setSettingsSection] = useState('shortcut');
   const [analyticsRange, setAnalyticsRange] = useState('month');
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toLocaleDateString('en-CA');
+  });
+  const [customEndDate, setCustomEndDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [selectedBarIdx, setSelectedBarIdx] = useState(6);
   const [selectedDonutCatId, setSelectedDonutCatId] = useState(null);
   const [amountPulse, setAmountPulse] = useState(false);
@@ -1296,7 +1304,11 @@ function TapxMainApp() {
     navigator.clipboard.writeText(personalApiUrl);
     showToast('Personal URL copied · Opening Shortcuts');
     setTimeout(() => {
-      window.location.href = 'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
+      if (SHARED_ICLOUD_SHORTCUT_URL) {
+        window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
+      } else {
+        window.location.href = 'shortcuts://create-shortcut';
+      }
     }, 450);
   };
 
@@ -1394,151 +1406,27 @@ function TapxMainApp() {
     return map;
   }, [transactions, resolveTxCategory]);
 
-  const analyticsData = useMemo(() => {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const sevenDaysAgo = new Date(startOfToday);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-    const filteredTx = transactions.filter((tx) => {
-      if (!tx?.created_at) return false;
-      const d = new Date(tx.created_at);
-      if (analyticsRange === 'week') return d >= sevenDaysAgo;
-      if (analyticsRange === 'month') {
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      }
-      return true;
-    });
-
-    let totalExpense = 0;
-    let totalIncome = 0;
-    let shortcutCount = 0;
-    let expenseCount = 0;
-
-    const categoryTotals = {};
-    const categoryCounts = {};
-    const walletTotals = {};
-    const expenseTxList = [];
-
-    filteredTx.forEach((tx) => {
-      const amt = Number(tx.amount) || 0;
-      if (tx.source === 'shortcut') shortcutCount += 1;
-
-      if (tx.type === 'expense') {
-        totalExpense += amt;
-        expenseCount += 1;
-        expenseTxList.push(tx);
-        const { category: c } = resolveTxCategory(tx);
-        const catKey = c?.id || tx.category_id || 'uncategorized';
-        categoryTotals[catKey] = (categoryTotals[catKey] || 0) + amt;
-        categoryCounts[catKey] = (categoryCounts[catKey] || 0) + 1;
-        if (tx.wallet_id) walletTotals[tx.wallet_id] = (walletTotals[tx.wallet_id] || 0) + amt;
-      } else if (tx.type === 'income') {
-        totalIncome += amt;
-      }
-    });
-
-    const daysDivisor =
-      analyticsRange === 'week'
-        ? 7
-        : analyticsRange === 'month'
-        ? Math.max(1, now.getDate())
-        : Math.max(1, new Set(filteredTx.map((t) => new Date(t.created_at).toDateString())).size);
-
-    const dailyAvgExpense = totalExpense / daysDivisor;
-    const projectedMonthSpend = Math.round(dailyAvgExpense * daysInCurrentMonth);
-    const savingsRate =
-      totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : null;
-
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-      const dayDate = new Date(startOfToday);
-      dayDate.setDate(dayDate.getDate() - i);
-      const dayStr = dayDate.toDateString();
-      const label = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
-      const fullDateLabel = dayDate.toLocaleDateString('en-IN', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short'
-      });
-
-      const daySum = transactions.reduce((sum, tx) => {
-        if (!tx?.created_at || tx.type !== 'expense') return sum;
-        const txDate = new Date(tx.created_at);
-        return txDate.toDateString() === dayStr ? sum + (Number(tx.amount) || 0) : sum;
-      }, 0);
-
-      last7Days.push({ label, fullDateLabel, isToday: i === 0, amount: daySum });
-    }
-
-    const maxDaySpend = Math.max(...last7Days.map((d) => d.amount), 1);
-    const sevenDayAvg = last7Days.reduce((acc, d) => acc + d.amount, 0) / 7;
-
-    const categoryBreakdown = Object.keys(categoryTotals)
-      .map((catId, index) => {
-        const catObj = categories.find((c) => c.id === catId);
-        const amount = categoryTotals[catId];
-        const count = categoryCounts[catId] || 0;
-        const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
-        const exactShare = totalExpense > 0 ? amount / totalExpense : 0;
-        return {
-          id: catId,
-          name: catObj?.name || 'Other',
-          icon: catObj?.icon || '💸',
-          amount,
-          count,
-          avgTicket: count > 0 ? Math.round(amount / count) : 0,
-          pct,
-          exactShare,
-          color: getCategoryAccentColor(catObj, index)
-        };
-      })
-      .sort((a, b) => b.amount - a.amount);
-
-    const walletBreakdown = Object.keys(walletTotals)
-      .map((wId, idx) => {
-        const wObj = wallets.find((w) => w.id === wId);
-        const amount = walletTotals[wId];
-        const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
-        return {
-          id: wId,
-          name: wObj?.name || 'Wallet',
-          icon: wObj?.icon || '💳',
-          color: wObj?.color || WALLET_COLORS[idx % WALLET_COLORS.length],
-          amount,
-          pct
-        };
-      })
-      .sort((a, b) => b.amount - a.amount);
-
-    const topExpenses = [...expenseTxList]
-      .sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0))
-      .slice(0, 3);
-
-    const shortcutPct =
-      filteredTx.length > 0 ? Math.round((shortcutCount / filteredTx.length) * 100) : 0;
-
-    return {
-      filteredTx,
-      totalExpense,
-      totalIncome,
-      netFlow: totalIncome - totalExpense,
-      savingsRate,
-      dailyAvgExpense,
-      projectedMonthSpend,
-      expenseCount,
-      totalTxCount: filteredTx.length,
-      shortcutCount,
-      shortcutPct,
-      last7Days,
-      maxDaySpend,
-      sevenDayAvg,
-      categoryBreakdown,
-      walletBreakdown,
-      topExpenses
-    };
-  }, [transactions, categories, wallets, analyticsRange, resolveTxCategory]);
+  const analyticsData = useMemo(
+    () =>
+      computeAnalytics({
+        transactions,
+        categories,
+        wallets,
+        analyticsRange,
+        customStartDate,
+        customEndDate,
+        resolveTxCategory
+      }),
+    [
+      transactions,
+      categories,
+      wallets,
+      analyticsRange,
+      customStartDate,
+      customEndDate,
+      resolveTxCategory
+    ]
+  );
 
   const handleExportCsv = useCallback(() => {
     const sourceRows = analyticsData.filteredTx.length > 0 ? analyticsData.filteredTx : transactions;
@@ -1659,7 +1547,6 @@ function TapxMainApp() {
         }
       `}</style>
 
-      {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
           className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_4px_0_#111110] flex items-center gap-3 animate-tab ${
@@ -1692,7 +1579,6 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Top Header */}
       <header className="relative z-10 px-5 pt-1 pb-2 flex items-center justify-between shrink-0">
         <div onClick={() => handleSelectTab('wallets')} className="cursor-pointer group">
           <div className="flex items-center gap-2">
@@ -1742,7 +1628,6 @@ function TapxMainApp() {
         </button>
       </header>
 
-      {/* MAIN VIEWPORT (Flush bottom padding matching tight dock position) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
@@ -1825,6 +1710,10 @@ function TapxMainApp() {
             tabAnimClass={tabAnimClass}
             analyticsRange={analyticsRange}
             setAnalyticsRange={setAnalyticsRange}
+            customStartDate={customStartDate}
+            setCustomStartDate={setCustomStartDate}
+            customEndDate={customEndDate}
+            setCustomEndDate={setCustomEndDate}
             analyticsData={analyticsData}
             currencySymbol={currencySymbol}
             selectedDonutCatId={selectedDonutCatId}
@@ -1934,7 +1823,7 @@ function TapxMainApp() {
         />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR (Anchored flush at bottom) */}
+      {/* CHUNKY CARTOON DOCK BAR (Flush at bottom) */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
