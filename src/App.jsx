@@ -1,649 +1,36 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { supabase } from './supabaseClient';
-
-// Shared iCloud Shortcut Link for 1-Tap Setup
-const SHARED_ICLOUD_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
-
-// Playful Cartoon / Cozy Retro Palette
-const WALLET_COLORS = [
-  '#E07A5F',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E56B6F',
-  '#D8CBB3',
-  '#F26B5B',
-  '#4EA8DE',
-  '#80ED99',
-  '#F7A072',
-  '#B5838D'
-];
-
-const CHART_COLORS = [
-  '#F26B5B',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E07A5F',
-  '#E56B6F',
-  '#D8CBB3'
-];
-
-// Full Searchable & Categorized Icon Library (160+ Icons + Custom Emoji Support)
-const ICON_CATALOG = [
-  // Money, Banking & Wallets
-  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
-  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
-  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
-  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
-  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
-  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
-  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
-  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
-  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
-  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
-  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
-  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
-  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
-  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
-  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
-  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
-  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
-  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
-  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
-  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
-
-  // Food & Drinks
-  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
-  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
-  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
-  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
-  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
-  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
-  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowlchinese' },
-  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
-  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
-  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
-  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
-  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
-  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
-  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
-  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
-  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
-  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
-  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
-  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
-  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
-  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
-  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
-  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
-  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
-
-  // Transport & Travel
-  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
-  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
-  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
-  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
-  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
-  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
-  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
-  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
-  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
-  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
-  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
-  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
-  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
-  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
-  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
-  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
-  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
-  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
-
-  // Shopping, Style & Personal
-  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
-  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
-  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
-  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
-  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
-  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
-  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
-  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
-  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
-  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
-  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
-  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
-  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
-  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
-
-  // Entertainment, Gaming & Fun
-  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
-  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
-  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
-  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
-  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
-  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
-  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
-  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
-  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
-  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
-  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
-  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
-  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
-  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
-
-  // Health, Sports & Fitness
-  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
-  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
-  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
-  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
-  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
-  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
-  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
-  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
-  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
-  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
-  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
-  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
-
-  // Tech, Bills, Study & Home
-  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
-  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
-  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
-  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
-  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
-  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
-  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
-  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
-  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
-  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
-  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
-  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
-  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
-  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
-  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
-  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
-  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
-  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
-];
-
-const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
-
-const DEFAULT_WALLETS_TEMPLATE = [
-  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
-  { name: 'Cash', type: 'Cash', balance: 0, color: '#52B788', icon: '💵' }
-];
-
-const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#F26B5B', monthly_budget: null },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#52B788', monthly_budget: null },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#F4B942', monthly_budget: null },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#9B7EDE', monthly_budget: null },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#E56B6F', monthly_budget: null },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#5C9EAD', monthly_budget: null },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#E07A5F', monthly_budget: null },
-  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#52B788', monthly_budget: null }
-];
-
-const NAV_TABS = [
-  { id: 'pad', label: 'Keypad' },
-  { id: 'wallets', label: 'Accounts' },
-  { id: 'analytics', label: 'Insights' },
-  { id: 'settings', label: 'Settings' }
-];
-
-const CACHE_KEY = 'tapx_local_cache_v4';
-const THEME_KEY = 'tapx_theme_pref';
-const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
-const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
-const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
-
-// Read Supabase's localStorage token or TAPX local cache synchronously on frame 0
-// so the Login screen NEVER flashes when opening the app while already signed in.
-function getInitialSyncSession(cachedData) {
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
-        const raw = localStorage.getItem(k);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          const sessionObj = parsed?.currentSession || parsed?.session || parsed;
-          if (sessionObj?.user?.id) {
-            return sessionObj;
-          }
-        }
-      }
-    }
-  } catch {
-    // Ignore storage read errors
-  }
-
-  if (cachedData?.userId) {
-    return {
-      user: {
-        id: cachedData.userId,
-        email: cachedData.userEmail || '',
-        user_metadata: cachedData.userMetadata || {}
-      }
-    };
-  }
-
-  return null;
-}
-
-function hasOAuthParamsInUrl() {
-  if (typeof window === 'undefined') return false;
-  const search = window.location.search || '';
-  const hash = window.location.hash || '';
-  return (
-    search.includes('code=') ||
-    hash.includes('access_token=') ||
-    hash.includes('error_description=')
-  );
-}
-
-// Parse embedded [cat:CategoryName] tag from Back Tap transaction notes
-function parseShortcutCategoryTag(rawNote) {
-  const str = String(rawNote || '');
-  const match = str.match(/\[cat:([^\]]+)\]/i);
-  if (!match) {
-    return { cleanNote: str, tagCategoryName: null };
-  }
-  return {
-    cleanNote: str.replace(/\[cat:[^\]]+\]/gi, '').replace(/\s+/g, ' ').trim(),
-    tagCategoryName: match[1].trim()
-  };
-}
-
-function cleanCategoryString(str) {
-  return String(str || '')
-    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
-    .trim()
-    .toLowerCase();
-}
-
-function findMatchingCategoryObj(categoryName, categoriesList) {
-  if (!categoryName || !Array.isArray(categoriesList) || categoriesList.length === 0) {
-    return null;
-  }
-  const target = cleanCategoryString(categoryName);
-  if (!target) return null;
-
-  const exact = categoriesList.find((c) => cleanCategoryString(c.name) === target);
-  if (exact) return exact;
-
-  const partial = categoriesList.find((c) => {
-    const cleanDb = cleanCategoryString(c.name);
-    return cleanDb.includes(target) || target.includes(cleanDb);
-  });
-  return partial || null;
-}
-
-// Assign a playful warm cartoon hex for any category
-function getCategoryAccentColor(cat, index = 0) {
-  if (
-    cat?.color &&
-    !['#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#ec4899'].includes(cat.color)
-  ) {
-    return cat.color;
-  }
-  const name = String(cat?.name || '').toLowerCase();
-  if (name.includes('food') || name.includes('drink') || name.includes('dining')) return '#F26B5B';
-  if (name.includes('grocer')) return '#52B788';
-  if (name.includes('transport') || name.includes('fuel') || name.includes('cab')) return '#F4B942';
-  if (name.includes('shop')) return '#9B7EDE';
-  if (name.includes('entertain') || name.includes('movie')) return '#E56B6F';
-  if (name.includes('bill') || name.includes('recharge')) return '#5C9EAD';
-  if (name.includes('health') || name.includes('fitness')) return '#E07A5F';
-  if (name.includes('income') || name.includes('allowance') || name.includes('salary')) return '#52B788';
-  return CHART_COLORS[index % CHART_COLORS.length];
-}
-
-// Format raw numeric string into Indian locale commas while preserving trailing dot/zeros
-function formatDisplayAmount(rawStr) {
-  if (!rawStr || rawStr === '0') return '0';
-  const parts = String(rawStr).split('.');
-  const intPart = Number(parts[0] || 0).toLocaleString('en-IN');
-  if (parts.length > 1) {
-    return `${intPart}.${parts[1]}`;
-  }
-  return intPart;
-}
-
-function formatDayGroupLabel(isoString) {
-  if (!isoString) return 'Recent';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return 'Recent';
-
-  const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-
-  if (date.toDateString() === now.toDateString()) return 'Today';
-  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-
-  return date.toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    ...(date.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {})
-  });
-}
-
-function formatTimeOnly(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString('en-IN', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-}
-
-// Escape CSV cell safely
-function escapeCsvCell(val) {
-  const str = String(val ?? '').replace(/"/g, '""');
-  return `"${str}"`;
-}
-
-// Reusable Full Icon Library + Any-Emoji Input Picker Component
-function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup = 'All' }) {
-  const [activeGroup, setActiveGroup] = useState(defaultGroup);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredIcons = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return ICON_CATALOG.filter((entry) => {
-      if (activeGroup !== 'All' && entry.group !== activeGroup && !q) {
-        return false;
-      }
-      if (!q) return true;
-      return (
-        entry.tags.includes(q) ||
-        entry.group.toLowerCase().includes(q) ||
-        entry.icon.includes(q)
-      );
-    });
-  }, [activeGroup, searchQuery]);
-
-  const handleCustomEmojiInput = (e) => {
-    const raw = e.target.value;
-    if (!raw) return;
-    // Extract the last grapheme cluster (so typing a new emoji replaces the previous one cleanly)
-    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-      const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
-      const segments = Array.from(segmenter.segment(raw.trim()));
-      if (segments.length > 0) {
-        onSelectIcon(segments[segments.length - 1].segment);
-        return;
-      }
-    }
-    const chars = Array.from(raw.trim());
-    if (chars.length > 0) {
-      onSelectIcon(chars[chars.length - 1]);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-          Icon ({ICON_CATALOG.length}+ or type any emoji)
-        </label>
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>Custom:</span>
-          <input
-            type="text"
-            value={selectedIcon}
-            onChange={handleCustomEmojiInput}
-            placeholder="😀"
-            title="Tap to type any emoji from your keyboard"
-            className={`w-11 h-8 text-center rounded-xl text-base font-bold focus:outline-none ${ui.input}`}
-          />
-        </div>
-      </div>
-
-      {/* Search + Group Pills */}
-      <div className="flex items-center gap-1.5">
-        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl w-32 shrink-0 ${ui.input}`}>
-          <span className="text-[11px] opacity-60">🔍</span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search icon..."
-            className="w-full bg-transparent text-xs focus:outline-none scale-[0.85] origin-left"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className={`text-[10px] font-bold ${ui.textMuted}`}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        <div className="flex gap-1 overflow-x-auto no-scrollbar py-0.5">
-          {ICON_GROUPS.map((grp) => {
-            const active = activeGroup === grp && !searchQuery;
-            return (
-              <button
-                key={grp}
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setActiveGroup(grp);
-                }}
-                className={`px-2.5 py-1 rounded-xl text-[10px] font-cartoon font-bold shrink-0 key-press ${
-                  active ? ui.pillActive : ui.pillIdle
-                }`}
-              >
-                {grp}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Scrollable Multi-Row Icon Grid */}
-      <div
-        className={`grid grid-cols-7 gap-1.5 max-h-36 overflow-y-auto custom-scroll p-2 rounded-2xl ${ui.cardSubtle}`}
-      >
-        {filteredIcons.length === 0 ? (
-          <div className={`col-span-7 py-4 text-center text-xs font-cartoon ${ui.textMuted}`}>
-            No match—type any emoji in the Custom box above!
-          </div>
-        ) : (
-          filteredIcons.map((item, idx) => {
-            const isSelected = selectedIcon === item.icon;
-            return (
-              <button
-                type="button"
-                key={`${item.icon}-${idx}`}
-                onClick={() => onSelectIcon(item.icon)}
-                className={`h-10 rounded-xl flex items-center justify-center text-lg key-press ${
-                  isSelected ? ui.pillActive : ui.pillIdle
-                }`}
-              >
-                {item.icon}
-              </button>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Playful Cartoony Vector Wallet Logo (Warm Sand #D8CBB3, Charcoal #1e1e1c, Chunky Outlines)
-function TapxLogo({ className = 'w-16 h-16' }) {
-  return (
-    <svg
-      viewBox="70 50 375 415"
-      className={`${className} shrink-0 select-none`}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Hard Cartoon Drop Shadow */}
-      <rect
-        x="108"
-        y="224"
-        width="316"
-        height="220"
-        rx="44"
-        fill="#111110"
-      />
-
-      {/* 3 Rising Chunky Cartoon Bars with Bold Outlines */}
-      <rect
-        x="164"
-        y="144"
-        width="56"
-        height="116"
-        rx="14"
-        fill="#F26B5B"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-      <rect
-        x="236"
-        y="106"
-        width="56"
-        height="154"
-        rx="14"
-        fill="#52B788"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-      <rect
-        x="308"
-        y="68"
-        width="56"
-        height="192"
-        rx="14"
-        fill="#F4B942"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-
-      {/* Main Wallet Body in Warm Sand (#D8CBB3) */}
-      <rect
-        x="96"
-        y="212"
-        width="316"
-        height="216"
-        rx="44"
-        fill="#D8CBB3"
-        stroke="#111110"
-        strokeWidth="11"
-      />
-
-
-
-      {/* Wallet Clasp in Charcoal (#282825) */}
-      <rect
-        x="324"
-        y="290"
-        width="102"
-        height="64"
-        rx="32"
-        fill="#282825"
-        stroke="#111110"
-        strokeWidth="10"
-      />
-
-      {/* Clasp Button Snap in Sunny Gold */}
-      <circle
-        cx="358"
-        cy="322"
-        r="13"
-        fill="#F4B942"
-        stroke="#111110"
-        strokeWidth="7"
-      />
-    </svg>
-  );
-}
-
-// Chunky Rounded Cartoon Navigation Icons
-function NavIcon({ id, active }) {
-  const sizeClass = 'w-[21px] h-[21px]';
-
-  if (id === 'pad') {
-    const r = active ? '2.4' : '1.9';
-    return (
-      <svg className={sizeClass} viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="6.5" cy="4.5" r={r} />
-        <circle cx="12" cy="4.5" r={r} />
-        <circle cx="17.5" cy="4.5" r={r} />
-        <circle cx="6.5" cy="10" r={r} />
-        <circle cx="12" cy="10" r={r} />
-        <circle cx="17.5" cy="10" r={r} />
-        <circle cx="6.5" cy="15.5" r={r} />
-        <circle cx="12" cy="15.5" r={r} />
-        <circle cx="17.5" cy="15.5" r={r} />
-        <circle cx="12" cy="20.5" r={r} />
-      </svg>
-    );
-  }
-
-  if (id === 'wallets') {
-    return (
-      <svg
-        className={sizeClass}
-        fill={active ? 'currentColor' : 'none'}
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={active ? '1.6' : '2.2'}
-      >
-        <rect x="2.5" y="4.5" width="19" height="15" rx="3.5" />
-        <path
-          strokeLinecap="round"
-          stroke={active ? '#1e1e1c' : 'currentColor'}
-          strokeWidth="2.2"
-          d="M2.5 9.5h19M6.5 14.5h4"
-        />
-      </svg>
-    );
-  }
-
-  if (id === 'analytics') {
-    return (
-      <svg
-        className={sizeClass}
-        fill={active ? 'currentColor' : 'none'}
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2.2"
-      >
-        <rect x="3.5" y="12" width="4.2" height="8.5" rx="1.8" />
-        <rect x="9.9" y="7.5" width="4.2" height="13" rx="1.8" />
-        <rect x="16.3" y="3.5" width="4.2" height="17" rx="1.8" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg
-      className={sizeClass}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={active ? '2.4' : '2.1'}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"
-      />
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2.2" />
-    </svg>
-  );
-}
+import {
+  WALLET_COLORS,
+  DEFAULT_WALLETS_TEMPLATE,
+  DEFAULT_CATEGORIES_TEMPLATE,
+  NAV_TABS,
+  CACHE_KEY,
+  THEME_KEY,
+  BUDGET_CLEANUP_KEY,
+  SAVED_ACCOUNTS_KEY,
+  OFFLINE_QUEUE_KEY,
+  getUiTheme
+} from './constants/theme';
+import {
+  getInitialSyncSession,
+  hasOAuthParamsInUrl,
+  parseShortcutCategoryTag,
+  cleanCategoryString,
+  findMatchingCategoryObj,
+  getCategoryAccentColor,
+  formatDisplayAmount,
+  formatDayGroupLabel,
+  escapeCsvCell
+} from './utils/formatters';
+import TapxLogo from './components/TapxLogo';
+import NavIcon from './components/NavIcon';
+import LoginScreen from './components/LoginScreen';
+import KeypadTab from './components/KeypadTab';
+import AccountsTab from './components/AccountsTab';
+import InsightsTab from './components/InsightsTab';
+import SettingsTab from './components/SettingsTab';
+import { WalletModal, CategoryModal, EditTransactionModal } from './components/Modals';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -695,7 +82,6 @@ function TapxMainApp() {
 
   const initialSyncSession = useMemo(() => getInitialSyncSession(cachedData), [cachedData]);
 
-  // Saved Google Accounts for 1-Tap Account Picker on Login Screen
   const [savedAccounts, setSavedAccounts] = useState(() => {
     try {
       const raw = localStorage.getItem(SAVED_ACCOUNTS_KEY);
@@ -705,7 +91,6 @@ function TapxMainApp() {
     }
   });
 
-  // Persistent Offline Sync Queue
   const [offlineQueue, setOfflineQueue] = useState(() => {
     try {
       const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
@@ -719,13 +104,10 @@ function TapxMainApp() {
   );
   const flushingQueueRef = useRef(false);
 
-  // Theme Mode: 'system' | 'dark' | 'light'
-  const [themePref, setThemePref] = useState(() => {
-    return localStorage.getItem(THEME_KEY) || 'dark';
-  });
-  const [systemIsDark, setSystemIsDark] = useState(() => {
-    return window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true;
-  });
+  const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
+  const [systemIsDark, setSystemIsDark] = useState(() =>
+    window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true
+  );
 
   useEffect(() => {
     if (!window.matchMedia) return;
@@ -737,7 +119,6 @@ function TapxMainApp() {
 
   const isDark = themePref === 'system' ? systemIsDark : themePref === 'dark';
 
-  // Sync theme color (#1e1e1c in dark mode, #EFE7DA in light mode) with iOS Status Bar
   useEffect(() => {
     localStorage.setItem(THEME_KEY, themePref);
     const bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
@@ -747,71 +128,8 @@ function TapxMainApp() {
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
 
-  // Fun Cartoony / Tactile Cozy Theme System (Charcoal #1e1e1c & Sand #D8CBB3)
-  const ui = useMemo(() => {
-    if (isDark) {
-      return {
-        bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
-        sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6]',
-        card: 'bg-[#282825] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
-        cardElevated: 'bg-[#30302c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-        cardSubtle: 'bg-[#22221f] border-2 border-[#111110]/80',
-        heroCard: 'bg-[#282825] border-2 border-[#D8CBB3]/35 shadow-[0_5px_0_#111110]',
-        input: 'bg-[#181816] border-2 border-[#111110] text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
-        pillIdle: 'bg-[#282825] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_3px_0_#111110] active:shadow-none',
-        pillActive: 'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[0_3px_0_#111110] active:shadow-none',
-        numpadKey: 'bg-[#282825] border-2 border-[#111110] text-[#F5EFE6] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#30302c]',
-        numpadKeySpecial: 'bg-[#32302b] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-        segmentedBg: 'bg-[#161614] border-2 border-[#111110] shadow-[inset_0_2px_0_rgba(0,0,0,0.5)]',
-        segmentedThumb: 'bg-[#D8CBB3] border-2 border-[#111110] shadow-[0_2px_0_#111110]',
-        segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
-        textPrimary: 'text-[#F5EFE6]',
-        textSand: 'text-[#D8CBB3]',
-        textSecondary: 'text-[#B8AA93]',
-        textMuted: 'text-[#877D6E]',
-        islandBar: 'cartoon-dock-dark',
-        islandLens: 'cartoon-pill-lens-dark',
-        islandTextActive: 'text-[#1e1e1c]',
-        islandTextIdle: 'text-[#B8AA93]',
-        primaryBtnExpense: 'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-        primaryBtnIncome: 'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-        primaryBtnTransfer: 'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-        divider: 'border-[#363632]',
-        stickyHeader: 'bg-[#1e1e1c]/95 backdrop-blur-sm'
-      };
-    }
-    return {
-      bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
-      sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c]',
-      card: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
-      cardElevated: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-      cardSubtle: 'bg-[#E5DEC9] border-2 border-[#1e1e1c]',
-      heroCard: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_5px_0_#1e1e1c]',
-      input: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
-      pillIdle: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
-      pillActive: 'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#524E46] active:shadow-none',
-      numpadKey: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-      numpadKeySpecial: 'bg-[#D8CBB3] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-      segmentedBg: 'bg-[#D8CBB3] border-2 border-[#1e1e1c]',
-      segmentedThumb: 'bg-[#1e1e1c] border-2 border-[#1e1e1c]',
-      segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
-      textPrimary: 'text-[#1e1e1c]',
-      textSand: 'text-[#1e1e1c]',
-      textSecondary: 'text-[#524E46]',
-      textMuted: 'text-[#7A7367]',
-      islandBar: 'cartoon-dock-light',
-      islandLens: 'cartoon-pill-lens-light',
-      islandTextActive: 'text-[#D8CBB3]',
-      islandTextIdle: 'text-[#524E46]',
-      primaryBtnExpense: 'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#524E46] active:shadow-[0_1px_0_#524E46]',
-      primaryBtnIncome: 'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-      primaryBtnTransfer: 'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-      divider: 'border-[#1e1e1c]/20',
-      stickyHeader: 'bg-[#EFE7DA]/95 backdrop-blur-sm'
-    };
-  }, [isDark]);
+  const ui = useMemo(() => getUiTheme(isDark), [isDark]);
 
-  // Initialize session synchronously from localStorage/cache so we NEVER flash the login screen
   const [session, setSession] = useState(() => initialSyncSession);
   const [isAuthChecking, setIsAuthChecking] = useState(() => !initialSyncSession);
   const [isLoggingIn, setIsLoggingIn] = useState(() => hasOAuthParamsInUrl());
@@ -819,7 +137,6 @@ function TapxMainApp() {
   const [dbError, setDbError] = useState('');
   const seedingRef = useRef(false);
 
-  // Navigation, Bouncy Pill & Scrubbing State
   const [activeTab, setActiveTab] = useState('pad');
   const [tabDirection, setTabDirection] = useState('right');
   const [lensBulge, setLensBulge] = useState(false);
@@ -872,7 +189,6 @@ function TapxMainApp() {
     [triggerLensMagnification]
   );
 
-  // Continuous 0..3 index from finger X position
   const getClampedIndexFromClientX = useCallback((clientX) => {
     if (!navBarRef.current) return 0;
     const rect = navBarRef.current.getBoundingClientRect();
@@ -887,14 +203,12 @@ function TapxMainApp() {
     isPointerDownOnNavRef.current = true;
     isScrubbingRef.current = false;
     pointerStartXRef.current = e.clientX;
-
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     setLensBulge(true);
   };
 
   const handleNavPointerMove = (e) => {
     if (!isPointerDownOnNavRef.current) return;
-
     if (!isScrubbingRef.current && Math.abs(e.clientX - pointerStartXRef.current) > 10) {
       isScrubbingRef.current = true;
       try {
@@ -907,7 +221,6 @@ function TapxMainApp() {
     if (isScrubbingRef.current) {
       const clampedIndex = getClampedIndexFromClientX(e.clientX);
       setScrubProgress(clampedIndex);
-
       const nearestIdx = Math.round(clampedIndex);
       const targetTab = NAV_TABS[nearestIdx]?.id;
       if (targetTab && targetTab !== activeTab) {
@@ -933,20 +246,13 @@ function TapxMainApp() {
     }
 
     setScrubProgress(null);
-
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
-    lensTimerRef.current = setTimeout(() => {
-      setLensBulge(false);
-    }, 220);
+    lensTimerRef.current = setTimeout(() => setLensBulge(false), 220);
   };
 
-  const activeTabIndex = Math.max(
-    0,
-    NAV_TABS.findIndex((t) => t.id === activeTab)
-  );
+  const activeTabIndex = Math.max(0, NAV_TABS.findIndex((t) => t.id === activeTab));
   const visualLensIndex = scrubProgress !== null ? scrubProgress : activeTabIndex;
-  const tabAnimClass =
-    tabDirection === 'right' ? 'animate-tab-right' : 'animate-tab-left';
+  const tabAnimClass = tabDirection === 'right' ? 'animate-tab-right' : 'animate-tab-left';
 
   // User Database State
   const [settings, setSettings] = useState(
@@ -966,16 +272,14 @@ function TapxMainApp() {
   );
   const [note, setNote] = useState('');
 
-  // Toast + Undo State
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
-  // Activity Filter & Search State
   const [activityWalletFilter, setActivityWalletFilter] = useState('all');
   const [activityTypeFilter, setActivityTypeFilter] = useState('all');
   const [activitySearch, setActivitySearch] = useState('');
 
-  // Bottom Sheet State: New / Edit Wallet
+  // Modal States
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [editingWalletId, setEditingWalletId] = useState(null);
   const [newWalletName, setNewWalletName] = useState('');
@@ -984,7 +288,6 @@ function TapxMainApp() {
   const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[0]);
   const [newWalletIcon, setNewWalletIcon] = useState('💳');
 
-  // Bottom Sheet State: New / Edit Category
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCatId, setEditingCatId] = useState(null);
   const [newCatName, setNewCatName] = useState('');
@@ -992,7 +295,6 @@ function TapxMainApp() {
   const [newCatIcon, setNewCatIcon] = useState('🍔');
   const [newCatBudget, setNewCatBudget] = useState('');
 
-  // Bottom Sheet State: Edit Transaction
   const [editingTx, setEditingTx] = useState(null);
   const [editTxAmount, setEditTxAmount] = useState('');
   const [editTxNote, setEditTxNote] = useState('');
@@ -1000,11 +302,9 @@ function TapxMainApp() {
   const [editTxToWalletId, setEditTxToWalletId] = useState('');
   const [editTxCategoryId, setEditTxCategoryId] = useState('');
 
-  // Two-Tap Delete Confirmation State
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [copiedField, setCopiedField] = useState('');
 
-  // Keep Transfer destination wallet distinct from source wallet automatically
   useEffect(() => {
     if (wallets.length > 1 && selectedWalletId === toWalletId) {
       const fallback = wallets.find((w) => w.id !== selectedWalletId);
@@ -1012,7 +312,6 @@ function TapxMainApp() {
     }
   }, [selectedWalletId, toWalletId, wallets]);
 
-  // Persist Offline Sync Queue to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(offlineQueue));
@@ -1021,7 +320,6 @@ function TapxMainApp() {
     }
   }, [offlineQueue]);
 
-  // Remember signed-in Google account on device for the 1-Tap Account Chooser
   useEffect(() => {
     const user = session?.user;
     if (!user?.id || !user?.email) return;
@@ -1046,7 +344,6 @@ function TapxMainApp() {
     });
   }, [session?.user]);
 
-  // Cache state automatically
   useEffect(() => {
     if (!session?.user?.id) return;
     try {
@@ -1065,7 +362,15 @@ function TapxMainApp() {
     } catch {
       // Ignore storage quota errors
     }
-  }, [session?.user?.id, session?.user?.email, session?.user?.user_metadata, settings, wallets, categories, transactions]);
+  }, [
+    session?.user?.id,
+    session?.user?.email,
+    session?.user?.user_metadata,
+    settings,
+    wallets,
+    categories,
+    transactions
+  ]);
 
   const showToast = useCallback((message, onUndo = null, duration = 2200) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -1075,7 +380,6 @@ function TapxMainApp() {
     }, onUndo ? 4000 : duration);
   }, []);
 
-  // Flush Offline Sync Queue when back online
   const flushOfflineQueue = useCallback(
     async (userId) => {
       if (!userId || flushingQueueRef.current) return;
@@ -1092,7 +396,6 @@ function TapxMainApp() {
 
       flushingQueueRef.current = true;
       setIsSyncingBg(true);
-
       const remaining = [];
 
       for (const item of currentQueue) {
@@ -1183,7 +486,12 @@ function TapxMainApp() {
         const [walletsRes, categoriesRes, txRes] = await Promise.all([
           supabase.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
           supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-          supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(500)
+          supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(500)
         ]);
 
         if (walletsRes.error) throw walletsRes.error;
@@ -1196,10 +504,7 @@ function TapxMainApp() {
 
         const alreadyCleanedBudgets = localStorage.getItem(BUDGET_CLEANUP_KEY);
         if (!alreadyCleanedBudgets && fetchedCategories.some((c) => c.monthly_budget !== null)) {
-          await supabase
-            .from('categories')
-            .update({ monthly_budget: null })
-            .eq('user_id', userId);
+          await supabase.from('categories').update({ monthly_budget: null }).eq('user_id', userId);
           fetchedCategories = fetchedCategories.map((c) => ({ ...c, monthly_budget: null }));
           localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
         } else if (!alreadyCleanedBudgets) {
@@ -1210,14 +515,8 @@ function TapxMainApp() {
           seedingRef.current = true;
 
           if (fetchedWallets.length === 0 && fetchedTx.length === 0) {
-            const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({
-              ...w,
-              user_id: userId
-            }));
-            const { data: seededWallets } = await supabase
-              .from('wallets')
-              .insert(starterWallets)
-              .select();
+            const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({ ...w, user_id: userId }));
+            const { data: seededWallets } = await supabase.from('wallets').insert(starterWallets).select();
             if (Array.isArray(seededWallets) && seededWallets.length > 0) {
               fetchedWallets = seededWallets;
             }
@@ -1227,16 +526,10 @@ function TapxMainApp() {
             const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
             const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
               (item) => !existingNames.has(item.name.toLowerCase())
-            ).map((item) => ({
-              ...item,
-              user_id: userId
-            }));
+            ).map((item) => ({ ...item, user_id: userId }));
 
             if (missingDefaults.length > 0) {
-              const { data: seededCats } = await supabase
-                .from('categories')
-                .insert(missingDefaults)
-                .select();
+              const { data: seededCats } = await supabase.from('categories').insert(missingDefaults).select();
               if (Array.isArray(seededCats)) {
                 fetchedCategories = [...fetchedCategories, ...seededCats];
               }
@@ -1244,7 +537,6 @@ function TapxMainApp() {
           }
         }
 
-        // Auto-heal Back Tap transactions whose category was tagged in `note` ([cat:CategoryName])
         const defaultFirstCatId = fetchedCategories[0]?.id;
         const txUpdatesToSync = [];
 
@@ -1258,17 +550,11 @@ function TapxMainApp() {
               txUpdatesToSync.push({ id: tx.id, category_id: nextCatId, note: cleanNote });
               return { ...tx, category_id: nextCatId, note: cleanNote };
             }
-          } else if (
-            tx.source === 'shortcut' &&
-            tx.category_id === defaultFirstCatId &&
-            cleanNote
-          ) {
+          } else if (tx.source === 'shortcut' && tx.category_id === defaultFirstCatId && cleanNote) {
             const noteCatMatch = findMatchingCategoryObj(cleanNote, fetchedCategories);
             if (noteCatMatch && noteCatMatch.id !== defaultFirstCatId) {
               const strippedNote =
-                cleanCategoryString(cleanNote) === cleanCategoryString(noteCatMatch.name)
-                  ? ''
-                  : cleanNote;
+                cleanCategoryString(cleanNote) === cleanCategoryString(noteCatMatch.name) ? '' : cleanNote;
               txUpdatesToSync.push({ id: tx.id, category_id: noteCatMatch.id, note: strippedNote });
               return { ...tx, category_id: noteCatMatch.id, note: strippedNote };
             }
@@ -1316,17 +602,12 @@ function TapxMainApp() {
     [flushOfflineQueue]
   );
 
-  // Track online/offline status & auto-flush queue on reconnect
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      if (session?.user?.id) {
-        fetchUserData(session.user.id);
-      }
+      if (session?.user?.id) fetchUserData(session.user.id);
     };
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
+    const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -1387,18 +668,13 @@ function TapxMainApp() {
   }, []);
 
   useEffect(() => {
-    if (session?.user?.id) {
-      fetchUserData(session.user.id);
-    }
+    if (session?.user?.id) fetchUserData(session.user.id);
   }, [session?.user?.id, fetchUserData]);
 
-  // Automatically sync when returning to the app after using Back Tap
   useEffect(() => {
     if (!session?.user?.id) return;
     const handleVisibilityOrFocus = () => {
-      if (document.visibilityState === 'visible') {
-        fetchUserData(session.user.id);
-      }
+      if (document.visibilityState === 'visible') fetchUserData(session.user.id);
     };
     window.addEventListener('focus', handleVisibilityOrFocus);
     document.addEventListener('visibilitychange', handleVisibilityOrFocus);
@@ -1408,22 +684,16 @@ function TapxMainApp() {
     };
   }, [session?.user?.id, fetchUserData]);
 
-  // Trigger Google OAuth with Account Chooser (`select_account`) or pre-selected `login_hint`
   const handleGoogleLogin = async (loginHintEmail = '') => {
     setIsLoggingIn(true);
     const queryParams = {
       access_type: 'offline',
-      ...(loginHintEmail
-        ? { login_hint: loginHintEmail }
-        : { prompt: 'select_account' })
+      ...(loginHintEmail ? { login_hint: loginHintEmail } : { prompt: 'select_account' })
     };
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-        queryParams
-      }
+      options: { redirectTo: window.location.origin, queryParams }
     });
 
     if (error) {
@@ -1451,7 +721,6 @@ function TapxMainApp() {
     await supabase.auth.signOut();
   };
 
-  // Zero-Latency Numpad Handler
   const handleDigitPress = (digit) => {
     if (noteInputRef.current && document.activeElement === noteInputRef.current) {
       noteInputRef.current.blur();
@@ -1495,6 +764,25 @@ function TapxMainApp() {
     const prevFrom = selectedWalletId;
     setSelectedWalletId(toWalletId);
     setToWalletId(prevFrom);
+  };
+
+  const resetWalletModal = () => {
+    setEditingWalletId(null);
+    setNewWalletName('');
+    setNewWalletBalance('');
+    setNewWalletType('UPI / Wallet');
+    setNewWalletColor(WALLET_COLORS[0]);
+    setNewWalletIcon('💳');
+    setShowWalletModal(false);
+  };
+
+  const resetCategoryModal = () => {
+    setEditingCatId(null);
+    setNewCatName('');
+    setNewCatBudget('');
+    setNewCatType('expense');
+    setNewCatIcon('🍔');
+    setShowCategoryModal(false);
   };
 
   const handleLogTransaction = async () => {
@@ -1552,12 +840,7 @@ function TapxMainApp() {
     };
 
     const currentlyOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-
-    const optimisticTx = {
-      id: tempId,
-      ...insertPayload,
-      pendingSync: currentlyOffline
-    };
+    const optimisticTx = { id: tempId, ...insertPayload, pendingSync: currentlyOffline };
 
     setTransactions((prev) => [optimisticTx, ...prev]);
     setWallets((prev) =>
@@ -1584,9 +867,7 @@ function TapxMainApp() {
         expectedToBalance
       };
       setOfflineQueue((prev) => [...prev, queueEntry]);
-      setTransactions((prev) =>
-        prev.map((tx) => (tx.id === tempId ? { ...tx, pendingSync: true } : tx))
-      );
+      setTransactions((prev) => prev.map((tx) => (tx.id === tempId ? { ...tx, pendingSync: true } : tx)));
       showToast('Saved offline · Will sync when back!');
     };
 
@@ -1616,10 +897,7 @@ function TapxMainApp() {
       .maybeSingle();
 
     if (checkFromWallet && Number(checkFromWallet.balance) !== expectedFromBalance) {
-      await supabase
-        .from('wallets')
-        .update({ balance: expectedFromBalance })
-        .eq('id', fromId);
+      await supabase.from('wallets').update({ balance: expectedFromBalance }).eq('id', fromId);
     }
 
     if (currentType === 'transfer' && destId && expectedToBalance !== null) {
@@ -1630,10 +908,7 @@ function TapxMainApp() {
         .maybeSingle();
 
       if (checkToWallet && Number(checkToWallet.balance) !== expectedToBalance) {
-        await supabase
-          .from('wallets')
-          .update({ balance: expectedToBalance })
-          .eq('id', destId);
+        await supabase.from('wallets').update({ balance: expectedToBalance }).eq('id', destId);
       }
     }
 
@@ -1642,16 +917,13 @@ function TapxMainApp() {
     }
   };
 
-  // Delete Transaction with Instant Undo Support
   const handleDeleteTransaction = async (id) => {
     const targetTx = transactions.find((t) => t.id === id);
     if (!targetTx) return;
 
     const amt = Number(targetTx.amount) || 0;
     const fromWallet = wallets.find((w) => w.id === targetTx.wallet_id);
-    const toWallet = targetTx.to_wallet_id
-      ? wallets.find((w) => w.id === targetTx.to_wallet_id)
-      : null;
+    const toWallet = targetTx.to_wallet_id ? wallets.find((w) => w.id === targetTx.to_wallet_id) : null;
 
     const origFromBal = fromWallet ? Number(fromWallet.balance || 0) : null;
     const origToBal = toWallet ? Number(toWallet.balance || 0) : null;
@@ -1662,10 +934,7 @@ function TapxMainApp() {
         : origFromBal + amt
       : null;
 
-    const restoredToBalance =
-      targetTx.type === 'transfer' && toWallet
-        ? origToBal - amt
-        : null;
+    const restoredToBalance = targetTx.type === 'transfer' && toWallet ? origToBal - amt : null;
 
     setTransactions((prev) => prev.filter((t) => t.id !== id));
     setOfflineQueue((prev) => prev.filter((item) => item.tempId !== id));
@@ -1681,25 +950,17 @@ function TapxMainApp() {
       })
     );
 
-    if (editingTx?.id === id) {
-      setEditingTx(null);
-    }
+    if (editingTx?.id === id) setEditingTx(null);
 
     if (!String(id).startsWith('temp-')) {
       await supabase.from('transactions').delete().eq('id', id);
 
       if (targetTx.wallet_id && restoredFromBalance !== null) {
-        await supabase
-          .from('wallets')
-          .update({ balance: restoredFromBalance })
-          .eq('id', targetTx.wallet_id);
+        await supabase.from('wallets').update({ balance: restoredFromBalance }).eq('id', targetTx.wallet_id);
       }
 
       if (targetTx.type === 'transfer' && targetTx.to_wallet_id && restoredToBalance !== null) {
-        await supabase
-          .from('wallets')
-          .update({ balance: restoredToBalance })
-          .eq('id', targetTx.to_wallet_id);
+        await supabase.from('wallets').update({ balance: restoredToBalance }).eq('id', targetTx.to_wallet_id);
       }
     }
 
@@ -1739,7 +1000,6 @@ function TapxMainApp() {
     });
   };
 
-  // Open Edit Transaction Sheet
   const openEditTransaction = (tx) => {
     const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
     const resolvedCat =
@@ -1781,20 +1041,16 @@ function TapxMainApp() {
       balanceDeltas[wId] = (balanceDeltas[wId] || 0) + delta;
     };
 
-    if (oldTx.type === 'income') {
-      addDelta(oldTx.wallet_id, -oldAmt);
-    } else if (oldTx.type === 'expense') {
-      addDelta(oldTx.wallet_id, oldAmt);
-    } else if (oldTx.type === 'transfer') {
+    if (oldTx.type === 'income') addDelta(oldTx.wallet_id, -oldAmt);
+    else if (oldTx.type === 'expense') addDelta(oldTx.wallet_id, oldAmt);
+    else if (oldTx.type === 'transfer') {
       addDelta(oldTx.wallet_id, oldAmt);
       addDelta(oldTx.to_wallet_id, -oldAmt);
     }
 
-    if (oldTx.type === 'income') {
-      addDelta(nextWalletId, newAmt);
-    } else if (oldTx.type === 'expense') {
-      addDelta(nextWalletId, -newAmt);
-    } else if (oldTx.type === 'transfer') {
+    if (oldTx.type === 'income') addDelta(nextWalletId, newAmt);
+    else if (oldTx.type === 'expense') addDelta(nextWalletId, -newAmt);
+    else if (oldTx.type === 'transfer') {
       addDelta(nextWalletId, -newAmt);
       addDelta(nextToWalletId, newAmt);
     }
@@ -1855,16 +1111,6 @@ function TapxMainApp() {
     setNewWalletColor(wallet.color || WALLET_COLORS[0]);
     setNewWalletIcon(wallet.icon || '💳');
     setShowWalletModal(true);
-  };
-
-  const resetWalletModal = () => {
-    setEditingWalletId(null);
-    setNewWalletName('');
-    setNewWalletBalance('');
-    setNewWalletType('UPI / Wallet');
-    setNewWalletColor(WALLET_COLORS[0]);
-    setNewWalletIcon('💳');
-    setShowWalletModal(false);
   };
 
   const handleSaveWallet = async (e) => {
@@ -1952,15 +1198,6 @@ function TapxMainApp() {
     setShowCategoryModal(true);
   };
 
-  const resetCategoryModal = () => {
-    setEditingCatId(null);
-    setNewCatName('');
-    setNewCatBudget('');
-    setNewCatType('expense');
-    setNewCatIcon('🍔');
-    setShowCategoryModal(false);
-  };
-
   const handleSaveCategory = async (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -2043,11 +1280,7 @@ function TapxMainApp() {
 
     setSettings((prev) => ({ ...prev, shortcut_token: randomHex }));
     showToast('Token refreshed!');
-
-    await supabase
-      .from('user_settings')
-      .update({ shortcut_token: randomHex })
-      .eq('user_id', session.user.id);
+    await supabase.from('user_settings').update({ shortcut_token: randomHex }).eq('user_id', session.user.id);
   };
 
   const copyToClipboard = (text, label) => {
@@ -2062,13 +1295,8 @@ function TapxMainApp() {
   const handleOneTapShortcut = () => {
     navigator.clipboard.writeText(personalApiUrl);
     showToast('Personal URL copied · Opening Shortcuts');
-
     setTimeout(() => {
-      if (SHARED_ICLOUD_SHORTCUT_URL) {
-        window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
-      } else {
-        window.location.href = 'shortcuts://create-shortcut';
-      }
+      window.location.href = 'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
     }, 450);
   };
 
@@ -2087,7 +1315,6 @@ function TapxMainApp() {
     [categories, entryType]
   );
 
-  // Resolve transaction category cleanly even if Back Tap stored [cat:...] in note
   const resolveTxCategory = useCallback(
     (tx) => {
       const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx?.note);
@@ -2101,7 +1328,6 @@ function TapxMainApp() {
     [categories]
   );
 
-  // Filtered and Searchable Transactions
   const visibleTransactions = useMemo(() => {
     const q = activitySearch.trim().toLowerCase();
     return transactions
@@ -2113,20 +1339,12 @@ function TapxMainApp() {
         ) {
           return false;
         }
-        if (activityTypeFilter !== 'all' && tx.type !== activityTypeFilter) {
-          return false;
-        }
+        if (activityTypeFilter !== 'all' && tx.type !== activityTypeFilter) return false;
         if (!q) return true;
         const w = wallets.find((item) => item.id === tx.wallet_id);
         const toW = wallets.find((item) => item.id === tx.to_wallet_id);
         const { category: c, cleanNote } = resolveTxCategory(tx);
-        const haystack = [
-          cleanNote,
-          w?.name,
-          toW?.name,
-          c?.name,
-          String(tx.amount || '')
-        ]
+        const haystack = [cleanNote, w?.name, toW?.name, c?.name, String(tx.amount || '')]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
@@ -2135,7 +1353,6 @@ function TapxMainApp() {
       .slice(0, 80);
   }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, wallets, resolveTxCategory]);
 
-  // Group visibleTransactions by Date
   const groupedTransactions = useMemo(() => {
     const groups = [];
     const groupMap = new Map();
@@ -2177,7 +1394,6 @@ function TapxMainApp() {
     return map;
   }, [transactions, resolveTxCategory]);
 
-  // Rich Analytics Engine (Donut Segments, Cashflow Ratio, Pacing, Top Spends, 7D Trend)
   const analyticsData = useMemo(() => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -2217,10 +1433,7 @@ function TapxMainApp() {
         const catKey = c?.id || tx.category_id || 'uncategorized';
         categoryTotals[catKey] = (categoryTotals[catKey] || 0) + amt;
         categoryCounts[catKey] = (categoryCounts[catKey] || 0) + 1;
-
-        if (tx.wallet_id) {
-          walletTotals[tx.wallet_id] = (walletTotals[tx.wallet_id] || 0) + amt;
-        }
+        if (tx.wallet_id) walletTotals[tx.wallet_id] = (walletTotals[tx.wallet_id] || 0) + amt;
       } else if (tx.type === 'income') {
         totalIncome += amt;
       }
@@ -2236,9 +1449,7 @@ function TapxMainApp() {
     const dailyAvgExpense = totalExpense / daysDivisor;
     const projectedMonthSpend = Math.round(dailyAvgExpense * daysInCurrentMonth);
     const savingsRate =
-      totalIncome > 0
-        ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100)
-        : null;
+      totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : null;
 
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
@@ -2258,17 +1469,11 @@ function TapxMainApp() {
         return txDate.toDateString() === dayStr ? sum + (Number(tx.amount) || 0) : sum;
       }, 0);
 
-      last7Days.push({
-        label,
-        fullDateLabel,
-        isToday: i === 0,
-        amount: daySum
-      });
+      last7Days.push({ label, fullDateLabel, isToday: i === 0, amount: daySum });
     }
 
     const maxDaySpend = Math.max(...last7Days.map((d) => d.amount), 1);
-    const sevenDayAvg =
-      last7Days.reduce((acc, d) => acc + d.amount, 0) / 7;
+    const sevenDayAvg = last7Days.reduce((acc, d) => acc + d.amount, 0) / 7;
 
     const categoryBreakdown = Object.keys(categoryTotals)
       .map((catId, index) => {
@@ -2335,7 +1540,6 @@ function TapxMainApp() {
     };
   }, [transactions, categories, wallets, analyticsRange, resolveTxCategory]);
 
-  // 1-Tap CSV Export Handler
   const handleExportCsv = useCallback(() => {
     const sourceRows = analyticsData.filteredTx.length > 0 ? analyticsData.filteredTx : transactions;
     if (sourceRows.length === 0) {
@@ -2355,14 +1559,11 @@ function TapxMainApp() {
       'Note',
       'Source'
     ];
-
     const csvLines = [headers.map(escapeCsvCell).join(',')];
 
     sourceRows.forEach((tx) => {
       const d = tx.created_at ? new Date(tx.created_at) : new Date();
-      const dateStr = !isNaN(d.getTime())
-        ? d.toLocaleDateString('en-CA')
-        : '';
+      const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('en-CA') : '';
       const timeStr = !isNaN(d.getTime())
         ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
         : '';
@@ -2370,19 +1571,22 @@ function TapxMainApp() {
       const toW = wallets.find((item) => item.id === tx.to_wallet_id);
       const { category: c, cleanNote } = resolveTxCategory(tx);
 
-      const row = [
-        dateStr,
-        timeStr,
-        tx.type || 'expense',
-        tx.type === 'transfer' ? 'Transfer' : c?.name || 'Uncategorized',
-        w?.name || '',
-        toW?.name || '',
-        Number(tx.amount || 0).toFixed(2),
-        settings?.currency || '₹',
-        cleanNote || '',
-        tx.source || 'app'
-      ];
-      csvLines.push(row.map(escapeCsvCell).join(','));
+      csvLines.push(
+        [
+          dateStr,
+          timeStr,
+          tx.type || 'expense',
+          tx.type === 'transfer' ? 'Transfer' : c?.name || 'Uncategorized',
+          w?.name || '',
+          toW?.name || '',
+          Number(tx.amount || 0).toFixed(2),
+          settings?.currency || '₹',
+          cleanNote || '',
+          tx.source || 'app'
+        ]
+          .map(escapeCsvCell)
+          .join(',')
+      );
     });
 
     const csvString = '\uFEFF' + csvLines.join('\n');
@@ -2413,17 +1617,6 @@ function TapxMainApp() {
     return 'text-[42px]';
   }, [formattedDisplayAmount]);
 
-  const primaryButtonClass =
-    entryType === 'income'
-      ? ui.primaryBtnIncome
-      : entryType === 'transfer'
-      ? ui.primaryBtnTransfer
-      : ui.primaryBtnExpense;
-
-  const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
-  const settingsSubIndex = settingsSection === 'shortcut' ? 0 : 1;
-
-  // Show boot screen while verifying initial auth or completing an OAuth redirect
   if ((isAuthChecking && !session) || (isLoggingIn && !session)) {
     return (
       <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
@@ -2433,151 +1626,24 @@ function TapxMainApp() {
     );
   }
 
-  // CARTOONY LOGIN SCREEN WITH 1-TAP SAVED GOOGLE ACCOUNT PICKER
   if (!session) {
     return (
-      <div
-        className={`h-full w-full ${ui.bg} flex flex-col justify-between px-7 max-w-md mx-auto overflow-hidden select-none relative`}
-        style={{
-          paddingTop: 'max(env(safe-area-inset-top), 24px)',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 28px)'
-        }}
-      >
-        <div />
-
-        <div className="relative z-10 flex flex-col items-center text-center space-y-3">
-          <div className="p-3 rounded-[32px] bg-[#282825] border-2 border-[#111110] shadow-[0_6px_0_#111110] mb-1">
-            <TapxLogo className="w-24 h-24" />
-          </div>
-          <span className="px-3 py-1 rounded-full text-[11px] font-cartoon font-bold uppercase tracking-wider bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_2px_0_#111110]">
-            Pocket Expense Buddy
-          </span>
-          <h1 className={`text-4xl font-cartoon font-bold tracking-tight ${ui.textPrimary}`}>
-            TAPX
-          </h1>
-          <p className={`text-sm max-w-[250px] font-medium leading-relaxed ${ui.textSecondary}`}>
-            Playful multi-wallet expense tracking with instant iPhone Back Tap logging.
-          </p>
-        </div>
-
-        <div className="relative z-10 space-y-3">
-          {savedAccounts.length > 0 && (
-            <div className="space-y-2 pb-1">
-              <p className={`text-[11px] font-cartoon font-bold uppercase tracking-wider px-1 ${ui.textMuted}`}>
-                Jump right back in
-              </p>
-              <div className="space-y-2">
-                {savedAccounts.map((acc) => (
-                  <div
-                    key={acc.email}
-                    onClick={() => handleGoogleLogin(acc.email)}
-                    className={`w-full p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {acc.avatar ? (
-                        <img
-                          src={acc.avatar}
-                          alt={acc.name}
-                          className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-[#111110]"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] font-cartoon font-bold text-sm flex items-center justify-center shrink-0">
-                          {String(acc.name || acc.email || 'U').charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0 text-left">
-                        <p className={`text-xs font-bold truncate ${ui.textPrimary}`}>
-                          {acc.name}
-                        </p>
-                        <p className={`text-[11px] truncate ${ui.textSecondary}`}>
-                          {acc.email}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => handleRemoveSavedAccount(acc.email, e)}
-                      className={`p-1.5 text-xs rounded-xl font-bold ${ui.textMuted} hover:text-[#F26B5B]`}
-                      title="Remove saved account"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={() => handleGoogleLogin('')}
-            className={`w-full py-4 px-5 font-cartoon font-bold text-base rounded-2xl flex items-center justify-center gap-3 key-press ${ui.primaryBtnExpense}`}
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"
-              />
-            </svg>
-            {savedAccounts.length > 0 ? 'Use another Google Account' : 'Continue with Google'}
-          </button>
-
-          <p className={`text-[11px] text-center leading-relaxed ${ui.textMuted}`}>
-            TAPX uses Google Sign-In solely to sync your private account across devices. Read our{' '}
-            <a
-              href="/privacy.html"
-              className={`underline font-bold ${ui.textSecondary}`}
-            >
-              Privacy Policy
-            </a>
-            {' · '}
-            <a
-              href="mailto:kalppatel132008@gmail.com"
-              className={`underline font-bold ${ui.textSecondary}`}
-            >
-              Support
-            </a>
-          </p>
-        </div>
-      </div>
+      <LoginScreen
+        ui={ui}
+        savedAccounts={savedAccounts}
+        onGoogleLogin={handleGoogleLogin}
+        onRemoveSavedAccount={handleRemoveSavedAccount}
+      />
     );
   }
-
-  const selectedDayObj =
-    analyticsData.last7Days[selectedBarIdx] ||
-    analyticsData.last7Days[analyticsData.last7Days.length - 1];
-
-  const activeDonutCat =
-    analyticsData.categoryBreakdown.find((c) => c.id === selectedDonutCatId) ||
-    analyticsData.categoryBreakdown[0] ||
-    null;
-
-  // SVG Donut geometry
-  const donutRadius = 45;
-  const donutCircumference = 2 * Math.PI * donutRadius;
-  let donutCumulativeShare = 0;
 
   return (
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'max(env(safe-area-inset-top), 16px)'
+        paddingTop: 'max(env(safe-area-inset-top), 12px)'
       }}
     >
-      {/* Self-contained UX helper styles */}
       <style>{`
         @media screen and (max-width: 768px) {
           input, select, textarea {
@@ -2593,7 +1659,7 @@ function TapxMainApp() {
         }
       `}</style>
 
-      {/* Chunky Cartoon Toast Pill with Optional Undo */}
+      {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
           className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_4px_0_#111110] flex items-center gap-3 animate-tab ${
@@ -2613,7 +1679,6 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Database Error Banner */}
       {dbError && (
         <div className="relative z-10 mx-5 mt-1 p-2.5 rounded-2xl bg-[#F26B5B]/20 border-2 border-[#F26B5B] text-[#F26B5B] text-xs font-bold flex items-center justify-between shrink-0">
           <span className="truncate">{dbError}</span>
@@ -2627,12 +1692,9 @@ function TapxMainApp() {
         </div>
       )}
 
-      {/* Top Header with Total Balance & Chunky "+ Account" Button */}
-      <header className="relative z-10 px-5 pt-1 pb-2.5 flex items-center justify-between shrink-0">
-        <div
-          onClick={() => handleSelectTab('wallets')}
-          className="cursor-pointer group"
-        >
+      {/* Top Header */}
+      <header className="relative z-10 px-5 pt-1 pb-2 flex items-center justify-between shrink-0">
+        <div onClick={() => handleSelectTab('wallets')} className="cursor-pointer group">
           <div className="flex items-center gap-2">
             <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
               Total Stash
@@ -2680,1601 +1742,203 @@ function TapxMainApp() {
         </button>
       </header>
 
-      {/* MAIN VIEWPORT */}
+      {/* MAIN VIEWPORT (Flush bottom padding matching tight dock position) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 86px)'
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 4px) + 74px)'
         }}
       >
-        {/* TAB 1: KEYPAD */}
         {activeTab === 'pad' && (
-          <div key="tab-pad" className={`flex-1 min-h-0 flex flex-col justify-between overflow-hidden ${tabAnimClass}`}>
-            {/* Chunky Sliding Segmented Control */}
-            <div className={`relative grid grid-cols-3 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
-              <div
-                className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
-                style={{ transform: `translate3d(${entryIndex * 100}%, 0, 0)` }}
-              />
-              {[
-                { id: 'expense', label: '💸 Expense' },
-                { id: 'income', label: '💰 Income' },
-                { id: 'transfer', label: '⇄ Transfer' }
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => {
-                    setEntryType(t.id);
-                    const firstMatch = categories.find(
-                      (c) => c.type === (t.id === 'income' ? 'income' : 'expense')
-                    );
-                    if (firstMatch) setSelectedCategoryId(firstMatch.id);
-                  }}
-                  className={`relative z-10 py-1.5 text-xs font-cartoon rounded-xl transition-colors duration-200 ${
-                    entryType === t.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Center Cartoon Amount Display Card */}
-            <div
-              className={`my-auto py-3 px-4 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden ${ui.heroCard}`}
-            >
-              {amountStr !== '0' && (
-                <button
-                  type="button"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handleDigitPress('CLEAR');
-                  }}
-                  className={`absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
-                >
-                  Reset
-                </button>
-              )}
-
-              <div
-                className={`${amountFontSizeClass} leading-none font-cartoon font-bold tracking-tight tabular-nums transition-transform duration-100 ${
-                  amountPulse ? 'scale-[1.06] -rotate-1' : 'scale-100'
-                } ${
-                  entryType === 'income'
-                    ? 'text-[#52B788]'
-                    : entryType === 'transfer'
-                    ? 'text-[#F4B942]'
-                    : ui.textSand
-                }`}
-              >
-                <span className={`text-2xl mr-1 font-cartoon ${ui.textMuted}`}>
-                  {entryType === 'income' ? '+' : entryType === 'expense' && amountStr !== '0' ? '-' : ''}
-                  {currencySymbol}
-                </span>
-                {formattedDisplayAmount}
-              </div>
-
-              <input
-                ref={noteInputRef}
-                type="text"
-                enterKeyHint="done"
-                placeholder={
-                  entryType === 'transfer'
-                    ? 'Transfer note (e.g. ATM withdrawal)...'
-                    : 'Write a quick note...'
-                }
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                }}
-                className={`mt-1 bg-transparent text-center text-xs font-semibold focus:outline-none w-4/5 scale-[0.84] origin-center ${ui.textSecondary}`}
-              />
-
-              {/* Quick Add Sticker Chips */}
-              <div className="flex items-center gap-1.5 mt-1.5">
-                {[50, 100, 500, 1000].map((val) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      handleQuickAddAmount(val);
-                    }}
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
-                  >
-                    +{currencySymbol}{val >= 1000 ? '1k' : val}
-                  </button>
-                ))}
-              </div>
-
-              {selectedWalletObj && (
-                <div className={`mt-2.5 pt-2 border-t-2 border-dashed w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold ${ui.divider} ${ui.textMuted}`}>
-                  <span>{selectedWalletObj.icon}</span>
-                  <span className={`font-bold ${ui.textSecondary}`}>{selectedWalletObj.name}</span>
-                  <span>·</span>
-                  <span className="tabular-nums">
-                    {currencySymbol}
-                    {Number(selectedWalletObj.balance || 0).toLocaleString('en-IN')} in pocket
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Wallet & Category Selector Pills */}
-            <div className="space-y-2 shrink-0">
-              {/* Wallet Row */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between px-0.5">
-                  <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
-                    {entryType === 'transfer' ? 'From Account → To Account' : 'Pick Account'}
-                  </span>
-                  {entryType === 'transfer' && wallets.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleSwapTransferWallets}
-                      className="text-[10px] font-cartoon font-bold text-[#F4B942] key-press"
-                    >
-                      ⇄ Swap
-                    </button>
-                  )}
-                </div>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {wallets.length === 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetWalletModal();
-                        setShowWalletModal(true);
-                      }}
-                      className={`px-3.5 py-2 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
-                    >
-                      + Add your first account
-                    </button>
-                  ) : (
-                    wallets.map((w, idx) => {
-                      const active = selectedWalletId === w.id;
-                      const wColor = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
-                      return (
-                        <button
-                          key={w.id}
-                          type="button"
-                          onClick={() => setSelectedWalletId(w.id)}
-                          style={
-                            active
-                              ? {
-                                  backgroundColor: wColor,
-                                  borderColor: '#111110',
-                                  color: '#1e1e1c'
-                                }
-                              : undefined
-                          }
-                          className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
-                            active
-                              ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]'
-                              : ui.pillIdle
-                          }`}
-                        >
-                          <span>{w.icon}</span>
-                          <span>{w.name}</span>
-                          <span className={`text-[10px] tabular-nums ${active ? 'opacity-90 font-extrabold' : 'opacity-75'}`}>
-                            {currencySymbol}
-                            {Number(w.balance || 0).toLocaleString('en-IN')}
-                          </span>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-
-                {/* Transfer Destination Row */}
-                {entryType === 'transfer' && wallets.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
-                    {wallets
-                      .filter((w) => w.id !== selectedWalletId)
-                      .map((w) => (
-                        <button
-                          key={w.id}
-                          type="button"
-                          onClick={() => setToWalletId(w.id)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1 shrink-0 transition-colors duration-150 key-press ${
-                            toWalletId === w.id ? ui.pillActive : ui.pillIdle
-                          }`}
-                        >
-                          <span>→ {w.icon} {w.name}</span>
-                        </button>
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Category Row with Cartoon Badges */}
-              {entryType !== 'transfer' && (
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between px-0.5">
-                    <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
-                      {entryType === 'income' ? 'Income Category' : 'Expense Category'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetCategoryModal();
-                        setNewCatType(entryType === 'income' ? 'income' : 'expense');
-                        setShowCategoryModal(true);
-                      }}
-                      className={`text-[10px] font-cartoon font-bold ${ui.textSecondary} key-press`}
-                    >
-                      + Custom
-                    </button>
-                  </div>
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                    {filteredCategories.map((c, idx) => {
-                      const active = selectedCategoryId === c.id;
-                      const accent = getCategoryAccentColor(c, idx);
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => setSelectedCategoryId(c.id)}
-                          style={
-                            active
-                              ? {
-                                  backgroundColor: accent,
-                                  borderColor: '#111110',
-                                  color: '#1e1e1c'
-                                }
-                              : undefined
-                          }
-                          className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
-                            active
-                              ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]'
-                              : ui.pillIdle
-                          }`}
-                        >
-                          <span>{c.icon}</span>
-                          <span>{c.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Tactile Arcade Cartoon Numpad (Hold DEL to Clear) */}
-            <div className="grid grid-cols-3 gap-2 pt-1.5 shrink-0">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handleDigitPress(key);
-                    if (key === 'DEL') {
-                      if (delHoldTimerRef.current) clearTimeout(delHoldTimerRef.current);
-                      delHoldTimerRef.current = setTimeout(() => {
-                        handleDigitPress('CLEAR');
-                      }, 420);
-                    }
-                  }}
-                  onPointerUp={() => {
-                    if (key === 'DEL' && delHoldTimerRef.current) {
-                      clearTimeout(delHoldTimerRef.current);
-                    }
-                  }}
-                  onPointerLeave={() => {
-                    if (key === 'DEL' && delHoldTimerRef.current) {
-                      clearTimeout(delHoldTimerRef.current);
-                    }
-                  }}
-                  className={`h-11 rounded-2xl text-lg font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
-                    key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
-                  }`}
-                >
-                  {key === 'DEL' ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
-                    </svg>
-                  ) : (
-                    key
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Chunky Sand / Mint / Gold Action Button */}
-            <button
-              type="button"
-              onClick={handleLogTransaction}
-              className={`w-full py-3.5 mt-2 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass}`}
-            >
-              Save {entryType === 'transfer' ? 'Transfer ⇄' : entryType === 'income' ? 'Income 💰' : 'Expense 💸'}
-            </button>
-          </div>
+          <KeypadTab
+            key="tab-pad"
+            ui={ui}
+            tabAnimClass={tabAnimClass}
+            entryType={entryType}
+            setEntryType={setEntryType}
+            categories={categories}
+            setSelectedCategoryId={setSelectedCategoryId}
+            amountStr={amountStr}
+            formattedDisplayAmount={formattedDisplayAmount}
+            amountFontSizeClass={amountFontSizeClass}
+            amountPulse={amountPulse}
+            currencySymbol={currencySymbol}
+            note={note}
+            setNote={setNote}
+            noteInputRef={noteInputRef}
+            selectedWalletObj={selectedWalletObj}
+            wallets={wallets}
+            selectedWalletId={selectedWalletId}
+            setSelectedWalletId={setSelectedWalletId}
+            toWalletId={toWalletId}
+            setToWalletId={setToWalletId}
+            filteredCategories={filteredCategories}
+            selectedCategoryId={selectedCategoryId}
+            handleDigitPress={handleDigitPress}
+            handleQuickAddAmount={handleQuickAddAmount}
+            handleSwapTransferWallets={handleSwapTransferWallets}
+            handleLogTransaction={handleLogTransaction}
+            delHoldTimerRef={delHoldTimerRef}
+            onOpenNewWallet={() => {
+              resetWalletModal();
+              setShowWalletModal(true);
+            }}
+            onOpenNewCategory={(type) => {
+              resetCategoryModal();
+              setNewCatType(type);
+              setShowCategoryModal(true);
+            }}
+          />
         )}
 
-        {/* TAB 2: ACCOUNTS & ACTIVITY */}
         {activeTab === 'wallets' && (
-          <div key="tab-wallets" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
-            {/* Cartoon Sticker Account Cards */}
-            <div className="shrink-0 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <h3 className={`text-xs font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
-                  Your Accounts ({wallets.length})
-                </h3>
-                {activityWalletFilter !== 'all' && (
-                  <button
-                    type="button"
-                    onClick={() => setActivityWalletFilter('all')}
-                    className="text-[11px] text-[#F4B942] font-cartoon font-bold key-press"
-                  >
-                    Show All
-                  </button>
-                )}
-              </div>
-
-              <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
-                {wallets.map((w, idx) => {
-                  const isFiltered = activityWalletFilter === w.id;
-                  const cardAccent = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
-                  return (
-                    <div
-                      key={w.id}
-                      onClick={() =>
-                        setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id))
-                      }
-                      style={{
-                        backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
-                      }}
-                      className={`min-w-[164px] p-3.5 rounded-2xl border-2 border-[#111110] shadow-[0_4px_0_#111110] flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press`}
-                    >
-                      <div className="flex items-center justify-between gap-2 relative z-10">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span
-                            className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
-                            style={{
-                              backgroundColor: isFiltered ? '#FAF6EE' : cardAccent
-                            }}
-                          >
-                            {w.icon}
-                          </span>
-                          <span
-                            className={`font-cartoon font-bold text-xs truncate ${
-                              isFiltered ? 'text-[#1e1e1c]' : ui.textPrimary
-                            }`}
-                          >
-                            {w.name}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditWallet(w);
-                          }}
-                          className={`px-2 py-0.5 rounded-lg border-2 border-[#111110] text-[10px] font-cartoon font-bold ${
-                            isFiltered
-                              ? 'bg-[#1e1e1c] text-[#D8CBB3]'
-                              : 'bg-[#D8CBB3] text-[#1e1e1c]'
-                          }`}
-                        >
-                          Edit
-                        </button>
-                      </div>
-                      <div className="mt-3 relative z-10 flex items-baseline justify-between gap-2">
-                        <div>
-                          <p
-                            className={`font-cartoon font-bold text-sm tabular-nums ${
-                              isFiltered ? 'text-[#1e1e1c]' : ui.textPrimary
-                            }`}
-                          >
-                            {currencySymbol}
-                            {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </p>
-                          <p
-                            className={`text-[10px] font-semibold ${
-                              isFiltered ? 'text-[#1e1e1c]/75' : ui.textMuted
-                            }`}
-                          >
-                            {w.type}
-                          </p>
-                        </div>
-                        {isFiltered && (
-                          <span className="text-[9px] px-2 py-0.5 rounded-full font-cartoon font-bold bg-[#1e1e1c] text-[#D8CBB3]">
-                            Active
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetWalletModal();
-                    setShowWalletModal(true);
-                  }}
-                  className={`min-w-[118px] p-3 rounded-2xl border-2 border-dashed border-[#D8CBB3]/50 flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.textSecondary}`}
-                >
-                  <span className="text-xl font-cartoon font-bold">+</span>
-                  <span className="text-[11px] font-cartoon font-bold">New Account</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Search + Type Filter Pills */}
-            <div className="flex items-center gap-2 shrink-0">
-              <div className={`flex-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${ui.input}`}>
-                <svg className={`w-3.5 h-3.5 shrink-0 ${ui.textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search note, category, amount..."
-                  value={activitySearch}
-                  onChange={(e) => setActivitySearch(e.target.value)}
-                  className="w-full bg-transparent text-xs font-medium focus:outline-none scale-[0.85] origin-left"
-                />
-                {activitySearch && (
-                  <button
-                    type="button"
-                    onClick={() => setActivitySearch('')}
-                    className={`text-[11px] font-bold ${ui.textMuted}`}
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              <div className={`flex p-0.5 rounded-xl shrink-0 ${ui.segmentedBg}`}>
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'expense', label: 'Out' },
-                  { id: 'income', label: 'In' }
-                ].map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setActivityTypeFilter(f.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-cartoon font-bold transition-all ${
-                      activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Date-Grouped Activity Feed */}
-            <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
-              {groupedTransactions.length === 0 ? (
-                <div className={`p-6 rounded-2xl text-center text-xs font-cartoon ${ui.card} ${ui.textMuted}`}>
-                  No transactions here yet! Tap the Keypad to pop one in.
-                </div>
-              ) : (
-                groupedTransactions.map((group) => (
-                  <div key={group.label} className="space-y-2">
-                    <div className={`sticky top-0 z-10 py-1 px-1 flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.stickyHeader}`}>
-                      <span className={ui.textSecondary}>{group.label}</span>
-                      <span className={`tabular-nums ${group.netSpend > 0 ? 'text-[#52B788]' : ui.textMuted}`}>
-                        {group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}
-                        {currencySymbol}
-                        {Math.abs(group.netSpend).toLocaleString('en-IN')}
-                      </span>
-                    </div>
-
-                    {group.items.map((tx, idx) => {
-                      const w = wallets.find((item) => item.id === tx.wallet_id);
-                      const toW = wallets.find((item) => item.id === tx.to_wallet_id);
-                      const { category: c, cleanNote } = resolveTxCategory(tx);
-                      const catAccent =
-                        tx.type === 'transfer'
-                          ? '#F4B942'
-                          : tx.type === 'income'
-                          ? '#52B788'
-                          : getCategoryAccentColor(c, idx);
-
-                      return (
-                        <div
-                          key={tx.id}
-                          onClick={() => openEditTransaction(tx)}
-                          className={`p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.card}`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div
-                              className="w-10 h-10 rounded-xl border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base shrink-0"
-                              style={{ backgroundColor: catAccent }}
-                            >
-                              {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                                  {tx.type === 'transfer'
-                                    ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
-                                    : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
-                                </p>
-                                {tx.pendingSync && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#F4B942] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
-                                    Queued
-                                  </span>
-                                )}
-                                {tx.source === 'shortcut' && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
-                                    Back Tap
-                                  </span>
-                                )}
-                              </div>
-                              <p className={`text-[10px] font-medium truncate ${ui.textMuted}`}>
-                                {w?.name || 'Account'}
-                                {cleanNote && c?.name ? ` · ${c.name}` : ''}
-                                {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span
-                              className={`text-xs font-cartoon font-bold tabular-nums ${
-                                tx.type === 'income'
-                                  ? 'text-[#52B788]'
-                                  : tx.type === 'transfer'
-                                  ? 'text-[#F4B942]'
-                                  : ui.textSand
-                              }`}
-                            >
-                              {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                              {currencySymbol}
-                              {Number(tx.amount || 0).toLocaleString('en-IN')}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteTransaction(tx.id);
-                              }}
-                              className={`p-1 rounded-lg text-xs font-bold key-press ${ui.textMuted} hover:text-[#F26B5B]`}
-                              title="Delete"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <AccountsTab
+            key="tab-wallets"
+            ui={ui}
+            isDark={isDark}
+            tabAnimClass={tabAnimClass}
+            wallets={wallets}
+            currencySymbol={currencySymbol}
+            activityWalletFilter={activityWalletFilter}
+            setActivityWalletFilter={setActivityWalletFilter}
+            activitySearch={activitySearch}
+            setActivitySearch={setActivitySearch}
+            activityTypeFilter={activityTypeFilter}
+            setActivityTypeFilter={setActivityTypeFilter}
+            groupedTransactions={groupedTransactions}
+            resolveTxCategory={resolveTxCategory}
+            openEditWallet={openEditWallet}
+            onOpenNewWallet={() => {
+              resetWalletModal();
+              setShowWalletModal(true);
+            }}
+            openEditTransaction={openEditTransaction}
+            handleDeleteTransaction={handleDeleteTransaction}
+          />
         )}
 
-        {/* TAB 3: INSIGHTS & 1-TAP CSV EXPORT */}
         {activeTab === 'analytics' && (
-          <div key="tab-analytics" className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
-            {/* Top Bar: Period Selector + 1-Tap CSV Export */}
-            <div className="flex items-center justify-between gap-2 shrink-0">
-              <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
-                {[
-                  { id: 'week', label: '7D' },
-                  { id: 'month', label: 'This Month' },
-                  { id: 'all', label: 'All Time' }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setAnalyticsRange(tab.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
-                      analyticsRange === tab.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleExportCsv}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold flex items-center gap-1.5 key-press ${ui.pillActive}`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Export CSV
-              </button>
-            </div>
-
-            {/* Scrollable Cartoon Insights Cards */}
-            <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
-              {/* Hero Cashflow & Pacing Card */}
-              <div className={`p-4 rounded-3xl space-y-3 relative overflow-hidden ${ui.card}`}>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>Spent</p>
-                    <p className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
-                      {currencySymbol}
-                      {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
-                      {currencySymbol}
-                      {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/day
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>Income</p>
-                    <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5 truncate">
-                      +{currencySymbol}
-                      {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
-                      {analyticsData.savingsRate !== null
-                        ? `${analyticsData.savingsRate}% saved`
-                        : `${analyticsData.expenseCount} entries`}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
-                      {analyticsRange === 'month' ? 'Est. Month' : 'Net Flow'}
-                    </p>
-                    <p
-                      className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${
-                        analyticsRange === 'month'
-                          ? ui.textSand
-                          : analyticsData.netFlow >= 0
-                          ? 'text-[#52B788]'
-                          : 'text-[#F26B5B]'
-                      }`}
-                    >
-                      {analyticsRange === 'month' ? (
-                        <>
-                          {currencySymbol}
-                          {analyticsData.projectedMonthSpend.toLocaleString('en-IN')}
-                        </>
-                      ) : (
-                        <>
-                          {analyticsData.netFlow >= 0 ? '+' : '-'}
-                          {currencySymbol}
-                          {Math.abs(analyticsData.netFlow).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                        </>
-                      )}
-                    </p>
-                    <p className={`text-[10px] font-semibold ${ui.textMuted}`}>
-                      {analyticsRange === 'month' ? 'Monthly pace' : `${analyticsData.shortcutPct}% Back Tap`}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Chunky Cashflow Ratio Bar */}
-                {(analyticsData.totalExpense > 0 || analyticsData.totalIncome > 0) && (
-                  <div className="space-y-1 pt-1">
-                    <div className="w-full h-3.5 rounded-full overflow-hidden flex bg-[#161614] border-2 border-[#111110] p-0.5 gap-0.5">
-                      {analyticsData.totalIncome > 0 && (
-                        <div
-                          className="h-full rounded-l-full bg-[#52B788] transition-all duration-500"
-                          style={{
-                            width: `${Math.max(
-                              8,
-                              Math.round(
-                                (analyticsData.totalIncome /
-                                  (analyticsData.totalIncome + analyticsData.totalExpense)) *
-                                  100
-                              )
-                            )}%`
-                          }}
-                        />
-                      )}
-                      {analyticsData.totalExpense > 0 && (
-                        <div
-                          className="h-full rounded-r-full bg-[#F26B5B] transition-all duration-500"
-                          style={{
-                            width: `${Math.max(
-                              8,
-                              Math.round(
-                                (analyticsData.totalExpense /
-                                  (analyticsData.totalIncome + analyticsData.totalExpense)) *
-                                  100
-                              )
-                            )}%`
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Interactive SVG Category Donut + Breakdown Card */}
-              <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
-                <div className="flex items-center justify-between">
-                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Where It Went</h4>
-                  <span className={`text-[10px] font-semibold ${ui.textMuted}`}>Tap a slice to inspect</span>
-                </div>
-
-                {analyticsData.categoryBreakdown.length === 0 ? (
-                  <p className={`text-xs py-3 text-center font-cartoon ${ui.textMuted}`}>
-                    No expenses recorded in this period.
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-4 py-1">
-                      <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                        <svg className="w-28 h-28 -rotate-90" viewBox="0 0 112 112">
-                          <circle
-                            cx="56"
-                            cy="56"
-                            r={donutRadius}
-                            fill="none"
-                            stroke={isDark ? '#181816' : '#D8CBB3'}
-                            strokeWidth="14"
-                          />
-                          {analyticsData.categoryBreakdown.map((item) => {
-                            const strokeLen = Math.max(
-                              0,
-                              item.exactShare * donutCircumference - (analyticsData.categoryBreakdown.length > 1 ? 3 : 0)
-                            );
-                            const dashOffset = -donutCumulativeShare * donutCircumference;
-                            donutCumulativeShare += item.exactShare;
-                            const isFocused = activeDonutCat?.id === item.id;
-
-                            return (
-                              <circle
-                                key={item.id}
-                                cx="56"
-                                cy="56"
-                                r={donutRadius}
-                                fill="none"
-                                stroke={item.color}
-                                strokeWidth={isFocused ? '16' : '12.5'}
-                                strokeDasharray={`${strokeLen} ${donutCircumference}`}
-                                strokeDashoffset={dashOffset}
-                                strokeLinecap="round"
-                                className="transition-all duration-300 cursor-pointer"
-                                onClick={() => setSelectedDonutCatId(item.id)}
-                              />
-                            );
-                          })}
-                        </svg>
-                        {activeDonutCat && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-2">
-                            <span className="text-lg leading-none">{activeDonutCat.icon}</span>
-                            <span className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textPrimary}`}>
-                              {activeDonutCat.pct}%
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {activeDonutCat && (
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className="w-3 h-3 rounded-full border border-[#111110] shrink-0"
-                              style={{ backgroundColor: activeDonutCat.color }}
-                            />
-                            <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                              {activeDonutCat.name}
-                            </p>
-                          </div>
-                          <p className={`text-lg font-cartoon font-bold tabular-nums leading-tight ${ui.textSand}`}>
-                            {currencySymbol}
-                            {activeDonutCat.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                          </p>
-                          <div className={`text-[10px] font-semibold space-y-0.5 ${ui.textSecondary}`}>
-                            <p>{activeDonutCat.count} {activeDonutCat.count === 1 ? 'entry' : 'entries'}</p>
-                            <p className="tabular-nums">
-                              Avg {currencySymbol}{activeDonutCat.avgTicket.toLocaleString('en-IN')}/spend
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Interactive Category Rows */}
-                    <div className="space-y-2 pt-1">
-                      {analyticsData.categoryBreakdown.map((item) => {
-                        const isFocused = activeDonutCat?.id === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => setSelectedDonutCatId(item.id)}
-                            className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-all key-press ${
-                              isFocused ? ui.cardElevated : ui.cardSubtle
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <span
-                                className="w-7 h-7 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
-                                style={{ backgroundColor: item.color }}
-                              >
-                                {item.icon}
-                              </span>
-                              <span className={`font-cartoon font-bold truncate ${ui.textPrimary}`}>{item.name}</span>
-                              <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({item.count})</span>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0 tabular-nums">
-                              <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                                {currencySymbol}
-                                {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                              </span>
-                              <span
-                                className="text-[10px] px-2 py-0.5 rounded-lg border border-[#111110] font-cartoon font-bold text-[#1e1e1c]"
-                                style={{ backgroundColor: item.color }}
-                              >
-                                {item.pct}%
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Interactive 7-Day Trend Bar Chart */}
-              <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Last 7 Days Rhythm</h4>
-                    {selectedDayObj && (
-                      <p className={`text-[10px] font-semibold tabular-nums ${ui.textSecondary}`}>
-                        {selectedDayObj.fullDateLabel}:{' '}
-                        <span className={`font-bold ${ui.textSand}`}>
-                          {currencySymbol}
-                          {selectedDayObj.amount.toLocaleString('en-IN')}
-                        </span>
-                      </p>
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-cartoon font-bold tabular-nums ${ui.textMuted}`}>
-                    Avg: {currencySymbol}
-                    {Math.round(analyticsData.sevenDayAvg).toLocaleString('en-IN')}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-7 gap-2 items-end h-28 pt-2">
-                  {analyticsData.last7Days.map((day, idx) => {
-                    const isSelected = selectedBarIdx === idx;
-                    const heightPct =
-                      day.amount > 0
-                        ? Math.max(16, Math.round((day.amount / analyticsData.maxDaySpend) * 100))
-                        : 8;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSelectedBarIdx(idx)}
-                        className="flex flex-col items-center justify-end h-full gap-1 key-press"
-                      >
-                        <span className={`text-[9px] font-cartoon font-bold tabular-nums truncate max-w-full ${isSelected ? ui.textSand : ui.textMuted}`}>
-                          {day.amount > 0
-                            ? day.amount >= 1000
-                              ? `${(day.amount / 1000).toFixed(1)}k`
-                              : Math.round(day.amount)
-                            : ''}
-                        </span>
-                        <div
-                          className={`w-full rounded-xl h-16 flex items-end p-0.5 border-2 border-[#111110] ${
-                            isSelected ? 'bg-[#181816]' : ui.cardSubtle
-                          }`}
-                        >
-                          <div
-                            className={`w-full rounded-lg border border-[#111110] transition-all duration-500 ios-spring ${
-                              isSelected
-                                ? 'bg-[#F4B942]'
-                                : day.isToday
-                                ? 'bg-[#D8CBB3]'
-                                : day.amount > 0
-                                ? 'bg-[#52B788]'
-                                : 'bg-transparent border-transparent'
-                            }`}
-                            style={{ height: `${heightPct}%` }}
-                          />
-                        </div>
-                        <span
-                          className={`text-[10px] font-cartoon font-bold ${
-                            isSelected || day.isToday ? ui.textSand : ui.textMuted
-                          }`}
-                        >
-                          {day.isToday ? 'Today' : day.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Account Share Breakdown */}
-              {analyticsData.walletBreakdown.length > 0 && (
-                <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
-                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Account Share</h4>
-                  <div className="space-y-2.5">
-                    {analyticsData.walletBreakdown.map((w) => (
-                      <div key={w.id} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs tabular-nums">
-                          <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                            {w.icon} {w.name}
-                          </span>
-                          <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                            {currencySymbol}
-                            {w.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}{' '}
-                            <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({w.pct}%)</span>
-                          </span>
-                        </div>
-                        <div className="w-full h-3 rounded-full overflow-hidden bg-[#181816] border-2 border-[#111110] p-0.5">
-                          <div
-                            className="h-full rounded-full transition-all duration-500 ios-spring"
-                            style={{ width: `${Math.max(6, w.pct)}%`, backgroundColor: w.color }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Largest Spends in Period */}
-              {analyticsData.topExpenses.length > 0 && (
-                <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
-                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Biggest Splurges</h4>
-                  <div className="space-y-2">
-                    {analyticsData.topExpenses.map((tx, idx) => {
-                      const w = wallets.find((item) => item.id === tx.wallet_id);
-                      const { category: c, cleanNote } = resolveTxCategory(tx);
-                      const accent = getCategoryAccentColor(c, idx);
-                      return (
-                        <div
-                          key={tx.id}
-                          onClick={() => openEditTransaction(tx)}
-                          className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span
-                              className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
-                              style={{ backgroundColor: accent }}
-                            >
-                              {c?.icon || '💸'}
-                            </span>
-                            <div className="min-w-0">
-                              <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                                {cleanNote || c?.name || 'Expense'}
-                              </p>
-                              <p className={`text-[10px] font-semibold truncate ${ui.textMuted}`}>
-                                {w?.name || 'Account'} · {formatDayGroupLabel(tx.created_at)}
-                              </p>
-                            </div>
-                          </div>
-                          <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
-                            -{currencySymbol}
-                            {Number(tx.amount || 0).toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <InsightsTab
+            key="tab-analytics"
+            ui={ui}
+            isDark={isDark}
+            tabAnimClass={tabAnimClass}
+            analyticsRange={analyticsRange}
+            setAnalyticsRange={setAnalyticsRange}
+            analyticsData={analyticsData}
+            currencySymbol={currencySymbol}
+            selectedDonutCatId={selectedDonutCatId}
+            setSelectedDonutCatId={setSelectedDonutCatId}
+            selectedBarIdx={selectedBarIdx}
+            setSelectedBarIdx={setSelectedBarIdx}
+            wallets={wallets}
+            resolveTxCategory={resolveTxCategory}
+            openEditTransaction={openEditTransaction}
+            handleExportCsv={handleExportCsv}
+          />
         )}
 
-        {/* TAB 4: SETTINGS */}
         {activeTab === 'settings' && (
-          <div key="tab-settings" className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
-            {/* Appearance Mode Selector */}
-            <div className={`p-3.5 rounded-2xl flex items-center justify-between shrink-0 ${ui.card}`}>
-              <div>
-                <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
-                <p className={`text-[10px] font-medium ${ui.textMuted}`}>Charcoal #1e1e1c &amp; Sand #D8CBB3</p>
-              </div>
-              <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
-                {[
-                  { id: 'system', label: 'Auto' },
-                  { id: 'light', label: 'Sand' },
-                  { id: 'dark', label: 'Charcoal' }
-                ].map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setThemePref(m.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
-                      themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Animated Sliding Sub-Section Switcher */}
-            <div className={`relative grid grid-cols-2 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
-              <div
-                className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
-                style={{ transform: `translate3d(${settingsSubIndex * 100}%, 0, 0)` }}
-              />
-              <button
-                type="button"
-                onClick={() => setSettingsSection('shortcut')}
-                className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
-                  settingsSection === 'shortcut' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
-                }`}
-              >
-                ⚡ Back Tap Setup
-              </button>
-              <button
-                type="button"
-                onClick={() => setSettingsSection('budgets')}
-                className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
-                  settingsSection === 'budgets' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
-                }`}
-              >
-                🏷️ Categories
-              </button>
-            </div>
-
-            {/* SUB-VIEW 1: BACK TAP SHORTCUT */}
-            {settingsSection === 'shortcut' && (
-              <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab-left">
-                <div className={`p-4 rounded-2xl space-y-3 ${ui.card}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>1-Tap Back Tap Installer</h3>
-                      <p className={`text-[10px] font-medium ${ui.textMuted}`}>
-                        Log from Lock Screen with double-tap on the back of your iPhone
-                      </p>
-                    </div>
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] font-cartoon font-bold">
-                      iOS
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-                      Your Personal Shortcut URL
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        readOnly
-                        value={personalApiUrl}
-                        className={`flex-1 rounded-xl px-2.5 py-2 text-[11px] font-mono ${ui.input}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
-                        className={`px-3 py-2 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
-                      >
-                        {copiedField === 'apiUrl' ? 'Copied!' : 'Copy'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleOneTapShortcut}
-                    className={`w-full py-3 px-4 rounded-xl font-cartoon font-bold text-xs key-press ${ui.primaryBtnExpense}`}
-                  >
-                    Copy Personal URL &amp; Install Shortcut
-                  </button>
-
-                  <div className={`pt-2 border-t-2 border-dashed space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
-                    <p className={`font-cartoon font-bold ${ui.textPrimary}`}>Quick Setup (10 Seconds):</p>
-                    <ol className="list-decimal list-inside space-y-1 leading-relaxed font-medium">
-                      <li>Tap the button above (your Personal URL copies automatically).</li>
-                      <li>When Apple Shortcuts opens, tap <strong>Paste</strong> into the setup prompt and tap <strong>Add Shortcut</strong>.</li>
-                      <li>Go to iPhone <strong>Settings → Accessibility → Touch → Back Tap → Double Tap</strong> and select <strong>Log to TAPX</strong>.</li>
-                    </ol>
-                  </div>
-                </div>
-
-                {/* Token Box */}
-                <div className={`p-3.5 rounded-2xl space-y-1.5 ${ui.card}`}>
-                  <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
-                    Shortcut Security Token
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={settings?.shortcut_token || ''}
-                      className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-mono ${ui.input}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
-                    >
-                      {copiedField === 'token' ? 'Copied!' : 'Copy'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleRegenerateToken}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
-                      title="Regenerate Token"
-                    >
-                      ↻
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SUB-VIEW 2: CATEGORIES */}
-            {settingsSection === 'budgets' && (
-              <div key="sub-budgets" className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden animate-tab-right">
-                <div className="flex items-center justify-between shrink-0">
-                  <span className={`text-[11px] font-cartoon font-bold ${ui.textMuted}`}>
-                    {categories.length} Categories
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetCategoryModal();
-                      setShowCategoryModal(true);
-                    }}
-                    className={`text-xs px-3 py-1 rounded-full font-cartoon font-bold key-press ${ui.pillActive}`}
-                  >
-                    + Add Category
-                  </button>
-                </div>
-
-                <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5 pb-1">
-                  {categories.map((c, idx) => {
-                    const spent = currentMonthSpendByCat[c.id] || 0;
-                    const budget = Number(c.monthly_budget) || 0;
-                    const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
-                    const accent = getCategoryAccentColor(c, idx);
-
-                    return (
-                      <div
-                        key={c.id}
-                        onClick={() => openEditCategory(c)}
-                        className={`p-3 rounded-2xl space-y-2 cursor-pointer key-press ${ui.card}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span
-                              className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
-                              style={{ backgroundColor: accent }}
-                            >
-                              {c.icon}
-                            </span>
-                            <div className="min-w-0">
-                              <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>{c.name}</p>
-                              <p className={`text-[10px] font-semibold capitalize ${ui.textMuted}`}>
-                                {c.type} {budget > 0 ? `· ${pct}% of limit` : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <div
-                            className="flex items-center gap-1.5 tabular-nums shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {c.type === 'expense' && (
-                              <span className={`text-xs font-cartoon font-bold mr-1 ${ui.textSand}`}>
-                                {currencySymbol}
-                                {spent.toLocaleString('en-IN')}
-                                {budget > 0 ? ` / ${currencySymbol}${budget.toLocaleString('en-IN')}` : ''}
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => openEditCategory(c)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCategory(c.id)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${
-                                confirmDeleteId === c.id
-                                  ? 'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110]'
-                                  : `${ui.textMuted} hover:text-[#F26B5B]`
-                              }`}
-                            >
-                              {confirmDeleteId === c.id ? 'Sure?' : '✕'}
-                            </button>
-                          </div>
-                        </div>
-                        {budget > 0 && c.type === 'expense' && (
-                          <div className="w-full h-2.5 rounded-full overflow-hidden bg-[#181816] border border-[#111110] p-0.5">
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ios-spring ${
-                                pct >= 90 ? 'bg-[#F26B5B]' : pct >= 75 ? 'bg-[#F4B942]' : 'bg-[#52B788]'
-                              }`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Account Footer */}
-            <div className={`pt-2 border-t-2 border-dashed flex items-center justify-between shrink-0 ${ui.divider}`}>
-              <span className={`text-[11px] font-semibold truncate max-w-[180px] ${ui.textMuted}`}>
-                {session?.user?.email}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    fetchUserData(session.user.id);
-                    showToast('Synced!');
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
-                >
-                  Sync
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="px-3 py-1.5 rounded-full bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] text-xs font-cartoon font-bold key-press"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
+          <SettingsTab
+            key="tab-settings"
+            ui={ui}
+            tabAnimClass={tabAnimClass}
+            themePref={themePref}
+            setThemePref={setThemePref}
+            settingsSection={settingsSection}
+            setSettingsSection={setSettingsSection}
+            personalApiUrl={personalApiUrl}
+            copyToClipboard={copyToClipboard}
+            copiedField={copiedField}
+            handleOneTapShortcut={handleOneTapShortcut}
+            settings={settings}
+            handleRegenerateToken={handleRegenerateToken}
+            categories={categories}
+            currentMonthSpendByCat={currentMonthSpendByCat}
+            currencySymbol={currencySymbol}
+            onOpenNewCategory={() => {
+              resetCategoryModal();
+              setShowCategoryModal(true);
+            }}
+            openEditCategory={openEditCategory}
+            handleDeleteCategory={handleDeleteCategory}
+            confirmDeleteId={confirmDeleteId}
+            session={session}
+            onSync={() => {
+              fetchUserData(session.user.id);
+              showToast('Synced!');
+            }}
+            handleLogout={handleLogout}
+          />
         )}
       </main>
 
-      {/* BOTTOM SHEET 1: CREATE / EDIT ACCOUNT (With Full Icon Library & Custom Color Picker) */}
       {showWalletModal && (
-        <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
-          onClick={resetWalletModal}
-        >
-          <form
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={handleSaveWallet}
-            className={`w-full max-w-md max-h-[88vh] overflow-y-auto custom-scroll rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
-          >
-            <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-9 h-9 rounded-xl border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base"
-                  style={{ backgroundColor: newWalletColor }}
-                >
-                  {newWalletIcon}
-                </span>
-                <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                  {editingWalletId ? 'Edit Account' : 'New Account'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={resetWalletModal}
-                className={`text-xs font-cartoon font-bold px-3 py-1 rounded-full key-press ${ui.pillIdle}`}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Account Name</label>
-              <input
-                type="text"
-                placeholder="e.g. UPI, Cash, FamPay, HDFC"
-                value={newWalletName}
-                onChange={(e) => setNewWalletName(e.target.value)}
-                className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Type</label>
-                <select
-                  value={newWalletType}
-                  onChange={(e) => setNewWalletType(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                >
-                  <option>UPI / Wallet</option>
-                  <option>Cash</option>
-                  <option>Bank</option>
-                  <option>Card</option>
-                  <option>Savings</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Current Balance</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={newWalletBalance}
-                  onChange={(e) => setNewWalletBalance(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Sticker Color</label>
-                <label className="flex items-center gap-1 text-[10px] font-cartoon font-bold cursor-pointer">
-                  <span className={ui.textSecondary}>Custom Hex</span>
-                  <input
-                    type="color"
-                    value={newWalletColor}
-                    onChange={(e) => setNewWalletColor(e.target.value)}
-                    className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent"
-                  />
-                </label>
-              </div>
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                {WALLET_COLORS.map((hex) => (
-                  <button
-                    type="button"
-                    key={hex}
-                    onClick={() => setNewWalletColor(hex)}
-                    style={{ backgroundColor: hex }}
-                    className={`w-7 h-7 rounded-full border-2 border-[#111110] shrink-0 transition-transform key-press ${
-                      newWalletColor === hex ? 'scale-110 ring-2 ring-[#D8CBB3] shadow-[0_2px_0_#111110]' : 'opacity-75'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Full Categorized & Searchable Icon Picker */}
-            <IconLibraryPicker
-              selectedIcon={newWalletIcon}
-              onSelectIcon={setNewWalletIcon}
-              ui={ui}
-              defaultGroup="Money"
-            />
-
-            <div className="flex items-center gap-2 pt-1">
-              {editingWalletId && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteWallet(editingWalletId)}
-                  className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_3px_0_#111110] key-press ${
-                    confirmDeleteId === editingWalletId
-                      ? 'bg-[#F26B5B] text-[#1e1e1c]'
-                      : 'bg-[#F26B5B]/20 text-[#F26B5B]'
-                  }`}
-                >
-                  {confirmDeleteId === editingWalletId ? 'Tap to Confirm' : 'Delete'}
-                </button>
-              )}
-              <button
-                type="submit"
-                className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
-              >
-                {editingWalletId ? 'Save Changes' : 'Create Account'}
-              </button>
-            </div>
-          </form>
-        </div>
+        <WalletModal
+          ui={ui}
+          editingWalletId={editingWalletId}
+          newWalletName={newWalletName}
+          setNewWalletName={setNewWalletName}
+          newWalletType={newWalletType}
+          setNewWalletType={setNewWalletType}
+          newWalletBalance={newWalletBalance}
+          setNewWalletBalance={setNewWalletBalance}
+          newWalletColor={newWalletColor}
+          setNewWalletColor={setNewWalletColor}
+          newWalletIcon={newWalletIcon}
+          setNewWalletIcon={setNewWalletIcon}
+          confirmDeleteId={confirmDeleteId}
+          onSave={handleSaveWallet}
+          onDelete={handleDeleteWallet}
+          onClose={resetWalletModal}
+        />
       )}
 
-      {/* BOTTOM SHEET 2: CREATE / EDIT CATEGORY (With Full Icon Library) */}
       {showCategoryModal && (
-        <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
-          onClick={resetCategoryModal}
-        >
-          <form
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={handleSaveCategory}
-            className={`w-full max-w-md max-h-[88vh] overflow-y-auto custom-scroll rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
-          >
-            <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-9 h-9 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base">
-                  {newCatIcon}
-                </span>
-                <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                  {editingCatId ? 'Edit Category' : 'New Category'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={resetCategoryModal}
-                className={`text-xs font-cartoon font-bold px-3 py-1 rounded-full key-press ${ui.pillIdle}`}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Category Name</label>
-              <input
-                type="text"
-                placeholder="e.g. Dining Out, Subscriptions"
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Type</label>
-                <select
-                  value={newCatType}
-                  onChange={(e) => setNewCatType(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                >
-                  <option value="expense">Expense</option>
-                  <option value="income">Income</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Monthly Limit (Optional)</label>
-                <input
-                  type="number"
-                  placeholder="No limit"
-                  value={newCatBudget}
-                  onChange={(e) => setNewCatBudget(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                />
-              </div>
-            </div>
-
-            {/* Full Categorized & Searchable Icon Picker */}
-            <IconLibraryPicker
-              selectedIcon={newCatIcon}
-              onSelectIcon={setNewCatIcon}
-              ui={ui}
-              defaultGroup="All"
-            />
-
-            <button
-              type="submit"
-              className={`w-full py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
-            >
-              {editingCatId ? 'Update Category' : 'Save Category'}
-            </button>
-          </form>
-        </div>
+        <CategoryModal
+          ui={ui}
+          editingCatId={editingCatId}
+          newCatName={newCatName}
+          setNewCatName={setNewCatName}
+          newCatType={newCatType}
+          setNewCatType={setNewCatType}
+          newCatIcon={newCatIcon}
+          setNewCatIcon={setNewCatIcon}
+          newCatBudget={newCatBudget}
+          setNewCatBudget={setNewCatBudget}
+          onSave={handleSaveCategory}
+          onClose={resetCategoryModal}
+        />
       )}
 
-      {/* BOTTOM SHEET 3: EDIT TRANSACTION */}
       {editingTx && (
-        <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-3"
-          onClick={() => setEditingTx(null)}
-        >
-          <form
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={handleSaveEditedTransaction}
-            className={`w-full max-w-md rounded-3xl p-5 space-y-3.5 shadow-[0_8px_0_#111110] animate-sheet-up ${ui.sheetBg}`}
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
-          >
-            <div className="w-12 h-1.5 rounded-full bg-[#D8CBB3]/40 mx-auto" />
-            <div className="flex items-center justify-between">
-              <h3 className={`text-base font-cartoon font-bold capitalize ${ui.textPrimary}`}>
-                Edit {editingTx.type}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setEditingTx(null)}
-                className={`text-xs font-cartoon font-bold px-3 py-1 rounded-full key-press ${ui.pillIdle}`}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Amount ({currencySymbol})</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editTxAmount}
-                  onChange={(e) => setEditTxAmount(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-cartoon font-bold tabular-nums focus:outline-none ${ui.input}`}
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Account</label>
-                <select
-                  value={editTxWalletId}
-                  onChange={(e) => setEditTxWalletId(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                >
-                  {wallets.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.icon} {w.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {editingTx.type === 'transfer' ? (
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>To Account</label>
-                <select
-                  value={editTxToWalletId}
-                  onChange={(e) => setEditTxToWalletId(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                >
-                  {wallets
-                    .filter((w) => w.id !== editTxWalletId)
-                    .map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.icon} {w.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Category</label>
-                <select
-                  value={editTxCategoryId}
-                  onChange={(e) => setEditTxCategoryId(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-                >
-                  {categories
-                    .filter((c) => c.type === editingTx.type)
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.icon} {c.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
-
-            <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Note</label>
-              <input
-                type="text"
-                placeholder="Optional note"
-                value={editTxNote}
-                onChange={(e) => setEditTxNote(e.target.value)}
-                className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none ${ui.input}`}
-              />
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => handleDeleteTransaction(editingTx.id)}
-                className="px-4 py-3 rounded-xl text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_3px_0_#111110] text-[#1e1e1c] bg-[#F26B5B] key-press"
-              >
-                Delete
-              </button>
-              <button
-                type="submit"
-                className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
+        <EditTransactionModal
+          ui={ui}
+          editingTx={editingTx}
+          currencySymbol={currencySymbol}
+          editTxAmount={editTxAmount}
+          setEditTxAmount={setEditTxAmount}
+          editTxWalletId={editTxWalletId}
+          setEditTxWalletId={setEditTxWalletId}
+          editTxToWalletId={editTxToWalletId}
+          setEditTxToWalletId={setEditTxToWalletId}
+          editTxCategoryId={editTxCategoryId}
+          setEditTxCategoryId={setEditTxCategoryId}
+          editTxNote={editTxNote}
+          setEditTxNote={setEditTxNote}
+          wallets={wallets}
+          categories={categories}
+          onSave={handleSaveEditedTransaction}
+          onDelete={handleDeleteTransaction}
+          onClose={() => setEditingTx(null)}
+        />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR WITH BOUNCY SAND PILL & SCRUBBING */}
+      {/* CHUNKY CARTOON DOCK BAR (Anchored flush at bottom) */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
-          bottom: 'max(env(safe-area-inset-bottom), 14px)'
+          bottom: 'max(env(safe-area-inset-bottom), 4px)'
         }}
       >
         <nav
@@ -4283,11 +1947,10 @@ function TapxMainApp() {
           onPointerMove={handleNavPointerMove}
           onPointerUp={handleNavPointerUpOrCancel}
           onPointerCancel={handleNavPointerUpOrCancel}
-          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[64px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
+          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[62px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
             lensBulge ? 'scale-[1.02]' : 'scale-100'
           } ${ui.islandBar}`}
         >
-          {/* Bouncy Sand / Charcoal Cartoon Pill Indicator */}
           <div
             className={`absolute top-[5px] bottom-[5px] left-[5px] w-[calc(25%-2.5px)] rounded-full pointer-events-none z-20 ${ui.islandLens}`}
             style={{
