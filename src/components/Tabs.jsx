@@ -1492,7 +1492,7 @@ export function SettingsTab({
             </button>
 
             <div className={`pt-2 border-t-2 border-dashed space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
-              <p className={`font-cartoon font-bold ${ui.textPrimary}`}>Quick Setup (10 Seconds):</p>
+              <p className={`font-cartoon font-bold ${ui.textPrimary}`}>Quick Setup (If you want it to be a Back tap Shortcut):</p>
               <ol className="list-decimal list-inside space-y-1 leading-relaxed font-medium">
                 <li>Tap the button above (your Personal URL copies automatically).</li>
                 <li>
