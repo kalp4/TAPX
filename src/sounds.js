@@ -94,7 +94,7 @@ function getAudioEngine() {
       compressor.release.setValueAtTime(0.12, audioCtx.currentTime);
 
       const masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.95, audioCtx.currentTime);
+      masterGain.gain.setValueAtTime(0.855, audioCtx.currentTime);
 
       compressor.connect(masterGain);
       masterGain.connect(audioCtx.destination);
