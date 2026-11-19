@@ -1,6 +1,8 @@
 import { SOUND_KEY } from './constants';
 
 let audioCtx = null;
+let masterBus = null;
+let noiseBuffer = null;
 let soundEnabled = readInitialSoundPref();
 
 function readInitialSoundPref() {
@@ -11,18 +13,44 @@ function readInitialSoundPref() {
   }
 }
 
-function getAudioContext() {
+function getAudioEngine() {
   if (typeof window === 'undefined') return null;
   try {
     if (!audioCtx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return null;
       audioCtx = new AudioCtx();
+
+      // Master compressor glues layered transients and keeps iPhone speakers punchy & distortion-free
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-14, audioCtx.currentTime);
+      compressor.knee.setValueAtTime(18, audioCtx.currentTime);
+      compressor.ratio.setValueAtTime(4, audioCtx.currentTime);
+      compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+      compressor.release.setValueAtTime(0.12, audioCtx.currentTime);
+
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.95, audioCtx.currentTime);
+
+      compressor.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+      masterBus = compressor;
+
+      // Reusable short white-noise buffer for tactile mechanical clicks & air swooshes
+      const sampleRate = audioCtx.sampleRate;
+      const length = Math.floor(sampleRate * 0.25);
+      noiseBuffer = audioCtx.createBuffer(1, length, sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < length; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
     }
+
     if (audioCtx.state === 'suspended') {
       audioCtx.resume().catch(() => {});
     }
-    return audioCtx;
+
+    return { ctx: audioCtx, out: masterBus, noise: noiseBuffer };
   } catch {
     return null;
   }
@@ -42,173 +70,542 @@ export function setSoundEnabled(enabled) {
 }
 
 export function unlockAudio() {
-  getAudioContext();
+  getAudioEngine();
 }
 
-function playTone({
-  freqStart,
-  freqEnd = freqStart,
-  duration = 0.06,
-  delay = 0,
-  volume = 0.08,
-  type = 'sine'
-}) {
-  if (!soundEnabled) return;
-  const ctx = getAudioContext();
-  if (!ctx) return;
+// Slight organic pitch variation (±1.2%) prevents rapid taps from sounding robotic
+function jitter(freq, amount = 0.012) {
+  return freq * (1 + (Math.random() * 2 - 1) * amount);
+}
 
-  try {
-    const start = ctx.currentTime + delay;
-    const end = start + duration;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freqStart, start);
-    if (freqEnd !== freqStart) {
-      osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), end);
-    }
-
-    const attack = Math.min(0.008, duration * 0.25);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.linearRampToValueAtTime(volume, start + attack);
-    gain.gain.exponentialRampToValueAtTime(0.0001, end);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(start);
-    osc.stop(end + 0.015);
-  } catch {
-    // Ignore audio scheduling errors on restricted devices
+// Synthesize a shaped oscillator tone with optional lowpass warmth
+function synthTone(
+  engine,
+  {
+    freqStart,
+    freqEnd = freqStart,
+    duration = 0.08,
+    delay = 0,
+    volume = 0.12,
+    type = 'sine',
+    attack = 0.004,
+    lowpassFreq = null
   }
+) {
+  const { ctx, out } = engine;
+  const start = ctx.currentTime + delay;
+  const end = start + duration;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(Math.max(20, freqStart), start);
+  if (freqEnd !== freqStart) {
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), end);
+  }
+
+  const safeAttack = Math.min(attack, duration * 0.3);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.linearRampToValueAtTime(volume, start + safeAttack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, end);
+
+  if (lowpassFreq) {
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(lowpassFreq, start);
+    osc.connect(filter);
+    filter.connect(gain);
+  } else {
+    osc.connect(gain);
+  }
+
+  gain.connect(out);
+  osc.start(start);
+  osc.stop(end + 0.02);
 }
 
-// Subtle musical pitch map so typing amounts on the keypad feels tactile
-const DIGIT_PITCH_MAP = {
-  '1': 440,
-  '2': 466,
-  '3': 494,
-  '4': 523,
-  '5': 554,
-  '6': 587,
-  '7': 622,
-  '8': 659,
-  '9': 698,
-  '0': 415,
-  '.': 508
+// Synthesize a filtered noise transient (for creamy mechanical key clicks & silky swooshes)
+function synthNoise(
+  engine,
+  {
+    duration = 0.012,
+    delay = 0,
+    volume = 0.08,
+    filterType = 'bandpass',
+    freqStart = 2000,
+    freqEnd = freqStart,
+    q = 1.6
+  }
+) {
+  const { ctx, out, noise } = engine;
+  if (!noise) return;
+
+  const start = ctx.currentTime + delay;
+  const end = start + duration;
+
+  const src = ctx.createBufferSource();
+  src.buffer = noise;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = filterType;
+  filter.Q.setValueAtTime(q, start);
+  filter.frequency.setValueAtTime(Math.max(40, freqStart), start);
+  if (freqEnd !== freqStart) {
+    filter.frequency.exponentialRampToValueAtTime(Math.max(40, freqEnd), end);
+  }
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.linearRampToValueAtTime(volume, start + Math.min(0.002, duration * 0.2));
+  gain.gain.exponentialRampToValueAtTime(0.0001, end);
+
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(out);
+
+  src.start(start);
+  src.stop(end + 0.015);
+}
+
+// Pentatonic marimba frequencies so typing any amount feels musical & never clashes
+const DIGIT_PENTATONIC_MAP = {
+  '1': 523.25, // C5
+  '2': 587.33, // D5
+  '3': 659.25, // E5
+  '4': 783.99, // G5
+  '5': 880.0,  // A5
+  '6': 1046.5, // C6
+  '7': 587.33, // D5
+  '8': 659.25, // E5
+  '9': 783.99, // G5
+  '0': 440.0,  // A4
+  '.': 987.77  // B5
 };
 
+// 1. Creamy mechanical keycap "thock" + subtle wooden marimba ping
 export function playKeyTap(digit = '0') {
-  const baseFreq = DIGIT_PITCH_MAP[String(digit)] || 480;
-  playTone({
-    freqStart: baseFreq,
-    freqEnd: baseFreq * 0.88,
-    duration: 0.045,
-    volume: 0.075,
-    type: 'triangle'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    const noteFreq = jitter(DIGIT_PENTATONIC_MAP[String(digit)] || 523.25);
+
+    // Layer A: Crisp 5ms switch click transient
+    synthNoise(engine, {
+      duration: 0.006,
+      volume: 0.09,
+      filterType: 'bandpass',
+      freqStart: jitter(2600, 0.06),
+      q: 1.8
+    });
+
+    // Layer B: Warm low-mid mechanical "thock" body
+    synthTone(engine, {
+      freqStart: jitter(195, 0.04),
+      freqEnd: 78,
+      duration: 0.036,
+      volume: 0.22,
+      type: 'sine',
+      attack: 0.002
+    });
+
+    // Layer C: Soft woody marimba overtone
+    synthTone(engine, {
+      freqStart: noteFreq,
+      freqEnd: noteFreq * 0.985,
+      duration: 0.055,
+      volume: 0.055,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 2200
+    });
+  } catch {}
 }
 
+// 2. Deeper damped backspace mechanical chunk
 export function playKeyDelete() {
-  playTone({
-    freqStart: 340,
-    freqEnd: 185,
-    duration: 0.065,
-    volume: 0.075,
-    type: 'sine'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.009,
+      volume: 0.08,
+      filterType: 'bandpass',
+      freqStart: 1200,
+      freqEnd: 700,
+      q: 1.4
+    });
+
+    synthTone(engine, {
+      freqStart: 180,
+      freqEnd: 65,
+      duration: 0.055,
+      volume: 0.24,
+      type: 'sine',
+      attack: 0.002
+    });
+  } catch {}
 }
 
+// 3. Juicy bubble-wrap "plop" for quick-add chips, pills, and chart taps
 export function playQuickChip() {
-  playTone({
-    freqStart: 520,
-    freqEnd: 710,
-    duration: 0.055,
-    volume: 0.065,
-    type: 'sine'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    // Tiny crisp snap
+    synthNoise(engine, {
+      duration: 0.004,
+      volume: 0.055,
+      filterType: 'highpass',
+      freqStart: 3000,
+      q: 1.0
+    });
+
+    // Hollow rising water-drop bubble
+    synthTone(engine, {
+      freqStart: jitter(390, 0.03),
+      freqEnd: jitter(820, 0.03),
+      duration: 0.046,
+      volume: 0.14,
+      type: 'sine',
+      attack: 0.003
+    });
+  } catch {}
 }
 
+// 4. Magnetic detent "tick-pop" for dock tabs & scrubbing
 export function playTabSwitch() {
-  playTone({
-    freqStart: 360,
-    freqEnd: 540,
-    duration: 0.06,
-    volume: 0.06,
-    type: 'triangle'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    // Crisp haptic-like detent click
+    synthNoise(engine, {
+      duration: 0.004,
+      volume: 0.085,
+      filterType: 'bandpass',
+      freqStart: 2200,
+      q: 2.2
+    });
+
+    // Warm hollow woody pop
+    synthTone(engine, {
+      freqStart: 270,
+      freqEnd: 460,
+      duration: 0.038,
+      volume: 0.14,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 1600
+    });
+  } catch {}
 }
 
+// 5. Signature Hero Success Chimes (Expense Coin-Bell, Income Jackpot, Transfer Swoosh, Save Glass)
 export function playSuccess(kind = 'expense') {
-  if (kind === 'income') {
-    // Bright ascending 3-note chime
-    playTone({ freqStart: 523.25, duration: 0.09, delay: 0, volume: 0.085, type: 'triangle' });
-    playTone({ freqStart: 659.25, duration: 0.09, delay: 0.055, volume: 0.085, type: 'triangle' });
-    playTone({ freqStart: 783.99, duration: 0.16, delay: 0.11, volume: 0.095, type: 'sine' });
-    return;
-  }
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
 
-  if (kind === 'transfer') {
-    // Smooth two-pocket swoosh chime
-    playTone({ freqStart: 392, freqEnd: 587.33, duration: 0.09, delay: 0, volume: 0.08, type: 'sine' });
-    playTone({ freqStart: 587.33, freqEnd: 783.99, duration: 0.13, delay: 0.07, volume: 0.085, type: 'triangle' });
-    return;
-  }
+  try {
+    if (kind === 'income') {
+      // Euphoric major-9th harp/kalimba sparkle roll (C5 -> E5 -> G5 -> B5 -> D6)
+      const notes = [523.25, 659.25, 783.99, 987.77, 1174.66];
+      notes.forEach((freq, i) => {
+        const d = i * 0.042;
+        synthTone(engine, {
+          freqStart: freq,
+          duration: 0.24 + i * 0.03,
+          delay: d,
+          volume: 0.11,
+          type: 'triangle',
+          attack: 0.004,
+          lowpassFreq: 3800
+        });
+        // Shimmering octave overtone
+        synthTone(engine, {
+          freqStart: freq * 2,
+          duration: 0.14,
+          delay: d,
+          volume: 0.035,
+          type: 'sine',
+          attack: 0.003
+        });
+      });
+      // Warm sub-bass bloom underneath
+      synthTone(engine, {
+        freqStart: 130.81,
+        duration: 0.22,
+        volume: 0.14,
+        type: 'sine',
+        attack: 0.01
+      });
+      return;
+    }
 
-  if (kind === 'save') {
-    // Clean double confirmation chime
-    playTone({ freqStart: 659.25, duration: 0.075, delay: 0, volume: 0.075, type: 'sine' });
-    playTone({ freqStart: 880, duration: 0.12, delay: 0.06, volume: 0.08, type: 'triangle' });
-    return;
-  }
+    if (kind === 'transfer') {
+      // Silky filtered air swoosh + magnetic two-tone lock
+      synthNoise(engine, {
+        duration: 0.11,
+        volume: 0.075,
+        filterType: 'bandpass',
+        freqStart: 450,
+        freqEnd: 1900,
+        q: 1.5
+      });
+      synthTone(engine, {
+        freqStart: 392.0, // G4
+        freqEnd: 587.33,  // D5
+        duration: 0.09,
+        delay: 0.02,
+        volume: 0.13,
+        type: 'sine',
+        attack: 0.005
+      });
+      synthTone(engine, {
+        freqStart: 783.99, // G5 lock bell
+        duration: 0.18,
+        delay: 0.085,
+        volume: 0.12,
+        type: 'triangle',
+        attack: 0.003,
+        lowpassFreq: 3200
+      });
+      synthTone(engine, {
+        freqStart: 1567.98, // G6 sparkle
+        duration: 0.12,
+        delay: 0.085,
+        volume: 0.035,
+        type: 'sine'
+      });
+      return;
+    }
 
-  // Default expense: crisp coin/register pop
-  playTone({ freqStart: 880, duration: 0.07, delay: 0, volume: 0.075, type: 'triangle' });
-  playTone({ freqStart: 1318.5, duration: 0.14, delay: 0.05, volume: 0.08, type: 'sine' });
+    if (kind === 'save') {
+      // Crisp Apple-Pay-inspired glass double-chime (F#5 -> B5)
+      synthTone(engine, {
+        freqStart: 739.99,
+        duration: 0.13,
+        delay: 0,
+        volume: 0.11,
+        type: 'sine',
+        attack: 0.003
+      });
+      synthTone(engine, {
+        freqStart: 987.77,
+        duration: 0.22,
+        delay: 0.06,
+        volume: 0.13,
+        type: 'sine',
+        attack: 0.003
+      });
+      synthTone(engine, {
+        freqStart: 1975.53,
+        duration: 0.15,
+        delay: 0.06,
+        volume: 0.035,
+        type: 'sine',
+        attack: 0.002
+      });
+      return;
+    }
+
+    // Default 'expense': Addictive crisp "Ka-Ching" coin-bell pop
+    // Mechanical latch click
+    synthNoise(engine, {
+      duration: 0.006,
+      volume: 0.08,
+      filterType: 'bandpass',
+      freqStart: 2800,
+      q: 2.0
+    });
+    // Warm base thump
+    synthTone(engine, {
+      freqStart: 220,
+      freqEnd: 95,
+      duration: 0.04,
+      volume: 0.16,
+      type: 'sine',
+      attack: 0.002
+    });
+    // First bright coin tone (B5)
+    synthTone(engine, {
+      freqStart: 987.77,
+      duration: 0.11,
+      delay: 0.015,
+      volume: 0.11,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 4200
+    });
+    // Second high coin ring (E6) + metallic bell harmonic
+    synthTone(engine, {
+      freqStart: 1318.51,
+      duration: 0.24,
+      delay: 0.07,
+      volume: 0.12,
+      type: 'sine',
+      attack: 0.002
+    });
+    synthTone(engine, {
+      freqStart: 2637.02, // E7 coin shimmer
+      duration: 0.18,
+      delay: 0.072,
+      volume: 0.04,
+      type: 'sine',
+      attack: 0.002
+    });
+  } catch {}
 }
 
+// 6. Satisfying rubbery pop-out + crisp air puff for deleting items
 export function playDelete() {
-  playTone({
-    freqStart: 420,
-    freqEnd: 170,
-    duration: 0.11,
-    volume: 0.085,
-    type: 'triangle'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.025,
+      volume: 0.07,
+      filterType: 'bandpass',
+      freqStart: 1500,
+      freqEnd: 500,
+      q: 1.2
+    });
+
+    synthTone(engine, {
+      freqStart: 380,
+      freqEnd: 115,
+      duration: 0.095,
+      volume: 0.16,
+      type: 'triangle',
+      attack: 0.003,
+      lowpassFreq: 1400
+    });
+  } catch {}
 }
 
+// 7. Bouncy elastic rewind pop for Undo
 export function playUndo() {
-  playTone({
-    freqStart: 250,
-    freqEnd: 540,
-    duration: 0.1,
-    volume: 0.08,
-    type: 'triangle'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthTone(engine, {
+      freqStart: 220,
+      freqEnd: 520,
+      duration: 0.065,
+      delay: 0,
+      volume: 0.13,
+      type: 'sine',
+      attack: 0.003
+    });
+    synthTone(engine, {
+      freqStart: 520,
+      freqEnd: 780,
+      duration: 0.095,
+      delay: 0.055,
+      volume: 0.12,
+      type: 'triangle',
+      attack: 0.003,
+      lowpassFreq: 2600
+    });
+  } catch {}
 }
 
+// 8. Playful muted cartoon woodblock double-knock for validation errors
 export function playError() {
-  playTone({ freqStart: 210, freqEnd: 180, duration: 0.075, delay: 0, volume: 0.085, type: 'sine' });
-  playTone({ freqStart: 170, freqEnd: 145, duration: 0.095, delay: 0.085, volume: 0.085, type: 'sine' });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthTone(engine, {
+      freqStart: 210,
+      freqEnd: 135,
+      duration: 0.065,
+      delay: 0,
+      volume: 0.16,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 900
+    });
+    synthTone(engine, {
+      freqStart: 165,
+      freqEnd: 105,
+      duration: 0.085,
+      delay: 0.08,
+      volume: 0.17,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 800
+    });
+  } catch {}
 }
 
+// 9. Soft airy lift when opening bottom sheets
 export function playModalOpen() {
-  playTone({
-    freqStart: 300,
-    freqEnd: 460,
-    duration: 0.065,
-    volume: 0.05,
-    type: 'sine'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.04,
+      volume: 0.04,
+      filterType: 'bandpass',
+      freqStart: 600,
+      freqEnd: 1500,
+      q: 1.0
+    });
+    synthTone(engine, {
+      freqStart: 240,
+      freqEnd: 410,
+      duration: 0.06,
+      volume: 0.08,
+      type: 'sine',
+      attack: 0.005
+    });
+  } catch {}
 }
 
+// 10. Crisp magnetic double-tick for Copy & CSV Export
 export function playCopy() {
-  playTone({
-    freqStart: 784,
-    freqEnd: 1046.5,
-    duration: 0.055,
-    volume: 0.065,
-    type: 'sine'
-  });
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.004,
+      volume: 0.07,
+      filterType: 'highpass',
+      freqStart: 2600
+    });
+    synthTone(engine, {
+      freqStart: 980,
+      duration: 0.035,
+      delay: 0,
+      volume: 0.09,
+      type: 'sine',
+      attack: 0.002
+    });
+    synthTone(engine, {
+      freqStart: 1480,
+      duration: 0.06,
+      delay: 0.04,
+      volume: 0.1,
+      type: 'sine',
+      attack: 0.002
+    });
+  } catch {}
 }
