@@ -3,6 +3,7 @@ import { SOUND_KEY } from './constants';
 let audioCtx = null;
 let masterBus = null;
 let noiseBuffer = null;
+let iosHapticLabel = null;
 let soundEnabled = readInitialSoundPref();
 
 function readInitialSoundPref() {
@@ -10,6 +11,69 @@ function readInitialSoundPref() {
     return localStorage.getItem(SOUND_KEY) !== 'off';
   } catch {
     return true;
+  }
+}
+
+// Ultra-light cross-platform haptics (Android vibrate API + iOS 17.4+ native Taptic switch fallback)
+function triggerIosSwitchTick() {
+  if (typeof document === 'undefined') return;
+  try {
+    if (!iosHapticLabel) {
+      const label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.position = 'fixed';
+      label.style.left = '-9999px';
+      label.style.top = '-9999px';
+      label.style.opacity = '0';
+      label.style.pointerEvents = 'none';
+
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      input.tabIndex = -1;
+
+      label.appendChild(input);
+      document.body.appendChild(label);
+      iosHapticLabel = label;
+    }
+    iosHapticLabel.click();
+  } catch {
+    // Ignore on unsupported browsers
+  }
+}
+
+export function triggerHaptic(style = 'light') {
+  if (typeof window === 'undefined') return;
+
+  try {
+    // 1. Android / browsers supporting Vibration API (kept intentionally very light)
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      if (style === 'tick') {
+        navigator.vibrate(7);
+      } else if (style === 'success') {
+        navigator.vibrate([10, 35, 14]);
+      } else if (style === 'error') {
+        navigator.vibrate([14, 45, 14]);
+      } else if (style === 'soft') {
+        navigator.vibrate(11);
+      } else {
+        navigator.vibrate(8);
+      }
+      return;
+    }
+
+    // 2. iOS Safari / PWA fallback via native Taptic switch element
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) return;
+
+    triggerIosSwitchTick();
+    if (style === 'success' || style === 'error') {
+      setTimeout(() => {
+        triggerIosSwitchTick();
+      }, 55);
+    }
+  } catch {
+    // Fail silently on restricted devices
   }
 }
 
@@ -183,7 +247,7 @@ const DIGIT_PENTATONIC_MAP = {
   '.': 987.77  // B5
 };
 
-// 1. Creamy mechanical keycap "thock" + subtle wooden marimba ping
+// 1. Creamy mechanical keycap "thock" + subtle wooden marimba ping (no vibration)
 export function playKeyTap(digit = '0') {
   if (!soundEnabled) return;
   const engine = getAudioEngine();
@@ -192,7 +256,6 @@ export function playKeyTap(digit = '0') {
   try {
     const noteFreq = jitter(DIGIT_PENTATONIC_MAP[String(digit)] || 523.25);
 
-    // Layer A: Crisp 5ms switch click transient
     synthNoise(engine, {
       duration: 0.006,
       volume: 0.09,
@@ -201,7 +264,6 @@ export function playKeyTap(digit = '0') {
       q: 1.8
     });
 
-    // Layer B: Warm low-mid mechanical "thock" body
     synthTone(engine, {
       freqStart: jitter(195, 0.04),
       freqEnd: 78,
@@ -211,7 +273,6 @@ export function playKeyTap(digit = '0') {
       attack: 0.002
     });
 
-    // Layer C: Soft woody marimba overtone
     synthTone(engine, {
       freqStart: noteFreq,
       freqEnd: noteFreq * 0.985,
@@ -224,7 +285,7 @@ export function playKeyTap(digit = '0') {
   } catch {}
 }
 
-// 2. Deeper damped backspace mechanical chunk
+// 2. Deeper damped backspace mechanical chunk (no vibration)
 export function playKeyDelete() {
   if (!soundEnabled) return;
   const engine = getAudioEngine();
@@ -251,14 +312,13 @@ export function playKeyDelete() {
   } catch {}
 }
 
-// 3. Juicy bubble-wrap "plop" for quick-add chips, pills, and chart taps
+// 3. Juicy bubble-wrap "plop" for quick-add chips, pills, and chart taps (no vibration)
 export function playQuickChip() {
   if (!soundEnabled) return;
   const engine = getAudioEngine();
   if (!engine) return;
 
   try {
-    // Tiny crisp snap
     synthNoise(engine, {
       duration: 0.004,
       volume: 0.055,
@@ -267,7 +327,6 @@ export function playQuickChip() {
       q: 1.0
     });
 
-    // Hollow rising water-drop bubble
     synthTone(engine, {
       freqStart: jitter(390, 0.03),
       freqEnd: jitter(820, 0.03),
@@ -279,14 +338,14 @@ export function playQuickChip() {
   } catch {}
 }
 
-// 4. Magnetic detent "tick-pop" for dock tabs & scrubbing
+// 4. Magnetic detent "tick-pop" for dock tabs & scrubbing (+ ultra-light tick vibration)
 export function playTabSwitch() {
+  triggerHaptic('tick');
   if (!soundEnabled) return;
   const engine = getAudioEngine();
   if (!engine) return;
 
   try {
-    // Crisp haptic-like detent click
     synthNoise(engine, {
       duration: 0.004,
       volume: 0.085,
@@ -295,7 +354,6 @@ export function playTabSwitch() {
       q: 2.2
     });
 
-    // Warm hollow woody pop
     synthTone(engine, {
       freqStart: 270,
       freqEnd: 460,
@@ -308,15 +366,15 @@ export function playTabSwitch() {
   } catch {}
 }
 
-// 5. Signature Hero Success Chimes (Expense Coin-Bell, Income Jackpot, Transfer Swoosh, Save Glass)
+// 5. Signature Hero Success Chimes (+ crisp light double-pulse vibration)
 export function playSuccess(kind = 'expense') {
+  triggerHaptic('success');
   if (!soundEnabled) return;
   const engine = getAudioEngine();
   if (!engine) return;
 
   try {
     if (kind === 'income') {
-      // Euphoric major-9th harp/kalimba sparkle roll (C5 -> E5 -> G5 -> B5 -> D6)
       const notes = [523.25, 659.25, 783.99, 987.77, 1174.66];
       notes.forEach((freq, i) => {
         const d = i * 0.042;
@@ -329,7 +387,6 @@ export function playSuccess(kind = 'expense') {
           attack: 0.004,
           lowpassFreq: 3800
         });
-        // Shimmering octave overtone
         synthTone(engine, {
           freqStart: freq * 2,
           duration: 0.14,
@@ -339,7 +396,6 @@ export function playSuccess(kind = 'expense') {
           attack: 0.003
         });
       });
-      // Warm sub-bass bloom underneath
       synthTone(engine, {
         freqStart: 130.81,
         duration: 0.22,
@@ -351,7 +407,6 @@ export function playSuccess(kind = 'expense') {
     }
 
     if (kind === 'transfer') {
-      // Silky filtered air swoosh + magnetic two-tone lock
       synthNoise(engine, {
         duration: 0.11,
         volume: 0.075,
@@ -361,8 +416,8 @@ export function playSuccess(kind = 'expense') {
         q: 1.5
       });
       synthTone(engine, {
-        freqStart: 392.0, // G4
-        freqEnd: 587.33,  // D5
+        freqStart: 392.0,
+        freqEnd: 587.33,
         duration: 0.09,
         delay: 0.02,
         volume: 0.13,
@@ -370,7 +425,7 @@ export function playSuccess(kind = 'expense') {
         attack: 0.005
       });
       synthTone(engine, {
-        freqStart: 783.99, // G5 lock bell
+        freqStart: 783.99,
         duration: 0.18,
         delay: 0.085,
         volume: 0.12,
@@ -379,7 +434,7 @@ export function playSuccess(kind = 'expense') {
         lowpassFreq: 3200
       });
       synthTone(engine, {
-        freqStart: 1567.98, // G6 sparkle
+        freqStart: 1567.98,
         duration: 0.12,
         delay: 0.085,
         volume: 0.035,
@@ -389,7 +444,6 @@ export function playSuccess(kind = 'expense') {
     }
 
     if (kind === 'save') {
-      // Crisp Apple-Pay-inspired glass double-chime (F#5 -> B5)
       synthTone(engine, {
         freqStart: 739.99,
         duration: 0.13,
@@ -418,7 +472,6 @@ export function playSuccess(kind = 'expense') {
     }
 
     // Default 'expense': Addictive crisp "Ka-Ching" coin-bell pop
-    // Mechanical latch click
     synthNoise(engine, {
       duration: 0.006,
       volume: 0.08,
@@ -426,7 +479,6 @@ export function playSuccess(kind = 'expense') {
       freqStart: 2800,
       q: 2.0
     });
-    // Warm base thump
     synthTone(engine, {
       freqStart: 220,
       freqEnd: 95,
@@ -435,7 +487,6 @@ export function playSuccess(kind = 'expense') {
       type: 'sine',
       attack: 0.002
     });
-    // First bright coin tone (B5)
     synthTone(engine, {
       freqStart: 987.77,
       duration: 0.11,
@@ -445,7 +496,6 @@ export function playSuccess(kind = 'expense') {
       attack: 0.002,
       lowpassFreq: 4200
     });
-    // Second high coin ring (E6) + metallic bell harmonic
     synthTone(engine, {
       freqStart: 1318.51,
       duration: 0.24,
@@ -455,7 +505,7 @@ export function playSuccess(kind = 'expense') {
       attack: 0.002
     });
     synthTone(engine, {
-      freqStart: 2637.02, // E7 coin shimmer
+      freqStart: 2637.02,
       duration: 0.18,
       delay: 0.072,
       volume: 0.04,
@@ -465,8 +515,9 @@ export function playSuccess(kind = 'expense') {
   } catch {}
 }
 
-// 6. Satisfying rubbery pop-out + crisp air puff for deleting items
+// 6. Satisfying rubbery pop-out + crisp air puff for deleting items (+ soft single pulse)
 export function playDelete() {
+  triggerHaptic('soft');
   if (!soundEnabled) return;
   const engine = getAudioEngine();
   if (!engine) return;
@@ -493,8 +544,9 @@ export function playDelete() {
   } catch {}
 }
 
-// 7. Bouncy elastic rewind pop for Undo
+// 7. Bouncy elastic rewind pop for Undo (+ light pulse)
 export function playUndo() {
+  triggerHaptic('light');
   if (!soundEnabled) return;
   const engine = getAudioEngine();
   if (!engine) return;
@@ -522,8 +574,9 @@ export function playUndo() {
   } catch {}
 }
 
-// 8. Playful muted cartoon woodblock double-knock for validation errors
+// 8. Playful muted cartoon woodblock double-knock for validation errors (+ gentle double-nudge)
 export function playError() {
+  triggerHaptic('error');
   if (!soundEnabled) return;
   const engine = getAudioEngine();
   if (!engine) return;
@@ -552,7 +605,7 @@ export function playError() {
   } catch {}
 }
 
-// 9. Soft airy lift when opening bottom sheets
+// 9. Soft airy lift when opening bottom sheets (no vibration)
 export function playModalOpen() {
   if (!soundEnabled) return;
   const engine = getAudioEngine();
@@ -578,8 +631,9 @@ export function playModalOpen() {
   } catch {}
 }
 
-// 10. Crisp magnetic double-tick for Copy & CSV Export
+// 10. Crisp magnetic double-tick for Copy & CSV Export (+ ultra-light tick)
 export function playCopy() {
+  triggerHaptic('tick');
   if (!soundEnabled) return;
   const engine = getAudioEngine();
   if (!engine) return;
