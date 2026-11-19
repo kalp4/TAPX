@@ -8,6 +8,7 @@ import {
   NAV_TABS,
   CACHE_KEY,
   THEME_KEY,
+  SOUND_KEY,
   BUDGET_CLEANUP_KEY,
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
@@ -24,6 +25,19 @@ import {
   escapeCsvCell,
   computeAnalytics
 } from './analytics';
+import {
+  setSoundEnabled,
+  playKeyTap,
+  playKeyDelete,
+  playQuickChip,
+  playTabSwitch,
+  playSuccess,
+  playDelete,
+  playUndo,
+  playError,
+  playModalOpen,
+  playCopy
+} from './sounds';
 import {
   TapxLogo,
   NavIcon,
@@ -113,6 +127,26 @@ function TapxMainApp() {
   const flushingQueueRef = useRef(false);
 
   const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
+  const [soundEnabled, setSoundEnabledState] = useState(() => {
+    try {
+      return localStorage.getItem(SOUND_KEY) !== 'off';
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    setSoundEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  const handleToggleSound = useCallback((enabled) => {
+    setSoundEnabled(enabled);
+    setSoundEnabledState(enabled);
+    if (enabled) {
+      playSuccess('save');
+    }
+  }, []);
+
   const [systemIsDark, setSystemIsDark] = useState(() =>
     window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true
   );
@@ -198,6 +232,7 @@ function TapxMainApp() {
       triggerLensMagnification(260);
       setActiveTab((prevTab) => {
         if (nextTabId === prevTab) return prevTab;
+        playTabSwitch();
         const prevIdx = NAV_TABS.findIndex((t) => t.id === prevTab);
         const nextIdx = NAV_TABS.findIndex((t) => t.id === nextTabId);
         setTabDirection(nextIdx >= prevIdx ? 'right' : 'left');
@@ -240,6 +275,7 @@ function TapxMainApp() {
       const nearestIdx = Math.round(clampedIndex);
       const targetTab = NAV_TABS[nearestIdx]?.id;
       if (targetTab && targetTab !== activeTab) {
+        playTabSwitch();
         const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
         setTabDirection(nearestIdx >= prevIdx ? 'right' : 'left');
         setActiveTab(targetTab);
@@ -448,6 +484,7 @@ function TapxMainApp() {
       setIsSyncingBg(false);
 
       if (remaining.length === 0 && currentQueue.length > 0) {
+        playSuccess('save');
         showToast(`Synced ${currentQueue.length} offline ${currentQueue.length === 1 ? 'entry' : 'entries'}!`);
       }
     },
@@ -695,6 +732,7 @@ function TapxMainApp() {
   }, [session?.user?.id, fetchUserData]);
 
   const handleGoogleLogin = async (loginHintEmail = '') => {
+    playQuickChip();
     setIsLoggingIn(true);
     const queryParams = {
       access_type: 'offline',
@@ -708,12 +746,14 @@ function TapxMainApp() {
 
     if (error) {
       setIsLoggingIn(false);
+      playError();
       showToast(error.message || 'Sign-in failed');
     }
   };
 
   const handleRemoveSavedAccount = (emailToRemove, e) => {
     e.stopPropagation();
+    playDelete();
     setSavedAccounts((prev) => {
       const next = prev.filter((a) => a.email.toLowerCase() !== emailToRemove.toLowerCase());
       try {
@@ -724,6 +764,7 @@ function TapxMainApp() {
   };
 
   const handleLogout = async () => {
+    playDelete();
     localStorage.removeItem(CACHE_KEY);
     setSession(null);
     await supabase.auth.signOut();
@@ -736,13 +777,18 @@ function TapxMainApp() {
     triggerAmountPulse();
 
     if (digit === 'CLEAR') {
+      playKeyDelete();
       setAmountStr('0');
       return;
     }
     if (digit === 'DEL') {
+      playKeyDelete();
       setAmountStr((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
       return;
     }
+
+    playKeyTap(digit);
+
     if (digit === '.') {
       setAmountStr((prev) => (prev.includes('.') ? prev : `${prev}.`));
       return;
@@ -759,6 +805,7 @@ function TapxMainApp() {
     if (noteInputRef.current && document.activeElement === noteInputRef.current) {
       noteInputRef.current.blur();
     }
+    playQuickChip();
     triggerAmountPulse();
     setAmountStr((prev) => {
       const current = parseFloat(prev) || 0;
@@ -769,6 +816,7 @@ function TapxMainApp() {
 
   const handleSwapTransferWallets = () => {
     if (!selectedWalletId || !toWalletId) return;
+    playQuickChip();
     const prevFrom = selectedWalletId;
     setSelectedWalletId(toWalletId);
     setToWalletId(prevFrom);
@@ -800,16 +848,19 @@ function TapxMainApp() {
 
     const numericAmount = parseFloat(amountStr);
     if (!numericAmount || numericAmount <= 0) {
+      playError();
       showToast('Pop in an amount above 0!');
       return;
     }
     if (!selectedWalletId) {
+      playError();
       showToast('Create an account first!');
       resetWalletModal();
       setShowWalletModal(true);
       return;
     }
     if (entryType === 'transfer' && (!toWalletId || toWalletId === selectedWalletId)) {
+      playError();
       showToast('Pick two different accounts!');
       return;
     }
@@ -863,6 +914,7 @@ function TapxMainApp() {
 
     setAmountStr('0');
     setNote('');
+    playSuccess(currentType);
 
     const enqueueOfflineItem = () => {
       const queueEntry = {
@@ -929,6 +981,8 @@ function TapxMainApp() {
     const targetTx = transactions.find((t) => t.id === id);
     if (!targetTx) return;
 
+    playDelete();
+
     const amt = Number(targetTx.amount) || 0;
     const fromWallet = wallets.find((w) => w.id === targetTx.wallet_id);
     const toWallet = targetTx.to_wallet_id ? wallets.find((w) => w.id === targetTx.to_wallet_id) : null;
@@ -973,6 +1027,7 @@ function TapxMainApp() {
     }
 
     showToast('Entry popped!', async () => {
+      playUndo();
       setToast(null);
       const { id: _oldId, pendingSync: _ps, ...reinsertPayload } = targetTx;
       const { data: restoredRow } = await supabase
@@ -1009,6 +1064,7 @@ function TapxMainApp() {
   };
 
   const openEditTransaction = (tx) => {
+    playModalOpen();
     const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
     const resolvedCat =
       (tagCategoryName && findMatchingCategoryObj(tagCategoryName, categories)) ||
@@ -1027,6 +1083,7 @@ function TapxMainApp() {
     if (!editingTx) return;
     const newAmt = parseFloat(editTxAmount);
     if (!newAmt || newAmt <= 0) {
+      playError();
       showToast('Enter a valid amount');
       return;
     }
@@ -1039,6 +1096,7 @@ function TapxMainApp() {
     const nextCategoryId = oldTx.type === 'transfer' ? null : editTxCategoryId || null;
 
     if (oldTx.type === 'transfer' && nextWalletId === nextToWalletId) {
+      playError();
       showToast('Pick two different accounts');
       return;
     }
@@ -1091,6 +1149,7 @@ function TapxMainApp() {
     );
 
     setEditingTx(null);
+    playSuccess('save');
     showToast('Transaction updated!');
 
     if (!String(oldTx.id).startsWith('temp-')) {
@@ -1112,6 +1171,7 @@ function TapxMainApp() {
   };
 
   const openEditWallet = (wallet) => {
+    playModalOpen();
     setEditingWalletId(wallet.id);
     setNewWalletName(wallet.name || '');
     setNewWalletType(wallet.type || 'UPI / Wallet');
@@ -1142,6 +1202,7 @@ function TapxMainApp() {
             : w
         )
       );
+      playSuccess('save');
       showToast('Account updated!');
 
       const { error } = await supabase
@@ -1150,6 +1211,7 @@ function TapxMainApp() {
         .eq('id', targetEditId);
 
       if (error) {
+        playError();
         showToast(error.message);
         fetchUserData(session.user.id);
       }
@@ -1177,18 +1239,22 @@ function TapxMainApp() {
         if (!selectedWalletId) setSelectedWalletId(createdWallet.id);
         return updated;
       });
+      playSuccess('save');
       showToast('Account created!');
     } else if (error) {
+      playError();
       showToast(error.message);
     }
   };
 
   const handleDeleteWallet = async (id) => {
     if (confirmDeleteId !== id) {
+      playQuickChip();
       setConfirmDeleteId(id);
       setTimeout(() => setConfirmDeleteId((prev) => (prev === id ? null : prev)), 3000);
       return;
     }
+    playDelete();
     setConfirmDeleteId(null);
     setWallets((prev) => prev.filter((w) => w.id !== id));
     if (activityWalletFilter === id) setActivityWalletFilter('all');
@@ -1198,6 +1264,7 @@ function TapxMainApp() {
   };
 
   const openEditCategory = (cat) => {
+    playModalOpen();
     setEditingCatId(cat.id);
     setNewCatName(cat.name || '');
     setNewCatType(cat.type || 'expense');
@@ -1226,6 +1293,7 @@ function TapxMainApp() {
             : c
         )
       );
+      playSuccess('save');
       showToast('Category updated!');
 
       const { error } = await supabase
@@ -1234,6 +1302,7 @@ function TapxMainApp() {
         .eq('id', targetEditId);
 
       if (error) {
+        playError();
         showToast(error.message);
         fetchUserData(session.user.id);
       }
@@ -1262,18 +1331,22 @@ function TapxMainApp() {
         }
         return updated;
       });
+      playSuccess('save');
       showToast('Category created!');
     } else if (error) {
+      playError();
       showToast(error.message);
     }
   };
 
   const handleDeleteCategory = async (id) => {
     if (confirmDeleteId !== id) {
+      playQuickChip();
       setConfirmDeleteId(id);
       setTimeout(() => setConfirmDeleteId((prev) => (prev === id ? null : prev)), 3000);
       return;
     }
+    playDelete();
     setConfirmDeleteId(null);
     setCategories((prev) => prev.filter((c) => c.id !== id));
     if (editingCatId === id) resetCategoryModal();
@@ -1287,12 +1360,14 @@ function TapxMainApp() {
       .join('');
 
     setSettings((prev) => ({ ...prev, shortcut_token: randomHex }));
+    playSuccess('save');
     showToast('Token refreshed!');
     await supabase.from('user_settings').update({ shortcut_token: randomHex }).eq('user_id', session.user.id);
   };
 
   const copyToClipboard = (text, label) => {
     navigator.clipboard.writeText(text || '');
+    playCopy();
     setCopiedField(label);
     showToast('Copied to clipboard!');
     setTimeout(() => setCopiedField(''), 2000);
@@ -1302,6 +1377,7 @@ function TapxMainApp() {
 
   const handleOneTapShortcut = () => {
     navigator.clipboard.writeText(personalApiUrl);
+    playCopy();
     showToast('Personal URL copied · Opening Shortcuts');
     setTimeout(() => {
       window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
@@ -1427,6 +1503,7 @@ function TapxMainApp() {
   const handleExportCsv = useCallback(() => {
     const sourceRows = analyticsData.filteredTx.length > 0 ? analyticsData.filteredTx : transactions;
     if (sourceRows.length === 0) {
+      playError();
       showToast('No transactions to export');
       return;
     }
@@ -1488,6 +1565,7 @@ function TapxMainApp() {
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 1500);
 
+    playCopy();
     showToast(`Exported ${sourceRows.length} entries to CSV!`);
   }, [analyticsData.filteredTx, transactions, wallets, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
 
@@ -1617,6 +1695,7 @@ function TapxMainApp() {
         <button
           type="button"
           onClick={() => {
+            playModalOpen();
             resetWalletModal();
             setShowWalletModal(true);
           }}
@@ -1664,10 +1743,12 @@ function TapxMainApp() {
             handleLogTransaction={handleLogTransaction}
             delHoldTimerRef={delHoldTimerRef}
             onOpenNewWallet={() => {
+              playModalOpen();
               resetWalletModal();
               setShowWalletModal(true);
             }}
             onOpenNewCategory={(type) => {
+              playModalOpen();
               resetCategoryModal();
               setNewCatType(type);
               setShowCategoryModal(true);
@@ -1693,6 +1774,7 @@ function TapxMainApp() {
             resolveTxCategory={resolveTxCategory}
             openEditWallet={openEditWallet}
             onOpenNewWallet={() => {
+              playModalOpen();
               resetWalletModal();
               setShowWalletModal(true);
             }}
@@ -1733,6 +1815,8 @@ function TapxMainApp() {
             tabAnimClass={tabAnimClass}
             themePref={themePref}
             setThemePref={setThemePref}
+            soundEnabled={soundEnabled}
+            onToggleSound={handleToggleSound}
             settingsSection={settingsSection}
             setSettingsSection={setSettingsSection}
             personalApiUrl={personalApiUrl}
@@ -1745,6 +1829,7 @@ function TapxMainApp() {
             currentMonthSpendByCat={currentMonthSpendByCat}
             currencySymbol={currencySymbol}
             onOpenNewCategory={() => {
+              playModalOpen();
               resetCategoryModal();
               setShowCategoryModal(true);
             }}
@@ -1753,6 +1838,7 @@ function TapxMainApp() {
             confirmDeleteId={confirmDeleteId}
             session={session}
             onSync={() => {
+              playSuccess('save');
               fetchUserData(session.user.id);
               showToast('Synced!');
             }}

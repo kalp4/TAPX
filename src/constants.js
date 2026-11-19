@@ -52,6 +52,7 @@ export const NAV_TABS = [
 
 export const CACHE_KEY = 'tapx_local_cache_v4';
 export const THEME_KEY = 'tapx_theme_pref';
+export const SOUND_KEY = 'tapx_sound_pref';
 export const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
 export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
 export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';

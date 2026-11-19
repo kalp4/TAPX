@@ -4555,7 +4555,15 @@ export function SettingsTab({
 </file>
 
 <file path="src/index.css">
-html,
+:root,
+html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #1e1e1c;
+}
+
 body,
 #root {
   position: fixed;
@@ -4566,27 +4574,15 @@ body,
   padding: 0;
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch;
+  background-color: #1e1e1c;
 }
 
 .custom-scroll {
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
   overscroll-behavior-y: contain;
-}
-
-.custom-scroll::-webkit-scrollbar {
-  width: 3px;
-}
-
-.custom-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.25);
-  border-radius: 9999px;
+  -webkit-overflow-scrolling: touch;
 }
 </file>
 
@@ -5214,12 +5210,12 @@ export default async function handler(req, res) {
 
 <file path="index.html">
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background-color: #1e1e1c;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TAPX" />
     <meta name="theme-color" content="#1e1e1c" id="theme-color-meta" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -5233,6 +5229,22 @@ export default async function handler(req, res) {
     />
     <title>TAPX</title>
     <script>
+      // 1. Synchronously set root background & theme-color before first paint so iOS status bar is never white
+      (function () {
+        try {
+          var savedTheme = localStorage.getItem('tapx_theme_v1') || 'dark';
+          var sysDark = window.matchMedia
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+            : true;
+          var isDark = savedTheme === 'system' ? sysDark : savedTheme === 'dark';
+          var bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
+          document.documentElement.style.backgroundColor = bgHex;
+          var meta = document.getElementById('theme-color-meta');
+          if (meta) meta.setAttribute('content', bgHex);
+        } catch (e) {}
+      })();
+
+      // 2. Synchronously generate a 512x512 Cartoony Charcoal & Sand PNG for iOS Home Screen
       (function () {
         try {
           var c = document.createElement('canvas');
@@ -5250,16 +5262,19 @@ export default async function handler(req, res) {
             ctx.closePath();
           }
 
+          // Warm Charcoal App Icon Background (#1e1e1c)
           ctx.fillStyle = '#1e1e1c';
           ctx.fillRect(0, 0, 512, 512);
 
           ctx.save();
           ctx.translate(-4, 8);
 
+          // Hard Cartoon Drop Shadow Behind Wallet
           ctx.fillStyle = '#111110';
           roundRectPath(106, 224, 316, 224, 46);
           ctx.fill();
 
+          // Rising Chunky Cartoon Bars (Coral, Mint, Gold) with Dark Outlines
           var bars = [
             { x: 168, y: 146, w: 56, h: 120, color: '#F26B5B' },
             { x: 240, y: 108, w: 56, h: 158, color: '#52B788' },
@@ -5274,6 +5289,7 @@ export default async function handler(req, res) {
             ctx.stroke();
           });
 
+          // Main Wallet Body in Warm Sand (#D8CBB3)
           ctx.fillStyle = '#D8CBB3';
           roundRectPath(100, 216, 316, 218, 44);
           ctx.fill();
@@ -5281,6 +5297,7 @@ export default async function handler(req, res) {
           ctx.strokeStyle = '#111110';
           ctx.stroke();
 
+          // Wallet Clasp in Charcoal (#2a2a27) with Gold Button Dot
           ctx.fillStyle = '#2a2a27';
           roundRectPath(324, 298, 102, 64, 32);
           ctx.fill();
@@ -5311,7 +5328,14 @@ export default async function handler(req, res) {
         -webkit-touch-callout: none;
         box-sizing: border-box;
       }
-      html,
+      :root,
+      html {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #1e1e1c;
+      }
       body,
       #root {
         position: fixed;
@@ -5323,6 +5347,7 @@ export default async function handler(req, res) {
         overflow: hidden;
         overscroll-behavior: none;
         touch-action: manipulation;
+        background-color: #1e1e1c;
         font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
       }
@@ -5340,10 +5365,12 @@ export default async function handler(req, res) {
         font-variant-numeric: tabular-nums;
       }
 
+      /* Bouncy Cartoon Spring Physics */
       .ios-spring {
         transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
       }
 
+      /* Chunky Cartoon Dock Track (Dark: Charcoal & Sand, Light: Cream & Charcoal) */
       .cartoon-dock-dark {
         background: #282825;
         border: 2.5px solid #111110;
@@ -5362,6 +5389,7 @@ export default async function handler(req, res) {
           0 10px 20px rgba(30, 30, 28, 0.14);
       }
 
+      /* Active Pill Bubble Inside Dock */
       .cartoon-pill-lens-dark {
         background: #D8CBB3;
         border: 2px solid #111110;
@@ -5378,6 +5406,7 @@ export default async function handler(req, res) {
           0 3px 0 #877D6E;
       }
 
+      /* Tactile Arcade / Cartoon Squish & Press */
       .key-press {
         transition:
           transform 95ms cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -5389,6 +5418,7 @@ export default async function handler(req, res) {
         transform: translate3d(0, 3px, 0) scale(0.97);
       }
 
+      /* Directional Bouncy Tab Transitions */
       @keyframes tabSlideRight {
         0% {
           opacity: 0;
@@ -5436,9 +5466,24 @@ export default async function handler(req, res) {
         animation: tabFadeUp 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
         will-change: transform, opacity;
       }
+
+      @keyframes amountPop {
+        0% {
+          transform: scale(0.92) rotate(-1deg);
+        }
+        60% {
+          transform: scale(1.05) rotate(0.5deg);
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+        }
+      }
+      .animate-pop {
+        animation: amountPop 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
     </style>
   </head>
-  <body>
+  <body style="background-color: #1e1e1c;">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
@@ -5480,7 +5525,12 @@ import {
   CategoryModal,
   EditTransactionModal
 } from './components/Modals';
-import { KeypadTab, AccountsTab, InsightsTab, SettingsTab } from './components/Tabs';
+import {
+  KeypadTab,
+  AccountsTab,
+  InsightsTab,
+  SettingsTab
+} from './components/Tabs';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -5549,6 +5599,7 @@ function TapxMainApp() {
       return [];
     }
   });
+
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -5570,10 +5621,14 @@ function TapxMainApp() {
   const isDark = themePref === 'system' ? systemIsDark : themePref === 'dark';
 
   useEffect(() => {
-    localStorage.setItem(THEME_KEY, themePref);
+    try {
+      localStorage.setItem(THEME_KEY, themePref);
+    } catch {}
     const bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
     document.documentElement.style.backgroundColor = bgHex;
     document.body.style.backgroundColor = bgHex;
+    const rootEl = document.getElementById('root');
+    if (rootEl) rootEl.style.backgroundColor = bgHex;
     const meta = document.getElementById('theme-color-meta');
     if (meta) meta.setAttribute('content', bgHex);
   }, [themePref, isDark]);
@@ -5669,9 +5724,7 @@ function TapxMainApp() {
       isScrubbingRef.current = true;
       try {
         e.currentTarget.setPointerCapture(e.pointerId);
-      } catch {
-        // Ignore capture errors
-      }
+      } catch {}
     }
 
     if (isScrubbingRef.current) {
@@ -5771,9 +5824,7 @@ function TapxMainApp() {
   useEffect(() => {
     try {
       localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(offlineQueue));
-    } catch {
-      // Ignore storage errors
-    }
+    } catch {}
   }, [offlineQueue]);
 
   useEffect(() => {
@@ -5793,9 +5844,7 @@ function TapxMainApp() {
       const next = [profileEntry, ...filtered].slice(0, 5);
       try {
         localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage errors
-      }
+      } catch {}
       return next;
     });
   }, [session?.user]);
@@ -5815,9 +5864,7 @@ function TapxMainApp() {
           transactions
         })
       );
-    } catch {
-      // Ignore storage quota errors
-    }
+    } catch {}
   }, [
     session?.user?.id,
     session?.user?.email,
@@ -6164,9 +6211,7 @@ function TapxMainApp() {
       const next = prev.filter((a) => a.email.toLowerCase() !== emailToRemove.toLowerCase());
       try {
         localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage errors
-      }
+      } catch {}
       return next;
     });
   };
@@ -6752,11 +6797,7 @@ function TapxMainApp() {
     navigator.clipboard.writeText(personalApiUrl);
     showToast('Personal URL copied · Opening Shortcuts');
     setTimeout(() => {
-      if (SHARED_ICLOUD_SHORTCUT_URL) {
-        window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
-      } else {
-        window.location.href = 'shortcuts://create-shortcut';
-      }
+      window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
     }, 450);
   };
 
@@ -6977,7 +7018,7 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'max(env(safe-area-inset-top), 12px)'
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)'
       }}
     >
       <style>{`
@@ -6995,6 +7036,7 @@ function TapxMainApp() {
         }
       `}</style>
 
+      {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
           className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_4px_0_#111110] flex items-center gap-3 animate-tab ${
@@ -7027,11 +7069,12 @@ function TapxMainApp() {
         </div>
       )}
 
-      <header className="relative z-10 px-5 pt-1 pb-2 flex items-center justify-between shrink-0">
+      {/* Top Header */}
+      <header className="relative z-10 px-5 pt-0.5 pb-1.5 flex items-center justify-between shrink-0">
         <div onClick={() => handleSelectTab('wallets')} className="cursor-pointer group">
           <div className="flex items-center gap-2">
             <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
-              Total Balance 
+              Total Balance
             </span>
             {!isOnline ? (
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#F4B942] text-[#1e1e1c] border border-[#111110] flex items-center gap-1">
@@ -7076,6 +7119,7 @@ function TapxMainApp() {
         </button>
       </header>
 
+      {/* MAIN VIEWPORT (Flush bottom padding matching tight dock position) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
@@ -7271,7 +7315,7 @@ function TapxMainApp() {
         />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR (Flush at bottom) */}
+      {/* CHUNKY CARTOON DOCK BAR (Anchored flush at bottom) */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{

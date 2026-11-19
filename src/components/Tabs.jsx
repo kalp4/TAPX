@@ -1,6 +1,7 @@
 import React from 'react';
 import { WALLET_COLORS } from '../constants';
 import { formatTimeOnly, formatDayGroupLabel, getCategoryAccentColor } from '../analytics';
+import { playQuickChip, playTabSwitch } from '../sounds';
 
 const RANGE_PRESETS = [
   { id: 'week', label: '7D' },
@@ -67,6 +68,7 @@ export function KeypadTab({
             key={t.id}
             type="button"
             onClick={() => {
+              if (entryType !== t.id) playTabSwitch();
               setEntryType(t.id);
               const firstMatch = categories.find(
                 (c) => c.type === (t.id === 'income' ? 'income' : 'expense')
@@ -198,7 +200,10 @@ export function KeypadTab({
                   <button
                     key={w.id}
                     type="button"
-                    onClick={() => setSelectedWalletId(w.id)}
+                    onClick={() => {
+                      playQuickChip();
+                      setSelectedWalletId(w.id);
+                    }}
                     style={
                       active
                         ? {
@@ -232,7 +237,10 @@ export function KeypadTab({
                   <button
                     key={w.id}
                     type="button"
-                    onClick={() => setToWalletId(w.id)}
+                    onClick={() => {
+                      playQuickChip();
+                      setToWalletId(w.id);
+                    }}
                     className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1 shrink-0 transition-colors duration-150 key-press ${
                       toWalletId === w.id ? ui.pillActive : ui.pillIdle
                     }`}
@@ -268,7 +276,10 @@ export function KeypadTab({
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setSelectedCategoryId(c.id)}
+                    onClick={() => {
+                      playQuickChip();
+                      setSelectedCategoryId(c.id);
+                    }}
                     style={
                       active
                         ? {
@@ -376,7 +387,10 @@ export function AccountsTab({
           {activityWalletFilter !== 'all' && (
             <button
               type="button"
-              onClick={() => setActivityWalletFilter('all')}
+              onClick={() => {
+                playQuickChip();
+                setActivityWalletFilter('all');
+              }}
               className="text-[11px] text-[#F4B942] font-cartoon font-bold key-press"
             >
               Show All
@@ -391,9 +405,10 @@ export function AccountsTab({
             return (
               <div
                 key={w.id}
-                onClick={() =>
-                  setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id))
-                }
+                onClick={() => {
+                  playQuickChip();
+                  setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id));
+                }}
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
                 }}
@@ -511,7 +526,10 @@ export function AccountsTab({
             <button
               key={f.id}
               type="button"
-              onClick={() => setActivityTypeFilter(f.id)}
+              onClick={() => {
+                if (activityTypeFilter !== f.id) playQuickChip();
+                setActivityTypeFilter(f.id);
+              }}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-cartoon font-bold transition-all ${
                 activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
               }`}
@@ -677,6 +695,7 @@ export function InsightsTab({
                   key={tab.id}
                   type="button"
                   onClick={() => {
+                    if (analyticsRange !== tab.id) playQuickChip();
                     setAnalyticsRange(tab.id);
                     setSelectedBarIdx(6);
                   }}
@@ -965,7 +984,10 @@ export function InsightsTab({
                           strokeDashoffset={dashOffset}
                           strokeLinecap="round"
                           className="transition-all duration-300 cursor-pointer"
-                          onClick={() => setSelectedDonutCatId(item.id)}
+                          onClick={() => {
+                            playQuickChip();
+                            setSelectedDonutCatId(item.id);
+                          }}
                         />
                       );
                     })}
@@ -1019,7 +1041,10 @@ export function InsightsTab({
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setSelectedDonutCatId(item.id)}
+                      onClick={() => {
+                        playQuickChip();
+                        setSelectedDonutCatId(item.id);
+                      }}
                       className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-all key-press ${
                         isFocused ? ui.cardElevated : ui.cardSubtle
                       }`}
@@ -1091,7 +1116,10 @@ export function InsightsTab({
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setSelectedBarIdx(idx)}
+                  onClick={() => {
+                    playQuickChip();
+                    setSelectedBarIdx(idx);
+                  }}
                   className="flex flex-col items-center justify-end h-full gap-1 key-press min-w-0"
                 >
                   <span
@@ -1374,6 +1402,8 @@ export function SettingsTab({
   tabAnimClass,
   themePref,
   setThemePref,
+  soundEnabled,
+  onToggleSound,
   settingsSection,
   setSettingsSection,
   personalApiUrl,
@@ -1397,28 +1427,59 @@ export function SettingsTab({
 
   return (
     <div className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
-      <div className={`p-3.5 rounded-2xl flex items-center justify-between shrink-0 ${ui.card}`}>
-        <div>
-          <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
-          <p className={`text-[10px] font-medium ${ui.textMuted}`}>&amp;Select your preferred theme</p>
+      <div className={`p-3.5 rounded-2xl space-y-2.5 shrink-0 ${ui.card}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
+            <p className={`text-[10px] font-medium ${ui.textMuted}`}>Select your preferred theme</p>
+          </div>
+          <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
+            {[
+              { id: 'system', label: 'Auto' },
+              { id: 'light', label: 'Light' },
+              { id: 'dark', label: 'Dark' }
+            ].map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  if (themePref !== m.id) playQuickChip();
+                  setThemePref(m.id);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                  themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
-          {[
-            { id: 'system', label: 'Auto' },
-            { id: 'light', label: 'Light' },
-            { id: 'dark', label: 'Dark' }
-          ].map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setThemePref(m.id)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
-                themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+
+        <div className={`pt-2.5 border-t-2 border-dashed flex items-center justify-between ${ui.divider}`}>
+          <div>
+            <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Sound Effects</p>
+            <p className={`text-[10px] font-medium ${ui.textMuted}`}>Tactile keypad pops &amp; chimes</p>
+          </div>
+          <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
+            {[
+              { id: true, label: '🔊 On' },
+              { id: false, label: '🔇 Muted' }
+            ].map((opt) => (
+              <button
+                key={String(opt.id)}
+                type="button"
+                onClick={() => onToggleSound(opt.id)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                  soundEnabled === opt.id
+                    ? `${ui.segmentedThumb} ${ui.segmentedTextActive}`
+                    : ui.textSecondary
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -1429,7 +1490,10 @@ export function SettingsTab({
         />
         <button
           type="button"
-          onClick={() => setSettingsSection('shortcut')}
+          onClick={() => {
+            if (settingsSection !== 'shortcut') playTabSwitch();
+            setSettingsSection('shortcut');
+          }}
           className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
             settingsSection === 'shortcut' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
@@ -1438,12 +1502,15 @@ export function SettingsTab({
         </button>
         <button
           type="button"
-          onClick={() => setSettingsSection('budgets')}
+          onClick={() => {
+            if (settingsSection !== 'budgets') playTabSwitch();
+            setSettingsSection('budgets');
+          }}
           className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
             settingsSection === 'budgets' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
         >
-           Categories
+          Categories
         </button>
       </div>
 
