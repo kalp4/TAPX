@@ -64,6 +64,7 @@ src/
   constants.js
   index.css
   main.jsx
+  sounds.js
   supabaseClient.js
 .gitignore
 .oxlintrc.json
@@ -952,286 +953,6 @@ export function computeAnalytics({
 }
 </file>
 
-<file path="src/constants.js">
-export const SHARED_ICLOUD_SHORTCUT_URL =
-  'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
-
-export const WALLET_COLORS = [
-  '#E07A5F',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E56B6F',
-  '#D8CBB3',
-  '#F26B5B',
-  '#4EA8DE',
-  '#80ED99',
-  '#F7A072',
-  '#B5838D'
-];
-
-export const CHART_COLORS = [
-  '#F26B5B',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E07A5F',
-  '#E56B6F',
-  '#D8CBB3'
-];
-
-export const DEFAULT_WALLETS_TEMPLATE = [
-  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
-  { name: 'Cash', type: 'Cash', balance: 0, color: '#52B788', icon: '💵' }
-];
-
-export const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#F26B5B', monthly_budget: null },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#52B788', monthly_budget: null },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#F4B942', monthly_budget: null },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#9B7EDE', monthly_budget: null },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#E56B6F', monthly_budget: null },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#5C9EAD', monthly_budget: null },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#E07A5F', monthly_budget: null },
-  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#52B788', monthly_budget: null }
-];
-
-export const NAV_TABS = [
-  { id: 'pad', label: 'Keypad' },
-  { id: 'wallets', label: 'Accounts' },
-  { id: 'analytics', label: 'Insights' },
-  { id: 'settings', label: 'Settings' }
-];
-
-export const CACHE_KEY = 'tapx_local_cache_v4';
-export const THEME_KEY = 'tapx_theme_pref';
-export const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
-export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
-export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
-
-export const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
-
-export const ICON_CATALOG = [
-  // Money, Banking & Wallets
-  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
-  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
-  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
-  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
-  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
-  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
-  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
-  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
-  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
-  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
-  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
-  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
-  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
-  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
-  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
-  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
-  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
-  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
-  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
-  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
-
-  // Food & Drinks
-  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
-  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
-  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
-  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
-  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
-  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
-  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowl chinese' },
-  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
-  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
-  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
-  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
-  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
-  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
-  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
-  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
-  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
-  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
-  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
-  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
-  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
-  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
-  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
-  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
-  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
-
-  // Transport & Travel
-  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
-  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
-  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
-  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
-  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
-  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
-  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
-  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
-  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
-  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
-  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
-  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
-  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
-  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
-  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
-  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
-  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
-  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
-
-  // Shopping, Style & Personal
-  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
-  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
-  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
-  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
-  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
-  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
-  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
-  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
-  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
-  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
-  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
-  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
-  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
-  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
-
-  // Entertainment, Gaming & Fun
-  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
-  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
-  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
-  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
-  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
-  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
-  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
-  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
-  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
-  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
-  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
-  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
-  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
-  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
-
-  // Health, Sports & Fitness
-  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
-  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
-  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
-  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
-  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
-  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
-  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
-  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
-  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
-  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
-  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
-  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
-
-  // Tech, Bills, Study & Home
-  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
-  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
-  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
-  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
-  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
-  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
-  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
-  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
-  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
-  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
-  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
-  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
-  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
-  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
-  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
-  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
-  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
-  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
-];
-
-export function getUiTheme(isDark) {
-  if (isDark) {
-    return {
-      bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
-      sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6]',
-      card: 'bg-[#282825] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
-      cardElevated:
-        'bg-[#30302c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      cardSubtle: 'bg-[#22221f] border-2 border-[#111110]/80',
-      heroCard: 'bg-[#282825] border-2 border-[#D8CBB3]/35 shadow-[0_5px_0_#111110]',
-      input:
-        'bg-[#181816] border-2 border-[#111110] text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
-      pillIdle:
-        'bg-[#282825] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_3px_0_#111110] active:shadow-none',
-      pillActive:
-        'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[0_3px_0_#111110] active:shadow-none',
-      numpadKey:
-        'bg-[#282825] border-2 border-[#111110] text-[#F5EFE6] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#30302c]',
-      numpadKeySpecial:
-        'bg-[#32302b] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      segmentedBg:
-        'bg-[#161614] border-2 border-[#111110] shadow-[inset_0_2px_0_rgba(0,0,0,0.5)]',
-      segmentedThumb: 'bg-[#D8CBB3] border-2 border-[#111110] shadow-[0_2px_0_#111110]',
-      segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
-      textPrimary: 'text-[#F5EFE6]',
-      textSand: 'text-[#D8CBB3]',
-      textSecondary: 'text-[#B8AA93]',
-      textMuted: 'text-[#877D6E]',
-      islandBar: 'cartoon-dock-dark',
-      islandLens: 'cartoon-pill-lens-dark',
-      islandTextActive: 'text-[#1e1e1c]',
-      islandTextIdle: 'text-[#B8AA93]',
-      primaryBtnExpense:
-        'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      primaryBtnIncome:
-        'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      primaryBtnTransfer:
-        'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      divider: 'border-[#363632]',
-      stickyHeader: 'bg-[#1e1e1c]'
-    };
-  }
-
-  return {
-    bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
-    sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c]',
-    card: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
-    cardElevated:
-      'bg-[#FFFFFF] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    cardSubtle: 'bg-[#E5DEC9] border-2 border-[#1e1e1c]',
-    heroCard: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_5px_0_#1e1e1c]',
-    input: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
-    pillIdle:
-      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
-    pillActive:
-      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#524E46] active:shadow-none',
-    numpadKey:
-      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    numpadKeySpecial:
-      'bg-[#D8CBB3] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    segmentedBg: 'bg-[#D8CBB3] border-2 border-[#1e1e1c]',
-    segmentedThumb: 'bg-[#1e1e1c] border-2 border-[#1e1e1c]',
-    segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
-    textPrimary: 'text-[#1e1e1c]',
-    textSand: 'text-[#1e1e1c]',
-    textSecondary: 'text-[#524E46]',
-    textMuted: 'text-[#7A7367]',
-    islandBar: 'cartoon-dock-light',
-    islandLens: 'cartoon-pill-lens-light',
-    islandTextActive: 'text-[#D8CBB3]',
-    islandTextIdle: 'text-[#524E46]',
-    primaryBtnExpense:
-      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#524E46] active:shadow-[0_1px_0_#524E46]',
-    primaryBtnIncome:
-      'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    primaryBtnTransfer:
-      'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    divider: 'border-[#1e1e1c]/20',
-    stickyHeader: 'bg-[#EFE7DA]'
-  };
-}
-</file>
-
 <file path="src/main.jsx">
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -1822,6 +1543,287 @@ dist-ssr
     </div>
   </body>
 </html>
+</file>
+
+<file path="src/constants.js">
+export const SHARED_ICLOUD_SHORTCUT_URL =
+  'https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b';
+
+export const WALLET_COLORS = [
+  '#E07A5F',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E56B6F',
+  '#D8CBB3',
+  '#F26B5B',
+  '#4EA8DE',
+  '#80ED99',
+  '#F7A072',
+  '#B5838D'
+];
+
+export const CHART_COLORS = [
+  '#F26B5B',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E07A5F',
+  '#E56B6F',
+  '#D8CBB3'
+];
+
+export const DEFAULT_WALLETS_TEMPLATE = [
+  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
+  { name: 'Cash', type: 'Cash', balance: 0, color: '#52B788', icon: '💵' }
+];
+
+export const DEFAULT_CATEGORIES_TEMPLATE = [
+  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#F26B5B', monthly_budget: null },
+  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#52B788', monthly_budget: null },
+  { name: 'Transport', type: 'expense', icon: '⛽', color: '#F4B942', monthly_budget: null },
+  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#9B7EDE', monthly_budget: null },
+  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#E56B6F', monthly_budget: null },
+  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#5C9EAD', monthly_budget: null },
+  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#E07A5F', monthly_budget: null },
+  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#52B788', monthly_budget: null }
+];
+
+export const NAV_TABS = [
+  { id: 'pad', label: 'Keypad' },
+  { id: 'wallets', label: 'Accounts' },
+  { id: 'analytics', label: 'Insights' },
+  { id: 'settings', label: 'Settings' }
+];
+
+export const CACHE_KEY = 'tapx_local_cache_v4';
+export const THEME_KEY = 'tapx_theme_pref';
+export const SOUND_KEY = 'tapx_sound_pref';
+export const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
+export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
+export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
+
+export const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
+
+export const ICON_CATALOG = [
+  // Money, Banking & Wallets
+  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
+  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
+  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
+  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
+  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
+  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
+  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
+  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
+  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
+  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
+  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
+  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
+  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
+  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
+  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
+  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
+  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
+  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
+  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
+  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
+
+  // Food & Drinks
+  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
+  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
+  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
+  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
+  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
+  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
+  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowl chinese' },
+  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
+  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
+  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
+  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
+  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
+  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
+  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
+  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
+  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
+  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
+  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
+  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
+  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
+  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
+  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
+  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
+  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
+
+  // Transport & Travel
+  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
+  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
+  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
+  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
+  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
+  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
+  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
+  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
+  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
+  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
+  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
+  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
+  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
+  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
+  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
+  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
+  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
+  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
+
+  // Shopping, Style & Personal
+  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
+  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
+  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
+  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
+  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
+  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
+  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
+  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
+  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
+  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
+  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
+  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
+  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
+  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
+
+  // Entertainment, Gaming & Fun
+  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
+  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
+  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
+  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
+  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
+  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
+  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
+  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
+  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
+  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
+  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
+  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
+  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
+  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
+
+  // Health, Sports & Fitness
+  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
+  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
+  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
+  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
+  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
+  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
+  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
+  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
+  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
+  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
+  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
+  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
+
+  // Tech, Bills, Study & Home
+  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
+  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
+  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
+  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
+  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
+  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
+  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
+  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
+  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
+  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
+  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
+  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
+  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
+  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
+  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
+  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
+  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
+  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
+];
+
+export function getUiTheme(isDark) {
+  if (isDark) {
+    return {
+      bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
+      sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6]',
+      card: 'bg-[#282825] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
+      cardElevated:
+        'bg-[#30302c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      cardSubtle: 'bg-[#22221f] border-2 border-[#111110]/80',
+      heroCard: 'bg-[#282825] border-2 border-[#D8CBB3]/35 shadow-[0_5px_0_#111110]',
+      input:
+        'bg-[#181816] border-2 border-[#111110] text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
+      pillIdle:
+        'bg-[#282825] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_3px_0_#111110] active:shadow-none',
+      pillActive:
+        'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[0_3px_0_#111110] active:shadow-none',
+      numpadKey:
+        'bg-[#282825] border-2 border-[#111110] text-[#F5EFE6] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#30302c]',
+      numpadKeySpecial:
+        'bg-[#32302b] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      segmentedBg:
+        'bg-[#161614] border-2 border-[#111110] shadow-[inset_0_2px_0_rgba(0,0,0,0.5)]',
+      segmentedThumb: 'bg-[#D8CBB3] border-2 border-[#111110] shadow-[0_2px_0_#111110]',
+      segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
+      textPrimary: 'text-[#F5EFE6]',
+      textSand: 'text-[#D8CBB3]',
+      textSecondary: 'text-[#B8AA93]',
+      textMuted: 'text-[#877D6E]',
+      islandBar: 'cartoon-dock-dark',
+      islandLens: 'cartoon-pill-lens-dark',
+      islandTextActive: 'text-[#1e1e1c]',
+      islandTextIdle: 'text-[#B8AA93]',
+      primaryBtnExpense:
+        'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      primaryBtnIncome:
+        'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      primaryBtnTransfer:
+        'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      divider: 'border-[#363632]',
+      stickyHeader: 'bg-[#1e1e1c]'
+    };
+  }
+
+  return {
+    bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
+    sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c]',
+    card: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
+    cardElevated:
+      'bg-[#FFFFFF] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    cardSubtle: 'bg-[#E5DEC9] border-2 border-[#1e1e1c]',
+    heroCard: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_5px_0_#1e1e1c]',
+    input: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
+    pillIdle:
+      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
+    pillActive:
+      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#524E46] active:shadow-none',
+    numpadKey:
+      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    numpadKeySpecial:
+      'bg-[#D8CBB3] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    segmentedBg: 'bg-[#D8CBB3] border-2 border-[#1e1e1c]',
+    segmentedThumb: 'bg-[#1e1e1c] border-2 border-[#1e1e1c]',
+    segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
+    textPrimary: 'text-[#1e1e1c]',
+    textSand: 'text-[#1e1e1c]',
+    textSecondary: 'text-[#524E46]',
+    textMuted: 'text-[#7A7367]',
+    islandBar: 'cartoon-dock-light',
+    islandLens: 'cartoon-pill-lens-light',
+    islandTextActive: 'text-[#D8CBB3]',
+    islandTextIdle: 'text-[#524E46]',
+    primaryBtnExpense:
+      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#524E46] active:shadow-[0_1px_0_#524E46]',
+    primaryBtnIncome:
+      'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    primaryBtnTransfer:
+      'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    divider: 'border-[#1e1e1c]/20',
+    stickyHeader: 'bg-[#EFE7DA]'
+  };
+}
 </file>
 
 <file path="README.md">
@@ -2790,10 +2792,117 @@ export function EditTransactionModal({
 }
 </file>
 
+<file path="package.json">
+{
+  "name": "tapx",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.46.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.2.0"
+  }
+}
+</file>
+
+<file path="public/favicon.svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Warm Charcoal Squircle Background (#1e1e1c) -->
+  <rect width="512" height="512" rx="112" fill="#1e1e1c" />
+
+  <!-- Hard Cartoon Drop Shadow Behind Wallet -->
+  <rect
+    x="104"
+    y="230"
+    width="316"
+    height="220"
+    rx="44"
+    fill="#111110"
+  />
+
+  <!-- 3 Rising Chunky Cartoon Bars (Coral, Mint, Sunny Gold) -->
+  <rect
+    x="160"
+    y="148"
+    width="56"
+    height="118"
+    rx="14"
+    fill="#F26B5B"
+    stroke="#111110"
+    stroke-width="10"
+  />
+  <rect
+    x="232"
+    y="110"
+    width="56"
+    height="156"
+    rx="14"
+    fill="#52B788"
+    stroke="#111110"
+    stroke-width="10"
+  />
+  <rect
+    x="304"
+    y="70"
+    width="56"
+    height="196"
+    rx="14"
+    fill="#F4B942"
+    stroke="#111110"
+    stroke-width="10"
+  />
+
+  <!-- Main Wallet Body in Warm Sand (#D8CBB3) -->
+  <rect
+    x="92"
+    y="218"
+    width="316"
+    height="216"
+    rx="44"
+    fill="#D8CBB3"
+    stroke="#111110"
+    stroke-width="11"
+  />
+
+  <!-- Wallet Clasp in Charcoal (#282825) -->
+  <rect
+    x="320"
+    y="296"
+    width="102"
+    height="64"
+    rx="32"
+    fill="#282825"
+    stroke="#111110"
+    stroke-width="10"
+  />
+
+  <!-- Clasp Button Snap in Sunny Gold (#F4B942) -->
+  <circle
+    cx="354"
+    cy="328"
+    r="13"
+    fill="#F4B942"
+    stroke="#111110"
+    stroke-width="7"
+  />
+</svg>
+</file>
+
 <file path="src/components/Tabs.jsx">
 import React from 'react';
 import { WALLET_COLORS } from '../constants';
 import { formatTimeOnly, formatDayGroupLabel, getCategoryAccentColor } from '../analytics';
+import { playQuickChip, playTabSwitch } from '../sounds';
 
 const RANGE_PRESETS = [
   { id: 'week', label: '7D' },
@@ -2860,6 +2969,7 @@ export function KeypadTab({
             key={t.id}
             type="button"
             onClick={() => {
+              if (entryType !== t.id) playTabSwitch();
               setEntryType(t.id);
               const firstMatch = categories.find(
                 (c) => c.type === (t.id === 'income' ? 'income' : 'expense')
@@ -2991,7 +3101,10 @@ export function KeypadTab({
                   <button
                     key={w.id}
                     type="button"
-                    onClick={() => setSelectedWalletId(w.id)}
+                    onClick={() => {
+                      playQuickChip();
+                      setSelectedWalletId(w.id);
+                    }}
                     style={
                       active
                         ? {
@@ -3025,7 +3138,10 @@ export function KeypadTab({
                   <button
                     key={w.id}
                     type="button"
-                    onClick={() => setToWalletId(w.id)}
+                    onClick={() => {
+                      playQuickChip();
+                      setToWalletId(w.id);
+                    }}
                     className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1 shrink-0 transition-colors duration-150 key-press ${
                       toWalletId === w.id ? ui.pillActive : ui.pillIdle
                     }`}
@@ -3061,7 +3177,10 @@ export function KeypadTab({
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setSelectedCategoryId(c.id)}
+                    onClick={() => {
+                      playQuickChip();
+                      setSelectedCategoryId(c.id);
+                    }}
                     style={
                       active
                         ? {
@@ -3169,7 +3288,10 @@ export function AccountsTab({
           {activityWalletFilter !== 'all' && (
             <button
               type="button"
-              onClick={() => setActivityWalletFilter('all')}
+              onClick={() => {
+                playQuickChip();
+                setActivityWalletFilter('all');
+              }}
               className="text-[11px] text-[#F4B942] font-cartoon font-bold key-press"
             >
               Show All
@@ -3184,9 +3306,10 @@ export function AccountsTab({
             return (
               <div
                 key={w.id}
-                onClick={() =>
-                  setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id))
-                }
+                onClick={() => {
+                  playQuickChip();
+                  setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id));
+                }}
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
                 }}
@@ -3304,7 +3427,10 @@ export function AccountsTab({
             <button
               key={f.id}
               type="button"
-              onClick={() => setActivityTypeFilter(f.id)}
+              onClick={() => {
+                if (activityTypeFilter !== f.id) playQuickChip();
+                setActivityTypeFilter(f.id);
+              }}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-cartoon font-bold transition-all ${
                 activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
               }`}
@@ -3470,6 +3596,7 @@ export function InsightsTab({
                   key={tab.id}
                   type="button"
                   onClick={() => {
+                    if (analyticsRange !== tab.id) playQuickChip();
                     setAnalyticsRange(tab.id);
                     setSelectedBarIdx(6);
                   }}
@@ -3758,7 +3885,10 @@ export function InsightsTab({
                           strokeDashoffset={dashOffset}
                           strokeLinecap="round"
                           className="transition-all duration-300 cursor-pointer"
-                          onClick={() => setSelectedDonutCatId(item.id)}
+                          onClick={() => {
+                            playQuickChip();
+                            setSelectedDonutCatId(item.id);
+                          }}
                         />
                       );
                     })}
@@ -3812,7 +3942,10 @@ export function InsightsTab({
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setSelectedDonutCatId(item.id)}
+                      onClick={() => {
+                        playQuickChip();
+                        setSelectedDonutCatId(item.id);
+                      }}
                       className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-xs transition-all key-press ${
                         isFocused ? ui.cardElevated : ui.cardSubtle
                       }`}
@@ -3884,7 +4017,10 @@ export function InsightsTab({
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setSelectedBarIdx(idx)}
+                  onClick={() => {
+                    playQuickChip();
+                    setSelectedBarIdx(idx);
+                  }}
                   className="flex flex-col items-center justify-end h-full gap-1 key-press min-w-0"
                 >
                   <span
@@ -4167,6 +4303,8 @@ export function SettingsTab({
   tabAnimClass,
   themePref,
   setThemePref,
+  soundEnabled,
+  onToggleSound,
   settingsSection,
   setSettingsSection,
   personalApiUrl,
@@ -4190,28 +4328,59 @@ export function SettingsTab({
 
   return (
     <div className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
-      <div className={`p-3.5 rounded-2xl flex items-center justify-between shrink-0 ${ui.card}`}>
-        <div>
-          <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
-          <p className={`text-[10px] font-medium ${ui.textMuted}`}>&amp;Select your preferred theme</p>
+      <div className={`p-3.5 rounded-2xl space-y-2.5 shrink-0 ${ui.card}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
+            <p className={`text-[10px] font-medium ${ui.textMuted}`}>Select your preferred theme</p>
+          </div>
+          <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
+            {[
+              { id: 'system', label: 'Auto' },
+              { id: 'light', label: 'Light' },
+              { id: 'dark', label: 'Dark' }
+            ].map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  if (themePref !== m.id) playQuickChip();
+                  setThemePref(m.id);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                  themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
-          {[
-            { id: 'system', label: 'Auto' },
-            { id: 'light', label: 'Light' },
-            { id: 'dark', label: 'Dark' }
-          ].map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setThemePref(m.id)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
-                themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+
+        <div className={`pt-2.5 border-t-2 border-dashed flex items-center justify-between ${ui.divider}`}>
+          <div>
+            <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Sound Effects</p>
+            <p className={`text-[10px] font-medium ${ui.textMuted}`}>Tactile keypad pops &amp; chimes</p>
+          </div>
+          <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
+            {[
+              { id: true, label: '🔊 On' },
+              { id: false, label: '🔇 Muted' }
+            ].map((opt) => (
+              <button
+                key={String(opt.id)}
+                type="button"
+                onClick={() => onToggleSound(opt.id)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                  soundEnabled === opt.id
+                    ? `${ui.segmentedThumb} ${ui.segmentedTextActive}`
+                    : ui.textSecondary
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -4222,7 +4391,10 @@ export function SettingsTab({
         />
         <button
           type="button"
-          onClick={() => setSettingsSection('shortcut')}
+          onClick={() => {
+            if (settingsSection !== 'shortcut') playTabSwitch();
+            setSettingsSection('shortcut');
+          }}
           className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
             settingsSection === 'shortcut' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
@@ -4231,12 +4403,15 @@ export function SettingsTab({
         </button>
         <button
           type="button"
-          onClick={() => setSettingsSection('budgets')}
+          onClick={() => {
+            if (settingsSection !== 'budgets') playTabSwitch();
+            setSettingsSection('budgets');
+          }}
           className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
             settingsSection === 'budgets' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
         >
-           Categories
+          Categories
         </button>
       </div>
 
@@ -4448,110 +4623,672 @@ export function SettingsTab({
 }
 </file>
 
-<file path="package.json">
-{
-  "name": "tapx",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.46.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.2.0"
+<file path="src/sounds.js">
+import { SOUND_KEY } from './constants';
+
+let audioCtx = null;
+let masterBus = null;
+let noiseBuffer = null;
+let iosHapticLabel = null;
+let soundEnabled = readInitialSoundPref();
+
+function readInitialSoundPref() {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== 'off';
+  } catch {
+    return true;
   }
 }
-</file>
 
-<file path="public/favicon.svg">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <!-- Warm Charcoal Squircle Background (#1e1e1c) -->
-  <rect width="512" height="512" rx="112" fill="#1e1e1c" />
+// Ultra-light cross-platform haptics (Android vibrate API + iOS 17.4+ native Taptic switch fallback)
+function triggerIosSwitchTick() {
+  if (typeof document === 'undefined') return;
+  try {
+    if (!iosHapticLabel) {
+      const label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.position = 'fixed';
+      label.style.left = '-9999px';
+      label.style.top = '-9999px';
+      label.style.opacity = '0';
+      label.style.pointerEvents = 'none';
 
-  <!-- Hard Cartoon Drop Shadow Behind Wallet -->
-  <rect
-    x="104"
-    y="230"
-    width="316"
-    height="220"
-    rx="44"
-    fill="#111110"
-  />
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      input.tabIndex = -1;
 
-  <!-- 3 Rising Chunky Cartoon Bars (Coral, Mint, Sunny Gold) -->
-  <rect
-    x="160"
-    y="148"
-    width="56"
-    height="118"
-    rx="14"
-    fill="#F26B5B"
-    stroke="#111110"
-    stroke-width="10"
-  />
-  <rect
-    x="232"
-    y="110"
-    width="56"
-    height="156"
-    rx="14"
-    fill="#52B788"
-    stroke="#111110"
-    stroke-width="10"
-  />
-  <rect
-    x="304"
-    y="70"
-    width="56"
-    height="196"
-    rx="14"
-    fill="#F4B942"
-    stroke="#111110"
-    stroke-width="10"
-  />
+      label.appendChild(input);
+      document.body.appendChild(label);
+      iosHapticLabel = label;
+    }
+    iosHapticLabel.click();
+  } catch {
+    // Ignore on unsupported browsers
+  }
+}
 
-  <!-- Main Wallet Body in Warm Sand (#D8CBB3) -->
-  <rect
-    x="92"
-    y="218"
-    width="316"
-    height="216"
-    rx="44"
-    fill="#D8CBB3"
-    stroke="#111110"
-    stroke-width="11"
-  />
+export function triggerHaptic(style = 'light') {
+  if (typeof window === 'undefined') return;
 
-  <!-- Wallet Clasp in Charcoal (#282825) -->
-  <rect
-    x="320"
-    y="296"
-    width="102"
-    height="64"
-    rx="32"
-    fill="#282825"
-    stroke="#111110"
-    stroke-width="10"
-  />
+  try {
+    // 1. Android / browsers supporting Vibration API (kept intentionally very light)
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      if (style === 'tick') {
+        navigator.vibrate(7);
+      } else if (style === 'success') {
+        navigator.vibrate([10, 35, 14]);
+      } else if (style === 'error') {
+        navigator.vibrate([14, 45, 14]);
+      } else if (style === 'soft') {
+        navigator.vibrate(11);
+      } else {
+        navigator.vibrate(8);
+      }
+      return;
+    }
 
-  <!-- Clasp Button Snap in Sunny Gold (#F4B942) -->
-  <circle
-    cx="354"
-    cy="328"
-    r="13"
-    fill="#F4B942"
-    stroke="#111110"
-    stroke-width="7"
-  />
-</svg>
+    // 2. iOS Safari / PWA fallback via native Taptic switch element
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) return;
+
+    triggerIosSwitchTick();
+    if (style === 'success' || style === 'error') {
+      setTimeout(() => {
+        triggerIosSwitchTick();
+      }, 55);
+    }
+  } catch {
+    // Fail silently on restricted devices
+  }
+}
+
+function getAudioEngine() {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (!audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      audioCtx = new AudioCtx();
+
+      // Master compressor glues layered transients and keeps iPhone speakers punchy & distortion-free
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-14, audioCtx.currentTime);
+      compressor.knee.setValueAtTime(18, audioCtx.currentTime);
+      compressor.ratio.setValueAtTime(4, audioCtx.currentTime);
+      compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+      compressor.release.setValueAtTime(0.12, audioCtx.currentTime);
+
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.855, audioCtx.currentTime);
+
+      compressor.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+      masterBus = compressor;
+
+      // Reusable short white-noise buffer for tactile mechanical clicks & air swooshes
+      const sampleRate = audioCtx.sampleRate;
+      const length = Math.floor(sampleRate * 0.25);
+      noiseBuffer = audioCtx.createBuffer(1, length, sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < length; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+    }
+
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+
+    return { ctx: audioCtx, out: masterBus, noise: noiseBuffer };
+  } catch {
+    return null;
+  }
+}
+
+export function isSoundEnabled() {
+  return soundEnabled;
+}
+
+export function setSoundEnabled(enabled) {
+  soundEnabled = Boolean(enabled);
+  try {
+    localStorage.setItem(SOUND_KEY, soundEnabled ? 'on' : 'off');
+  } catch {
+    // Ignore storage write errors
+  }
+}
+
+export function unlockAudio() {
+  getAudioEngine();
+}
+
+// Slight organic pitch variation (±1.2%) prevents rapid taps from sounding robotic
+function jitter(freq, amount = 0.012) {
+  return freq * (1 + (Math.random() * 2 - 1) * amount);
+}
+
+// Synthesize a shaped oscillator tone with optional lowpass warmth
+function synthTone(
+  engine,
+  {
+    freqStart,
+    freqEnd = freqStart,
+    duration = 0.08,
+    delay = 0,
+    volume = 0.12,
+    type = 'sine',
+    attack = 0.004,
+    lowpassFreq = null
+  }
+) {
+  const { ctx, out } = engine;
+  const start = ctx.currentTime + delay;
+  const end = start + duration;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(Math.max(20, freqStart), start);
+  if (freqEnd !== freqStart) {
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), end);
+  }
+
+  const safeAttack = Math.min(attack, duration * 0.3);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.linearRampToValueAtTime(volume, start + safeAttack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, end);
+
+  if (lowpassFreq) {
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(lowpassFreq, start);
+    osc.connect(filter);
+    filter.connect(gain);
+  } else {
+    osc.connect(gain);
+  }
+
+  gain.connect(out);
+  osc.start(start);
+  osc.stop(end + 0.02);
+}
+
+// Synthesize a filtered noise transient (for creamy mechanical key clicks & silky swooshes)
+function synthNoise(
+  engine,
+  {
+    duration = 0.012,
+    delay = 0,
+    volume = 0.08,
+    filterType = 'bandpass',
+    freqStart = 2000,
+    freqEnd = freqStart,
+    q = 1.6
+  }
+) {
+  const { ctx, out, noise } = engine;
+  if (!noise) return;
+
+  const start = ctx.currentTime + delay;
+  const end = start + duration;
+
+  const src = ctx.createBufferSource();
+  src.buffer = noise;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = filterType;
+  filter.Q.setValueAtTime(q, start);
+  filter.frequency.setValueAtTime(Math.max(40, freqStart), start);
+  if (freqEnd !== freqStart) {
+    filter.frequency.exponentialRampToValueAtTime(Math.max(40, freqEnd), end);
+  }
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.linearRampToValueAtTime(volume, start + Math.min(0.002, duration * 0.2));
+  gain.gain.exponentialRampToValueAtTime(0.0001, end);
+
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(out);
+
+  src.start(start);
+  src.stop(end + 0.015);
+}
+
+// Pentatonic marimba frequencies so typing any amount feels musical & never clashes
+const DIGIT_PENTATONIC_MAP = {
+  '1': 523.25, // C5
+  '2': 587.33, // D5
+  '3': 659.25, // E5
+  '4': 783.99, // G5
+  '5': 880.0,  // A5
+  '6': 1046.5, // C6
+  '7': 587.33, // D5
+  '8': 659.25, // E5
+  '9': 783.99, // G5
+  '0': 440.0,  // A4
+  '.': 987.77  // B5
+};
+
+// 1. Creamy mechanical keycap "thock" + subtle wooden marimba ping (no vibration)
+export function playKeyTap(digit = '0') {
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    const noteFreq = jitter(DIGIT_PENTATONIC_MAP[String(digit)] || 523.25);
+
+    synthNoise(engine, {
+      duration: 0.006,
+      volume: 0.09,
+      filterType: 'bandpass',
+      freqStart: jitter(2600, 0.06),
+      q: 1.8
+    });
+
+    synthTone(engine, {
+      freqStart: jitter(195, 0.04),
+      freqEnd: 78,
+      duration: 0.036,
+      volume: 0.22,
+      type: 'sine',
+      attack: 0.002
+    });
+
+    synthTone(engine, {
+      freqStart: noteFreq,
+      freqEnd: noteFreq * 0.985,
+      duration: 0.055,
+      volume: 0.055,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 2200
+    });
+  } catch {}
+}
+
+// 2. Deeper damped backspace mechanical chunk (no vibration)
+export function playKeyDelete() {
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.009,
+      volume: 0.08,
+      filterType: 'bandpass',
+      freqStart: 1200,
+      freqEnd: 700,
+      q: 1.4
+    });
+
+    synthTone(engine, {
+      freqStart: 180,
+      freqEnd: 65,
+      duration: 0.055,
+      volume: 0.24,
+      type: 'sine',
+      attack: 0.002
+    });
+  } catch {}
+}
+
+// 3. Juicy bubble-wrap "plop" for quick-add chips, pills, and chart taps (no vibration)
+export function playQuickChip() {
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.004,
+      volume: 0.055,
+      filterType: 'highpass',
+      freqStart: 3000,
+      q: 1.0
+    });
+
+    synthTone(engine, {
+      freqStart: jitter(390, 0.03),
+      freqEnd: jitter(820, 0.03),
+      duration: 0.046,
+      volume: 0.14,
+      type: 'sine',
+      attack: 0.003
+    });
+  } catch {}
+}
+
+// 4. Magnetic detent "tick-pop" for dock tabs & scrubbing (+ ultra-light tick vibration)
+export function playTabSwitch() {
+  triggerHaptic('tick');
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.004,
+      volume: 0.085,
+      filterType: 'bandpass',
+      freqStart: 2200,
+      q: 2.2
+    });
+
+    synthTone(engine, {
+      freqStart: 270,
+      freqEnd: 460,
+      duration: 0.038,
+      volume: 0.14,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 1600
+    });
+  } catch {}
+}
+
+// 5. Signature Hero Success Chimes (+ crisp light double-pulse vibration)
+export function playSuccess(kind = 'expense') {
+  triggerHaptic('success');
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    if (kind === 'income') {
+      const notes = [523.25, 659.25, 783.99, 987.77, 1174.66];
+      notes.forEach((freq, i) => {
+        const d = i * 0.042;
+        synthTone(engine, {
+          freqStart: freq,
+          duration: 0.24 + i * 0.03,
+          delay: d,
+          volume: 0.11,
+          type: 'triangle',
+          attack: 0.004,
+          lowpassFreq: 3800
+        });
+        synthTone(engine, {
+          freqStart: freq * 2,
+          duration: 0.14,
+          delay: d,
+          volume: 0.035,
+          type: 'sine',
+          attack: 0.003
+        });
+      });
+      synthTone(engine, {
+        freqStart: 130.81,
+        duration: 0.22,
+        volume: 0.14,
+        type: 'sine',
+        attack: 0.01
+      });
+      return;
+    }
+
+    if (kind === 'transfer') {
+      synthNoise(engine, {
+        duration: 0.11,
+        volume: 0.075,
+        filterType: 'bandpass',
+        freqStart: 450,
+        freqEnd: 1900,
+        q: 1.5
+      });
+      synthTone(engine, {
+        freqStart: 392.0,
+        freqEnd: 587.33,
+        duration: 0.09,
+        delay: 0.02,
+        volume: 0.13,
+        type: 'sine',
+        attack: 0.005
+      });
+      synthTone(engine, {
+        freqStart: 783.99,
+        duration: 0.18,
+        delay: 0.085,
+        volume: 0.12,
+        type: 'triangle',
+        attack: 0.003,
+        lowpassFreq: 3200
+      });
+      synthTone(engine, {
+        freqStart: 1567.98,
+        duration: 0.12,
+        delay: 0.085,
+        volume: 0.035,
+        type: 'sine'
+      });
+      return;
+    }
+
+    if (kind === 'save') {
+      synthTone(engine, {
+        freqStart: 739.99,
+        duration: 0.13,
+        delay: 0,
+        volume: 0.11,
+        type: 'sine',
+        attack: 0.003
+      });
+      synthTone(engine, {
+        freqStart: 987.77,
+        duration: 0.22,
+        delay: 0.06,
+        volume: 0.13,
+        type: 'sine',
+        attack: 0.003
+      });
+      synthTone(engine, {
+        freqStart: 1975.53,
+        duration: 0.15,
+        delay: 0.06,
+        volume: 0.035,
+        type: 'sine',
+        attack: 0.002
+      });
+      return;
+    }
+
+    // Default 'expense': Addictive crisp "Ka-Ching" coin-bell pop
+    synthNoise(engine, {
+      duration: 0.006,
+      volume: 0.08,
+      filterType: 'bandpass',
+      freqStart: 2800,
+      q: 2.0
+    });
+    synthTone(engine, {
+      freqStart: 220,
+      freqEnd: 95,
+      duration: 0.04,
+      volume: 0.16,
+      type: 'sine',
+      attack: 0.002
+    });
+    synthTone(engine, {
+      freqStart: 987.77,
+      duration: 0.11,
+      delay: 0.015,
+      volume: 0.11,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 4200
+    });
+    synthTone(engine, {
+      freqStart: 1318.51,
+      duration: 0.24,
+      delay: 0.07,
+      volume: 0.12,
+      type: 'sine',
+      attack: 0.002
+    });
+    synthTone(engine, {
+      freqStart: 2637.02,
+      duration: 0.18,
+      delay: 0.072,
+      volume: 0.04,
+      type: 'sine',
+      attack: 0.002
+    });
+  } catch {}
+}
+
+// 6. Satisfying rubbery pop-out + crisp air puff for deleting items (+ soft single pulse)
+export function playDelete() {
+  triggerHaptic('soft');
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.025,
+      volume: 0.07,
+      filterType: 'bandpass',
+      freqStart: 1500,
+      freqEnd: 500,
+      q: 1.2
+    });
+
+    synthTone(engine, {
+      freqStart: 380,
+      freqEnd: 115,
+      duration: 0.095,
+      volume: 0.16,
+      type: 'triangle',
+      attack: 0.003,
+      lowpassFreq: 1400
+    });
+  } catch {}
+}
+
+// 7. Bouncy elastic rewind pop for Undo (+ light pulse)
+export function playUndo() {
+  triggerHaptic('light');
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthTone(engine, {
+      freqStart: 220,
+      freqEnd: 520,
+      duration: 0.065,
+      delay: 0,
+      volume: 0.13,
+      type: 'sine',
+      attack: 0.003
+    });
+    synthTone(engine, {
+      freqStart: 520,
+      freqEnd: 780,
+      duration: 0.095,
+      delay: 0.055,
+      volume: 0.12,
+      type: 'triangle',
+      attack: 0.003,
+      lowpassFreq: 2600
+    });
+  } catch {}
+}
+
+// 8. Playful muted cartoon woodblock double-knock for validation errors (+ gentle double-nudge)
+export function playError() {
+  triggerHaptic('error');
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthTone(engine, {
+      freqStart: 210,
+      freqEnd: 135,
+      duration: 0.065,
+      delay: 0,
+      volume: 0.16,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 900
+    });
+    synthTone(engine, {
+      freqStart: 165,
+      freqEnd: 105,
+      duration: 0.085,
+      delay: 0.08,
+      volume: 0.17,
+      type: 'triangle',
+      attack: 0.002,
+      lowpassFreq: 800
+    });
+  } catch {}
+}
+
+// 9. Soft airy lift when opening bottom sheets (no vibration)
+export function playModalOpen() {
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.04,
+      volume: 0.04,
+      filterType: 'bandpass',
+      freqStart: 600,
+      freqEnd: 1500,
+      q: 1.0
+    });
+    synthTone(engine, {
+      freqStart: 240,
+      freqEnd: 410,
+      duration: 0.06,
+      volume: 0.08,
+      type: 'sine',
+      attack: 0.005
+    });
+  } catch {}
+}
+
+// 10. Crisp magnetic double-tick for Copy & CSV Export (+ ultra-light tick)
+export function playCopy() {
+  triggerHaptic('tick');
+  if (!soundEnabled) return;
+  const engine = getAudioEngine();
+  if (!engine) return;
+
+  try {
+    synthNoise(engine, {
+      duration: 0.004,
+      volume: 0.07,
+      filterType: 'highpass',
+      freqStart: 2600
+    });
+    synthTone(engine, {
+      freqStart: 980,
+      duration: 0.035,
+      delay: 0,
+      volume: 0.09,
+      type: 'sine',
+      attack: 0.002
+    });
+    synthTone(engine, {
+      freqStart: 1480,
+      duration: 0.06,
+      delay: 0.04,
+      volume: 0.1,
+      type: 'sine',
+      attack: 0.002
+    });
+  } catch {}
+}
 </file>
 
 <file path="src/index.css">
@@ -5501,6 +6238,7 @@ import {
   NAV_TABS,
   CACHE_KEY,
   THEME_KEY,
+  SOUND_KEY,
   BUDGET_CLEANUP_KEY,
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
@@ -5517,6 +6255,19 @@ import {
   escapeCsvCell,
   computeAnalytics
 } from './analytics';
+import {
+  setSoundEnabled,
+  playKeyTap,
+  playKeyDelete,
+  playQuickChip,
+  playTabSwitch,
+  playSuccess,
+  playDelete,
+  playUndo,
+  playError,
+  playModalOpen,
+  playCopy
+} from './sounds';
 import {
   TapxLogo,
   NavIcon,
@@ -5606,6 +6357,26 @@ function TapxMainApp() {
   const flushingQueueRef = useRef(false);
 
   const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
+  const [soundEnabled, setSoundEnabledState] = useState(() => {
+    try {
+      return localStorage.getItem(SOUND_KEY) !== 'off';
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    setSoundEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  const handleToggleSound = useCallback((enabled) => {
+    setSoundEnabled(enabled);
+    setSoundEnabledState(enabled);
+    if (enabled) {
+      playSuccess('save');
+    }
+  }, []);
+
   const [systemIsDark, setSystemIsDark] = useState(() =>
     window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : true
   );
@@ -5691,6 +6462,7 @@ function TapxMainApp() {
       triggerLensMagnification(260);
       setActiveTab((prevTab) => {
         if (nextTabId === prevTab) return prevTab;
+        playTabSwitch();
         const prevIdx = NAV_TABS.findIndex((t) => t.id === prevTab);
         const nextIdx = NAV_TABS.findIndex((t) => t.id === nextTabId);
         setTabDirection(nextIdx >= prevIdx ? 'right' : 'left');
@@ -5733,6 +6505,7 @@ function TapxMainApp() {
       const nearestIdx = Math.round(clampedIndex);
       const targetTab = NAV_TABS[nearestIdx]?.id;
       if (targetTab && targetTab !== activeTab) {
+        playTabSwitch();
         const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
         setTabDirection(nearestIdx >= prevIdx ? 'right' : 'left');
         setActiveTab(targetTab);
@@ -5941,6 +6714,7 @@ function TapxMainApp() {
       setIsSyncingBg(false);
 
       if (remaining.length === 0 && currentQueue.length > 0) {
+        playSuccess('save');
         showToast(`Synced ${currentQueue.length} offline ${currentQueue.length === 1 ? 'entry' : 'entries'}!`);
       }
     },
@@ -6188,6 +6962,7 @@ function TapxMainApp() {
   }, [session?.user?.id, fetchUserData]);
 
   const handleGoogleLogin = async (loginHintEmail = '') => {
+    playQuickChip();
     setIsLoggingIn(true);
     const queryParams = {
       access_type: 'offline',
@@ -6201,12 +6976,14 @@ function TapxMainApp() {
 
     if (error) {
       setIsLoggingIn(false);
+      playError();
       showToast(error.message || 'Sign-in failed');
     }
   };
 
   const handleRemoveSavedAccount = (emailToRemove, e) => {
     e.stopPropagation();
+    playDelete();
     setSavedAccounts((prev) => {
       const next = prev.filter((a) => a.email.toLowerCase() !== emailToRemove.toLowerCase());
       try {
@@ -6217,6 +6994,7 @@ function TapxMainApp() {
   };
 
   const handleLogout = async () => {
+    playDelete();
     localStorage.removeItem(CACHE_KEY);
     setSession(null);
     await supabase.auth.signOut();
@@ -6229,13 +7007,18 @@ function TapxMainApp() {
     triggerAmountPulse();
 
     if (digit === 'CLEAR') {
+      playKeyDelete();
       setAmountStr('0');
       return;
     }
     if (digit === 'DEL') {
+      playKeyDelete();
       setAmountStr((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
       return;
     }
+
+    playKeyTap(digit);
+
     if (digit === '.') {
       setAmountStr((prev) => (prev.includes('.') ? prev : `${prev}.`));
       return;
@@ -6252,6 +7035,7 @@ function TapxMainApp() {
     if (noteInputRef.current && document.activeElement === noteInputRef.current) {
       noteInputRef.current.blur();
     }
+    playQuickChip();
     triggerAmountPulse();
     setAmountStr((prev) => {
       const current = parseFloat(prev) || 0;
@@ -6262,6 +7046,7 @@ function TapxMainApp() {
 
   const handleSwapTransferWallets = () => {
     if (!selectedWalletId || !toWalletId) return;
+    playQuickChip();
     const prevFrom = selectedWalletId;
     setSelectedWalletId(toWalletId);
     setToWalletId(prevFrom);
@@ -6293,16 +7078,19 @@ function TapxMainApp() {
 
     const numericAmount = parseFloat(amountStr);
     if (!numericAmount || numericAmount <= 0) {
+      playError();
       showToast('Pop in an amount above 0!');
       return;
     }
     if (!selectedWalletId) {
+      playError();
       showToast('Create an account first!');
       resetWalletModal();
       setShowWalletModal(true);
       return;
     }
     if (entryType === 'transfer' && (!toWalletId || toWalletId === selectedWalletId)) {
+      playError();
       showToast('Pick two different accounts!');
       return;
     }
@@ -6356,6 +7144,7 @@ function TapxMainApp() {
 
     setAmountStr('0');
     setNote('');
+    playSuccess(currentType);
 
     const enqueueOfflineItem = () => {
       const queueEntry = {
@@ -6422,6 +7211,8 @@ function TapxMainApp() {
     const targetTx = transactions.find((t) => t.id === id);
     if (!targetTx) return;
 
+    playDelete();
+
     const amt = Number(targetTx.amount) || 0;
     const fromWallet = wallets.find((w) => w.id === targetTx.wallet_id);
     const toWallet = targetTx.to_wallet_id ? wallets.find((w) => w.id === targetTx.to_wallet_id) : null;
@@ -6466,6 +7257,7 @@ function TapxMainApp() {
     }
 
     showToast('Entry popped!', async () => {
+      playUndo();
       setToast(null);
       const { id: _oldId, pendingSync: _ps, ...reinsertPayload } = targetTx;
       const { data: restoredRow } = await supabase
@@ -6502,6 +7294,7 @@ function TapxMainApp() {
   };
 
   const openEditTransaction = (tx) => {
+    playModalOpen();
     const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
     const resolvedCat =
       (tagCategoryName && findMatchingCategoryObj(tagCategoryName, categories)) ||
@@ -6520,6 +7313,7 @@ function TapxMainApp() {
     if (!editingTx) return;
     const newAmt = parseFloat(editTxAmount);
     if (!newAmt || newAmt <= 0) {
+      playError();
       showToast('Enter a valid amount');
       return;
     }
@@ -6532,6 +7326,7 @@ function TapxMainApp() {
     const nextCategoryId = oldTx.type === 'transfer' ? null : editTxCategoryId || null;
 
     if (oldTx.type === 'transfer' && nextWalletId === nextToWalletId) {
+      playError();
       showToast('Pick two different accounts');
       return;
     }
@@ -6584,6 +7379,7 @@ function TapxMainApp() {
     );
 
     setEditingTx(null);
+    playSuccess('save');
     showToast('Transaction updated!');
 
     if (!String(oldTx.id).startsWith('temp-')) {
@@ -6605,6 +7401,7 @@ function TapxMainApp() {
   };
 
   const openEditWallet = (wallet) => {
+    playModalOpen();
     setEditingWalletId(wallet.id);
     setNewWalletName(wallet.name || '');
     setNewWalletType(wallet.type || 'UPI / Wallet');
@@ -6635,6 +7432,7 @@ function TapxMainApp() {
             : w
         )
       );
+      playSuccess('save');
       showToast('Account updated!');
 
       const { error } = await supabase
@@ -6643,6 +7441,7 @@ function TapxMainApp() {
         .eq('id', targetEditId);
 
       if (error) {
+        playError();
         showToast(error.message);
         fetchUserData(session.user.id);
       }
@@ -6670,18 +7469,22 @@ function TapxMainApp() {
         if (!selectedWalletId) setSelectedWalletId(createdWallet.id);
         return updated;
       });
+      playSuccess('save');
       showToast('Account created!');
     } else if (error) {
+      playError();
       showToast(error.message);
     }
   };
 
   const handleDeleteWallet = async (id) => {
     if (confirmDeleteId !== id) {
+      playQuickChip();
       setConfirmDeleteId(id);
       setTimeout(() => setConfirmDeleteId((prev) => (prev === id ? null : prev)), 3000);
       return;
     }
+    playDelete();
     setConfirmDeleteId(null);
     setWallets((prev) => prev.filter((w) => w.id !== id));
     if (activityWalletFilter === id) setActivityWalletFilter('all');
@@ -6691,6 +7494,7 @@ function TapxMainApp() {
   };
 
   const openEditCategory = (cat) => {
+    playModalOpen();
     setEditingCatId(cat.id);
     setNewCatName(cat.name || '');
     setNewCatType(cat.type || 'expense');
@@ -6719,6 +7523,7 @@ function TapxMainApp() {
             : c
         )
       );
+      playSuccess('save');
       showToast('Category updated!');
 
       const { error } = await supabase
@@ -6727,6 +7532,7 @@ function TapxMainApp() {
         .eq('id', targetEditId);
 
       if (error) {
+        playError();
         showToast(error.message);
         fetchUserData(session.user.id);
       }
@@ -6755,18 +7561,22 @@ function TapxMainApp() {
         }
         return updated;
       });
+      playSuccess('save');
       showToast('Category created!');
     } else if (error) {
+      playError();
       showToast(error.message);
     }
   };
 
   const handleDeleteCategory = async (id) => {
     if (confirmDeleteId !== id) {
+      playQuickChip();
       setConfirmDeleteId(id);
       setTimeout(() => setConfirmDeleteId((prev) => (prev === id ? null : prev)), 3000);
       return;
     }
+    playDelete();
     setConfirmDeleteId(null);
     setCategories((prev) => prev.filter((c) => c.id !== id));
     if (editingCatId === id) resetCategoryModal();
@@ -6780,12 +7590,14 @@ function TapxMainApp() {
       .join('');
 
     setSettings((prev) => ({ ...prev, shortcut_token: randomHex }));
+    playSuccess('save');
     showToast('Token refreshed!');
     await supabase.from('user_settings').update({ shortcut_token: randomHex }).eq('user_id', session.user.id);
   };
 
   const copyToClipboard = (text, label) => {
     navigator.clipboard.writeText(text || '');
+    playCopy();
     setCopiedField(label);
     showToast('Copied to clipboard!');
     setTimeout(() => setCopiedField(''), 2000);
@@ -6795,6 +7607,7 @@ function TapxMainApp() {
 
   const handleOneTapShortcut = () => {
     navigator.clipboard.writeText(personalApiUrl);
+    playCopy();
     showToast('Personal URL copied · Opening Shortcuts');
     setTimeout(() => {
       window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
@@ -6920,6 +7733,7 @@ function TapxMainApp() {
   const handleExportCsv = useCallback(() => {
     const sourceRows = analyticsData.filteredTx.length > 0 ? analyticsData.filteredTx : transactions;
     if (sourceRows.length === 0) {
+      playError();
       showToast('No transactions to export');
       return;
     }
@@ -6981,6 +7795,7 @@ function TapxMainApp() {
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 1500);
 
+    playCopy();
     showToast(`Exported ${sourceRows.length} entries to CSV!`);
   }, [analyticsData.filteredTx, transactions, wallets, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
 
@@ -7110,6 +7925,7 @@ function TapxMainApp() {
         <button
           type="button"
           onClick={() => {
+            playModalOpen();
             resetWalletModal();
             setShowWalletModal(true);
           }}
@@ -7157,10 +7973,12 @@ function TapxMainApp() {
             handleLogTransaction={handleLogTransaction}
             delHoldTimerRef={delHoldTimerRef}
             onOpenNewWallet={() => {
+              playModalOpen();
               resetWalletModal();
               setShowWalletModal(true);
             }}
             onOpenNewCategory={(type) => {
+              playModalOpen();
               resetCategoryModal();
               setNewCatType(type);
               setShowCategoryModal(true);
@@ -7186,6 +8004,7 @@ function TapxMainApp() {
             resolveTxCategory={resolveTxCategory}
             openEditWallet={openEditWallet}
             onOpenNewWallet={() => {
+              playModalOpen();
               resetWalletModal();
               setShowWalletModal(true);
             }}
@@ -7226,6 +8045,8 @@ function TapxMainApp() {
             tabAnimClass={tabAnimClass}
             themePref={themePref}
             setThemePref={setThemePref}
+            soundEnabled={soundEnabled}
+            onToggleSound={handleToggleSound}
             settingsSection={settingsSection}
             setSettingsSection={setSettingsSection}
             personalApiUrl={personalApiUrl}
@@ -7238,6 +8059,7 @@ function TapxMainApp() {
             currentMonthSpendByCat={currentMonthSpendByCat}
             currencySymbol={currencySymbol}
             onOpenNewCategory={() => {
+              playModalOpen();
               resetCategoryModal();
               setShowCategoryModal(true);
             }}
@@ -7246,6 +8068,7 @@ function TapxMainApp() {
             confirmDeleteId={confirmDeleteId}
             session={session}
             onSync={() => {
+              playSuccess('save');
               fetchUserData(session.user.id);
               showToast('Synced!');
             }}
