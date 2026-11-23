@@ -1714,7 +1714,7 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)'
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)'
       }}
     >
       {/* Chunky Cartoon Toast Pill */}
@@ -1722,7 +1722,7 @@ function TapxMainApp() {
         <div
           role="status"
           aria-live="polite"
-          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold flex items-center gap-3 animate-tab ${ui.toastBg}`}
+          className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold flex items-center gap-3 animate-tab ${ui.toastBg}`}
         >
           <span>{toast.message}</span>
           {toast.onUndo && (
@@ -1847,11 +1847,11 @@ function TapxMainApp() {
         </button>
       </header>
 
-      {/* MAIN VIEWPORT (Tight flush spacing above floating dock to maximize phone height) */}
+      {/* MAIN VIEWPORT (Flush spacing right down to the 60px dock at bottom: 10px) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(calc(env(safe-area-inset-bottom, 0px) - 18px), 8px) + 70px)'
+          paddingBottom: '78px'
         }}
       >
         {activeTab === 'pad' && (
@@ -2059,11 +2059,11 @@ function TapxMainApp() {
         />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR (Anchored close to home indicator to eliminate bottom void) */}
+      {/* CHUNKY CARTOON DOCK BAR (Flush at bottom: 10px) */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
-          bottom: 'max(calc(env(safe-area-inset-bottom, 0px) - 18px), 8px)'
+          bottom: '10px'
         }}
       >
         <nav
