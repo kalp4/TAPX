@@ -19,6 +19,23 @@ const INSIGHTS_SECTIONS = [
   { id: 'habits', label: 'Habits' }
 ];
 
+function EmptyStateCard({ ui, icon, title, subtitle }) {
+  return (
+    <div className={`p-6 rounded-3xl flex flex-col items-center text-center space-y-2 ${ui.card}`}>
+      <span
+        className={`w-12 h-12 rounded-2xl bg-[#D8CBB3] text-[#1e1e1c] flex items-center justify-center text-2xl ${ui.iconBadge}`}
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+      <p className={`text-sm font-cartoon font-bold ${ui.textPrimary}`}>{title}</p>
+      <p className={`text-xs font-medium max-w-[240px] leading-relaxed ${ui.textMuted}`}>
+        {subtitle}
+      </p>
+    </div>
+  );
+}
+
 export function KeypadTab({
   ui,
   tabAnimClass,
@@ -58,10 +75,26 @@ export function KeypadTab({
       ? ui.primaryBtnTransfer
       : ui.primaryBtnExpense;
 
+  const numericAmount = parseFloat(amountStr) || 0;
+  const currentWalletBalance = Number(selectedWalletObj?.balance || 0);
+  const projectedBalance =
+    entryType === 'income'
+      ? currentWalletBalance + numericAmount
+      : currentWalletBalance - numericAmount;
+  const willGoNegative = Boolean(
+    selectedWalletObj && numericAmount > 0 && entryType !== 'income' && projectedBalance < 0
+  );
+
   return (
-    <div className={`flex-1 min-h-0 flex flex-col justify-between overflow-hidden ${tabAnimClass}`}>
-      <div className={`relative grid grid-cols-3 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
+    <div className={`flex-1 min-h-0 flex flex-col gap-2 overflow-hidden ${tabAnimClass}`}>
+      {/* Entry Type Segmented Control */}
+      <div
+        role="tablist"
+        aria-label="Transaction type"
+        className={`relative grid grid-cols-3 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}
+      >
         <div
+          aria-hidden="true"
           className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
           style={{ transform: `translate3d(${entryIndex * 100}%, 0, 0)` }}
         />
@@ -73,6 +106,8 @@ export function KeypadTab({
           <button
             key={t.id}
             type="button"
+            role="tab"
+            aria-selected={entryType === t.id}
             onClick={() => {
               if (entryType !== t.id) playTabSwitch();
               setEntryType(t.id);
@@ -90,8 +125,11 @@ export function KeypadTab({
         ))}
       </div>
 
+      {/* Primary Hero Amount Card */}
       <div
-        className={`my-auto py-3 px-4 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden ${ui.heroCard}`}
+        className={`py-3 px-4 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden transition-colors duration-200 ${
+          willGoNegative ? ui.heroCardWarning : ui.heroCard
+        }`}
       >
         {amountStr !== '0' && (
           <button
@@ -100,7 +138,8 @@ export function KeypadTab({
               e.preventDefault();
               handleDigitPress('CLEAR');
             }}
-            className={`absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
+            aria-label="Reset amount"
+            className={`absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-cartoon font-bold key-press ${ui.pillIdle}`}
           >
             Reset
           </button>
@@ -110,7 +149,9 @@ export function KeypadTab({
           className={`${amountFontSizeClass} leading-none font-cartoon font-bold tracking-tight tabular-nums transition-transform duration-100 ${
             amountPulse ? 'scale-[1.06] -rotate-1' : 'scale-100'
           } ${
-            entryType === 'income'
+            willGoNegative
+              ? 'text-[#F26B5B]'
+              : entryType === 'income'
               ? 'text-[#52B788]'
               : entryType === 'transfer'
               ? 'text-[#F4B942]'
@@ -128,6 +169,7 @@ export function KeypadTab({
           ref={noteInputRef}
           type="text"
           enterKeyHint="done"
+          aria-label="Transaction note"
           placeholder={
             entryType === 'transfer'
               ? 'Transfer note (e.g. ATM withdrawal)...'
@@ -138,7 +180,7 @@ export function KeypadTab({
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.currentTarget.blur();
           }}
-          className={`mt-1 bg-transparent text-center text-xs font-semibold focus:outline-none w-4/5 scale-[0.84] origin-center ${ui.textSecondary}`}
+          className={`mt-1.5 w-full bg-transparent text-center text-[16px] leading-snug font-medium py-0.5 px-2 focus:outline-none ${ui.textSecondary}`}
         />
 
         <div className="flex items-center gap-1.5 mt-1.5">
@@ -150,7 +192,7 @@ export function KeypadTab({
                 e.preventDefault();
                 handleQuickAddAmount(val);
               }}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
             >
               +{currencySymbol}
               {val >= 1000 ? '1k' : val}
@@ -160,30 +202,54 @@ export function KeypadTab({
 
         {selectedWalletObj && (
           <div
-            className={`mt-2.5 pt-2 border-t-2 border-dashed w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold ${ui.divider} ${ui.textMuted}`}
+            className={`mt-2.5 pt-2 border-t-2 border-dashed w-full flex items-center justify-center flex-wrap gap-1.5 text-[11px] font-semibold ${ui.divider} ${ui.textMuted}`}
           >
             <span>{selectedWalletObj.icon}</span>
             <span className={`font-bold ${ui.textSecondary}`}>{selectedWalletObj.name}</span>
             <span>·</span>
             <span className="tabular-nums">
               {currencySymbol}
-              {Number(selectedWalletObj.balance || 0).toLocaleString('en-IN')} in pocket
+              {currentWalletBalance.toLocaleString('en-IN')}
             </span>
+            {numericAmount > 0 && (
+              <>
+                <span aria-hidden="true">→</span>
+                <span
+                  className={`font-cartoon font-bold tabular-nums ${
+                    willGoNegative
+                      ? 'text-[#F26B5B]'
+                      : entryType === 'income'
+                      ? 'text-[#52B788]'
+                      : ui.textSecondary
+                  }`}
+                >
+                  {projectedBalance < 0 ? '-' : ''}
+                  {currencySymbol}
+                  {Math.abs(projectedBalance).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                </span>
+                {willGoNegative && (
+                  <span className="px-2 py-0.5 rounded-full text-[10.5px] font-cartoon font-bold bg-[#F26B5B]/20 text-[#F26B5B]">
+                    Negative
+                  </span>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
 
-      <div className="space-y-2 shrink-0">
+      {/* Account & Category Pickers */}
+      <div className="space-y-1.5 shrink-0">
         <div className="space-y-1">
           <div className="flex items-center justify-between px-0.5">
-            <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
+            <span className={`text-[11px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
               {entryType === 'transfer' ? 'From Account → To Account' : 'Pick Account'}
             </span>
             {entryType === 'transfer' && wallets.length > 1 && (
               <button
                 type="button"
                 onClick={handleSwapTransferWallets}
-                className="text-[10px] font-cartoon font-bold text-[#F4B942] key-press"
+                className="text-[11px] font-cartoon font-bold text-[#F4B942] key-press"
               >
                 ⇄ Swap
               </button>
@@ -206,6 +272,7 @@ export function KeypadTab({
                   <button
                     key={w.id}
                     type="button"
+                    aria-pressed={active}
                     onClick={() => {
                       playQuickChip();
                       setSelectedWalletId(w.id);
@@ -214,18 +281,17 @@ export function KeypadTab({
                       active
                         ? {
                             backgroundColor: wColor,
-                            borderColor: '#111110',
                             color: '#1e1e1c'
                           }
                         : undefined
                     }
                     className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
-                      active ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]' : ui.pillIdle
+                      active ? ui.pillSelectedBorder : ui.pillIdle
                     }`}
                   >
                     <span>{w.icon}</span>
                     <span>{w.name}</span>
-                    <span className={`text-[10px] tabular-nums ${active ? 'opacity-90 font-extrabold' : 'opacity-75'}`}>
+                    <span className={`text-[11px] tabular-nums ${active ? 'opacity-90 font-extrabold' : 'opacity-75'}`}>
                       {currencySymbol}
                       {Number(w.balance || 0).toLocaleString('en-IN')}
                     </span>
@@ -243,6 +309,7 @@ export function KeypadTab({
                   <button
                     key={w.id}
                     type="button"
+                    aria-pressed={toWalletId === w.id}
                     onClick={() => {
                       playQuickChip();
                       setToWalletId(w.id);
@@ -263,13 +330,13 @@ export function KeypadTab({
         {entryType !== 'transfer' && (
           <div className="space-y-1">
             <div className="flex items-center justify-between px-0.5">
-              <span className={`text-[10px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
+              <span className={`text-[11px] font-cartoon uppercase tracking-wider font-bold ${ui.textMuted}`}>
                 {entryType === 'income' ? 'Income Category' : 'Expense Category'}
               </span>
               <button
                 type="button"
                 onClick={() => onOpenNewCategory(entryType === 'income' ? 'income' : 'expense')}
-                className={`text-[10px] font-cartoon font-bold ${ui.textSecondary} key-press`}
+                className={`text-[11px] font-cartoon font-bold ${ui.textSecondary} key-press`}
               >
                 + Custom
               </button>
@@ -282,6 +349,7 @@ export function KeypadTab({
                   <button
                     key={c.id}
                     type="button"
+                    aria-pressed={active}
                     onClick={() => {
                       playQuickChip();
                       setSelectedCategoryId(c.id);
@@ -290,13 +358,12 @@ export function KeypadTab({
                       active
                         ? {
                             backgroundColor: accent,
-                            borderColor: '#111110',
                             color: '#1e1e1c'
                           }
                         : undefined
                     }
                     className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
-                      active ? 'border-2 border-[#111110] shadow-[0_3px_0_#111110]' : ui.pillIdle
+                      active ? ui.pillSelectedBorder : ui.pillIdle
                     }`}
                   >
                     <span>{c.icon}</span>
@@ -309,57 +376,68 @@ export function KeypadTab({
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 pt-1.5 shrink-0">
-        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
-          <button
-            key={key}
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              handleDigitPress(key);
-              if (key === 'DEL') {
-                if (delHoldTimerRef.current) clearTimeout(delHoldTimerRef.current);
-                delHoldTimerRef.current = setTimeout(() => {
-                  handleDigitPress('CLEAR');
-                }, 420);
-              }
-            }}
-            onPointerUp={() => {
-              if (key === 'DEL' && delHoldTimerRef.current) {
-                clearTimeout(delHoldTimerRef.current);
-              }
-            }}
-            onPointerLeave={() => {
-              if (key === 'DEL' && delHoldTimerRef.current) {
-                clearTimeout(delHoldTimerRef.current);
-              }
-            }}
-            className={`h-11 rounded-2xl text-lg font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
-              key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
-            }`}
-          >
-            {key === 'DEL' ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z"
-                />
-              </svg>
-            ) : (
-              key
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Fluid Thumb-Zone Numpad */}
+      <div className="flex-1 min-h-0 flex flex-col justify-end gap-2">
+        <div className="flex-1 min-h-[208px] max-h-[264px] grid grid-cols-3 grid-rows-4 gap-2">
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
+            <button
+              key={key}
+              type="button"
+              aria-label={key === 'DEL' ? 'Delete last digit' : key === '.' ? 'Decimal point' : `Digit ${key}`}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                handleDigitPress(key);
+                if (key === 'DEL') {
+                  if (delHoldTimerRef.current) clearTimeout(delHoldTimerRef.current);
+                  delHoldTimerRef.current = setTimeout(() => {
+                    handleDigitPress('CLEAR');
+                  }, 420);
+                }
+              }}
+              onPointerUp={() => {
+                if (key === 'DEL' && delHoldTimerRef.current) {
+                  clearTimeout(delHoldTimerRef.current);
+                }
+              }}
+              onPointerLeave={() => {
+                if (key === 'DEL' && delHoldTimerRef.current) {
+                  clearTimeout(delHoldTimerRef.current);
+                }
+              }}
+              className={`h-full min-h-[48px] max-h-[60px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
+                key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
+              }`}
+            >
+              {key === 'DEL' ? (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z"
+                  />
+                </svg>
+              ) : (
+                key
+              )}
+            </button>
+          ))}
+        </div>
 
-      <button
-        type="button"
-        onClick={handleLogTransaction}
-        className={`w-full py-3.5 mt-2 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass}`}
-      >
-        Save {entryType === 'transfer' ? 'Transfer ⇄' : entryType === 'income' ? 'Income 💰' : 'Expense 💸'}
-      </button>
+        <button
+          type="button"
+          onClick={handleLogTransaction}
+          className={`w-full py-3.5 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass}`}
+        >
+          Save {entryType === 'transfer' ? 'Transfer ⇄' : entryType === 'income' ? 'Income 💰' : 'Expense 💸'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -418,12 +496,14 @@ export function AccountsTab({
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
                 }}
-                className="min-w-[164px] p-3.5 rounded-2xl border-2 border-[#111110] shadow-[0_4px_0_#111110] flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press"
+                className={`min-w-[168px] p-3.5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
+                  isFiltered ? ui.walletCardHero : ui.card
+                }`}
               >
                 <div className="flex items-center justify-between gap-2 relative z-10">
-                  <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
                       style={{
                         backgroundColor: isFiltered ? '#FAF6EE' : cardAccent
                       }}
@@ -440,11 +520,12 @@ export function AccountsTab({
                   </div>
                   <button
                     type="button"
+                    aria-label={`Edit ${w.name} account`}
                     onClick={(e) => {
                       e.stopPropagation();
                       openEditWallet(w);
                     }}
-                    className={`px-2 py-0.5 rounded-lg border-2 border-[#111110] text-[10px] font-cartoon font-bold ${
+                    className={`px-2 py-0.5 rounded-lg border text-[10.5px] font-cartoon font-bold ${ui.badgeBorder} ${
                       isFiltered ? 'bg-[#1e1e1c] text-[#D8CBB3]' : 'bg-[#D8CBB3] text-[#1e1e1c]'
                     }`}
                   >
@@ -462,7 +543,7 @@ export function AccountsTab({
                       {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                     <p
-                      className={`text-[10px] font-semibold ${
+                      className={`text-[10.5px] font-semibold ${
                         isFiltered ? 'text-[#1e1e1c]/75' : ui.textMuted
                       }`}
                     >
@@ -470,7 +551,7 @@ export function AccountsTab({
                     </p>
                   </div>
                   {isFiltered && (
-                    <span className="text-[9px] px-2 py-0.5 rounded-full font-cartoon font-bold bg-[#1e1e1c] text-[#D8CBB3]">
+                    <span className="text-[10.5px] px-2 py-0.5 rounded-full font-cartoon font-bold bg-[#1e1e1c] text-[#D8CBB3]">
                       Active
                     </span>
                   )}
@@ -482,7 +563,7 @@ export function AccountsTab({
           <button
             type="button"
             onClick={onOpenNewWallet}
-            className={`min-w-[118px] p-3 rounded-2xl border-2 border-dashed border-[#D8CBB3]/50 flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.textSecondary}`}
+            className={`min-w-[118px] p-3 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.dashBorder} ${ui.textSecondary}`}
           >
             <span className="text-xl font-cartoon font-bold">+</span>
             <span className="text-[11px] font-cartoon font-bold">New Account</span>
@@ -490,14 +571,16 @@ export function AccountsTab({
         </div>
       </div>
 
+      {/* Search & Filter Row (native 16px input, zero scale hacks) */}
       <div className="flex items-center gap-2 shrink-0">
-        <div className={`flex-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${ui.input}`}>
+        <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-xl ${ui.input}`}>
           <svg
-            className={`w-3.5 h-3.5 shrink-0 ${ui.textMuted}`}
+            className={`w-4 h-4 shrink-0 ${ui.textMuted}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth="2.4"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -507,16 +590,18 @@ export function AccountsTab({
           </svg>
           <input
             type="text"
-            placeholder="Search note, category, amount..."
+            aria-label="Search transactions"
+            placeholder="Search note, category..."
             value={activitySearch}
             onChange={(e) => setActivitySearch(e.target.value)}
-            className="w-full bg-transparent text-xs font-medium focus:outline-none scale-[0.85] origin-left"
+            className="w-full bg-transparent text-[16px] leading-snug font-medium focus:outline-none"
           />
           {activitySearch && (
             <button
               type="button"
+              aria-label="Clear search"
               onClick={() => setActivitySearch('')}
-              className={`text-[11px] font-bold ${ui.textMuted}`}
+              className={`p-0.5 text-xs font-bold ${ui.textMuted}`}
             >
               ✕
             </button>
@@ -532,11 +617,12 @@ export function AccountsTab({
             <button
               key={f.id}
               type="button"
+              aria-pressed={activityTypeFilter === f.id}
               onClick={() => {
                 if (activityTypeFilter !== f.id) playQuickChip();
                 setActivityTypeFilter(f.id);
               }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-cartoon font-bold transition-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-cartoon font-bold transition-all ${
                 activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
               }`}
             >
@@ -546,14 +632,22 @@ export function AccountsTab({
         </div>
       </div>
 
+      {/* Date-Grouped Activity Feed */}
       <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
         {groupedTransactions.length === 0 ? (
-          <div className={`p-6 rounded-2xl text-center text-xs font-cartoon ${ui.card} ${ui.textMuted}`}>
-            No transactions here yet! Tap the Keypad to pop one in.
-          </div>
+          <EmptyStateCard
+            ui={ui}
+            icon="🧾"
+            title={activitySearch ? 'No matching entries' : 'No activity yet'}
+            subtitle={
+              activitySearch
+                ? 'Try a different keyword or clear the active account filter.'
+                : 'Head over to the Keypad to log your first expense, income, or transfer.'
+            }
+          />
         ) : (
           groupedTransactions.map((group) => (
-            <div key={group.label} className="space-y-2">
+            <div key={group.label} className="space-y-1.5">
               <div
                 className={`sticky top-0 z-10 py-1 px-1 flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.stickyHeader}`}
               >
@@ -580,11 +674,11 @@ export function AccountsTab({
                   <div
                     key={tx.id}
                     onClick={() => openEditTransaction(tx)}
-                    className={`p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.card}`}
+                    className={`p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.listRow}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-xl border-2 border-[#111110] shadow-[0_2px_0_#111110] flex items-center justify-center text-base shrink-0"
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0 ${ui.iconBadge}`}
                         style={{ backgroundColor: catAccent }}
                       >
                         {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
@@ -597,17 +691,21 @@ export function AccountsTab({
                               : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
                           </p>
                           {tx.pendingSync && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#F4B942] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
+                            <span
+                              className={`text-[10.5px] px-1.5 py-0.5 rounded-md bg-[#F4B942] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
+                            >
                               Queued
                             </span>
                           )}
                           {tx.source === 'shortcut' && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border border-[#111110] font-cartoon font-bold shrink-0">
+                            <span
+                              className={`text-[10.5px] px-1.5 py-0.5 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
+                            >
                               Back Tap
                             </span>
                           )}
                         </div>
-                        <p className={`text-[10px] font-medium truncate ${ui.textMuted}`}>
+                        <p className={`text-[11px] font-medium truncate ${ui.textMuted}`}>
                           {w?.name || 'Account'}
                           {cleanNote && c?.name ? ` · ${c.name}` : ''}
                           {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
@@ -630,11 +728,12 @@ export function AccountsTab({
                       </span>
                       <button
                         type="button"
+                        aria-label="Delete transaction"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteTransaction(tx.id);
                         }}
-                        className={`p-1 rounded-lg text-xs font-bold key-press ${ui.textMuted} hover:text-[#F26B5B]`}
+                        className={`p-1.5 rounded-lg text-xs font-bold key-press ${ui.textMuted} hover:text-[#F26B5B]`}
                         title="Delete"
                       >
                         ✕
@@ -673,6 +772,9 @@ export function InsightsTab({
   handleExportCsv
 }) {
   const [insightsView, setInsightsView] = useState('overview');
+  const [selectedDow, setSelectedDow] = useState(null);
+  const [selectedTimeSlotId, setSelectedTimeSlotId] = useState(null);
+
   const insightsSubIndex = INSIGHTS_SECTIONS.findIndex((s) => s.id === insightsView);
 
   const safeBarIdx = Math.min(
@@ -686,6 +788,18 @@ export function InsightsTab({
   const activeDonutCat =
     analyticsData.categoryBreakdown.find((c) => c.id === selectedDonutCatId) ||
     analyticsData.categoryBreakdown[0] ||
+    null;
+
+  const activeDowObj =
+    analyticsData.dowBreakdown.find((d) => d.dayNum === selectedDow) ||
+    analyticsData.peakDow ||
+    analyticsData.dowBreakdown[0] ||
+    null;
+
+  const activeTimeSlotObj =
+    analyticsData.timeOfDayBreakdown.find((s) => s.id === selectedTimeSlotId) ||
+    analyticsData.peakTimeSlot ||
+    analyticsData.timeOfDayBreakdown[0] ||
     null;
 
   const donutRadius = 45;
@@ -706,6 +820,7 @@ export function InsightsTab({
                 <button
                   key={tab.id}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => {
                     if (analyticsRange !== tab.id) playQuickChip();
                     setAnalyticsRange(tab.id);
@@ -724,10 +839,18 @@ export function InsightsTab({
           <button
             type="button"
             onClick={handleExportCsv}
+            aria-label="Export filtered period to CSV"
             title="Export filtered period to CSV"
             className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${ui.pillActive}`}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              aria-hidden="true"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -740,33 +863,38 @@ export function InsightsTab({
 
         {analyticsRange === 'custom' && (
           <div className={`p-2.5 rounded-2xl grid grid-cols-2 gap-2 animate-tab ${ui.card}`}>
-            <div className="space-y-0.5">
-              <label className={`text-[9px] font-cartoon font-bold uppercase px-1 ${ui.textMuted}`}>
+            <div className="space-y-1">
+              <label className={`text-[10.5px] font-cartoon font-bold uppercase px-1 ${ui.textMuted}`}>
                 From Date
               </label>
               <input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className={`w-full rounded-xl px-2.5 py-1.5 text-xs font-cartoon font-bold focus:outline-none ${ui.input}`}
+                className={`w-full rounded-xl px-2.5 py-2 text-[16px] leading-snug font-cartoon font-bold focus:outline-none ${ui.input}`}
               />
             </div>
-            <div className="space-y-0.5">
-              <label className={`text-[9px] font-cartoon font-bold uppercase px-1 ${ui.textMuted}`}>
+            <div className="space-y-1">
+              <label className={`text-[10.5px] font-cartoon font-bold uppercase px-1 ${ui.textMuted}`}>
                 To Date
               </label>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className={`w-full rounded-xl px-2.5 py-1.5 text-xs font-cartoon font-bold focus:outline-none ${ui.input}`}
+                className={`w-full rounded-xl px-2.5 py-2 text-[16px] leading-snug font-cartoon font-bold focus:outline-none ${ui.input}`}
               />
             </div>
           </div>
         )}
 
-        <div className={`relative grid grid-cols-3 p-1 rounded-2xl ${ui.segmentedBg}`}>
+        <div
+          role="tablist"
+          aria-label="Insights sections"
+          className={`relative grid grid-cols-3 p-1 rounded-2xl ${ui.segmentedBg}`}
+        >
           <div
+            aria-hidden="true"
             className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
             style={{ transform: `translate3d(${Math.max(0, insightsSubIndex) * 100}%, 0, 0)` }}
           />
@@ -774,6 +902,8 @@ export function InsightsTab({
             <button
               key={sec.id}
               type="button"
+              role="tab"
+              aria-selected={insightsView === sec.id}
               onClick={() => {
                 if (insightsView !== sec.id) playTabSwitch();
                 setInsightsView(sec.id);
@@ -791,275 +921,286 @@ export function InsightsTab({
       {/* SECTION 1: OVERVIEW */}
       {insightsView === 'overview' && (
         <div key="insights-overview" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
-          {/* Cashflow Summary Card */}
-          <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
-            <div className="flex items-center justify-between gap-2">
-              <span className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
-                {analyticsData.windowLabel} · {analyticsData.effectiveDays}{' '}
-                {analyticsData.effectiveDays === 1 ? 'Day' : 'Days'}
-              </span>
-              {analyticsData.expenseDeltaPct !== null && (
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-cartoon font-bold border border-[#111110] ${
-                    analyticsData.expenseDeltaPct <= 0
-                      ? 'bg-[#52B788] text-[#1e1e1c]'
-                      : 'bg-[#F26B5B] text-[#1e1e1c]'
-                  }`}
-                >
-                  {analyticsData.expenseDeltaPct > 0 ? '▲ +' : '▼ '}
-                  {analyticsData.expenseDeltaPct}% vs prev
-                </span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
-                  Spent
-                </p>
-                <p className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
-                  {currencySymbol}
-                  {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
-                <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
-                  {currencySymbol}
-                  {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/day
-                </p>
-              </div>
-
-              <div>
-                <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
-                  Income
-                </p>
-                <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5 truncate">
-                  +{currencySymbol}
-                  {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </p>
-                <p className={`text-[10px] font-semibold tabular-nums ${ui.textMuted}`}>
-                  {analyticsData.savingsRate !== null
-                    ? `${analyticsData.savingsRate}% saved`
-                    : `${analyticsData.expenseCount} entries`}
-                </p>
-              </div>
-
-              <div>
-                <p className={`text-[10px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
-                  {analyticsRange === 'month' ? 'Est. Month' : 'Net Flow'}
-                </p>
-                <p
-                  className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${
-                    analyticsRange === 'month'
-                      ? ui.textSand
-                      : analyticsData.netFlow >= 0
-                      ? 'text-[#52B788]'
-                      : 'text-[#F26B5B]'
-                  }`}
-                >
-                  {analyticsRange === 'month' ? (
-                    <>
-                      {currencySymbol}
-                      {analyticsData.projectedMonthSpend.toLocaleString('en-IN')}
-                    </>
-                  ) : (
-                    <>
-                      {analyticsData.netFlow >= 0 ? '+' : '-'}
-                      {currencySymbol}
-                      {Math.abs(analyticsData.netFlow).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </>
+          {!hasAnyActivity ? (
+            <EmptyStateCard
+              ui={ui}
+              icon="📊"
+              title={`No activity in ${analyticsData.windowLabel}`}
+              subtitle="Log an expense or income on the Keypad, or switch the date preset above."
+            />
+          ) : (
+            <>
+              {/* Hero Cashflow Summary Card */}
+              <div className={`p-4 rounded-3xl space-y-3.5 ${ui.heroCard}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
+                    {analyticsData.windowLabel} · {analyticsData.effectiveDays}{' '}
+                    {analyticsData.effectiveDays === 1 ? 'Day' : 'Days'}
+                  </span>
+                  {analyticsData.expenseDeltaPct !== null && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10.5px] font-cartoon font-bold border ${ui.badgeBorder} ${
+                        analyticsData.expenseDeltaPct <= 0
+                          ? 'bg-[#52B788] text-[#1e1e1c]'
+                          : 'bg-[#F26B5B] text-[#1e1e1c]'
+                      }`}
+                    >
+                      {analyticsData.expenseDeltaPct > 0 ? '▲ +' : '▼ '}
+                      {analyticsData.expenseDeltaPct}% vs prev
+                    </span>
                   )}
-                </p>
-                <p className={`text-[10px] font-semibold ${ui.textMuted}`}>
-                  {analyticsRange === 'month' ? 'Monthly pace' : `${analyticsData.shortcutPct}% Back Tap`}
-                </p>
-              </div>
-            </div>
+                </div>
 
-            {hasAnyActivity && (
-              <div className="w-full h-3 rounded-full overflow-hidden flex bg-[#161614] border-2 border-[#111110] p-0.5 gap-0.5">
-                {analyticsData.totalIncome > 0 && (
-                  <div
-                    className="h-full rounded-l-full bg-[#52B788] transition-all duration-500"
-                    style={{
-                      width: `${Math.max(
-                        8,
-                        Math.round(
-                          (analyticsData.totalIncome /
-                            (analyticsData.totalIncome + analyticsData.totalExpense)) *
-                            100
-                        )
-                      )}%`
-                    }}
-                  />
-                )}
-                {analyticsData.totalExpense > 0 && (
-                  <div
-                    className="h-full rounded-r-full bg-[#F26B5B] transition-all duration-500"
-                    style={{
-                      width: `${Math.max(
-                        8,
-                        Math.round(
-                          (analyticsData.totalExpense /
-                            (analyticsData.totalIncome + analyticsData.totalExpense)) *
-                            100
-                        )
-                      )}%`
-                    }}
-                  />
-                )}
-              </div>
-            )}
-
-            <div className={`pt-2.5 border-t-2 border-dashed grid grid-cols-3 gap-2 text-center ${ui.divider}`}>
-              <div>
-                <p className={`text-[9.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>No-Spend</p>
-                <p className="text-xs font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5">
-                  {analyticsData.noSpendDays}d ({analyticsData.noSpendPct}%)
-                </p>
-              </div>
-              <div>
-                <p className={`text-[9.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Avg Spend</p>
-                <p className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textSand}`}>
-                  {currencySymbol}
-                  {analyticsData.avgTicket.toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className={`text-[9.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Entries</p>
-                <p className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textPrimary}`}>
-                  {analyticsData.expenseCount} out
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Spending Rhythm Bar Chart */}
-          <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Spending Rhythm</h4>
-                {selectedDayObj && (
-                  <p className={`text-[10px] font-semibold tabular-nums ${ui.textSecondary}`}>
-                    {selectedDayObj.fullDateLabel}:{' '}
-                    <span className={`font-bold ${ui.textSand}`}>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <p className={`text-[10.5px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
+                      Spent
+                    </p>
+                    <p className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
                       {currencySymbol}
-                      {selectedDayObj.amount.toLocaleString('en-IN')}
-                    </span>
-                  </p>
-                )}
-              </div>
-              <span className={`text-[10px] font-cartoon font-bold tabular-nums ${ui.textMuted}`}>
-                Avg: {currencySymbol}
-                {Math.round(analyticsData.trendAvg).toLocaleString('en-IN')}
-              </span>
-            </div>
+                      {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    </p>
+                    <p className={`text-[10.5px] font-semibold tabular-nums ${ui.textMuted}`}>
+                      {currencySymbol}
+                      {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/day
+                    </p>
+                  </div>
 
-            <div
-              className="grid gap-1.5 items-end h-28 pt-2"
-              style={{
-                gridTemplateColumns: `repeat(${analyticsData.trendBars.length}, minmax(0, 1fr))`
-              }}
-            >
-              {analyticsData.trendBars.map((day, idx) => {
-                const isSelected = safeBarIdx === idx;
-                const heightPct =
-                  day.amount > 0
-                    ? Math.max(16, Math.round((day.amount / analyticsData.maxTrendSpend) * 100))
-                    : 8;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      playQuickChip();
-                      setSelectedBarIdx(idx);
-                    }}
-                    className="flex flex-col items-center justify-end h-full gap-1 key-press min-w-0"
-                  >
-                    <span
-                      className={`text-[8.5px] font-cartoon font-bold tabular-nums truncate max-w-full ${
-                        isSelected ? ui.textSand : ui.textMuted
-                      }`}
-                    >
-                      {day.amount > 0
-                        ? day.amount >= 1000
-                          ? `${(day.amount / 1000).toFixed(1)}k`
-                          : Math.round(day.amount)
-                        : ''}
-                    </span>
-                    <div
-                      className={`w-full rounded-xl h-16 flex items-end p-0.5 border-2 border-[#111110] ${
-                        isSelected ? 'bg-[#181816]' : ui.cardSubtle
-                      }`}
-                    >
-                      <div
-                        className={`w-full rounded-lg border border-[#111110] transition-all duration-500 ios-spring ${
-                          isSelected
-                            ? 'bg-[#F4B942]'
-                            : day.isToday
-                            ? 'bg-[#D8CBB3]'
-                            : day.amount > 0
-                            ? 'bg-[#52B788]'
-                            : 'bg-transparent border-transparent'
-                        }`}
-                        style={{ height: `${heightPct}%` }}
-                      />
-                    </div>
-                    <span
-                      className={`text-[9px] font-cartoon font-bold truncate max-w-full ${
-                        isSelected || day.isToday ? ui.textSand : ui.textMuted
-                      }`}
-                    >
-                      {day.isToday && analyticsData.trendBars.length <= 7 ? 'Today' : day.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                  <div>
+                    <p className={`text-[10.5px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
+                      Income
+                    </p>
+                    <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5 truncate">
+                      +{currencySymbol}
+                      {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    </p>
+                    <p className={`text-[10.5px] font-semibold tabular-nums ${ui.textMuted}`}>
+                      {analyticsData.savingsRate !== null
+                        ? `${analyticsData.savingsRate}% saved`
+                        : `${analyticsData.expenseCount} entries`}
+                    </p>
+                  </div>
 
-          {/* Biggest Splurges */}
-          {analyticsData.topExpenses.length > 0 && (
-            <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
-              <div className="flex items-center justify-between">
-                <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Biggest Splurges</h4>
-                <span className={`text-[10px] font-semibold ${ui.textMuted}`}>Tap to edit</span>
-              </div>
-              <div className="space-y-2">
-                {analyticsData.topExpenses.map((tx, idx) => {
-                  const w = wallets.find((item) => item.id === tx.wallet_id);
-                  const { category: c, cleanNote } = resolveTxCategory(tx);
-                  const accent = getCategoryAccentColor(c, idx);
-                  return (
-                    <div
-                      key={tx.id}
-                      onClick={() => openEditTransaction(tx)}
-                      className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
+                  <div>
+                    <p className={`text-[10.5px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
+                      {analyticsRange === 'month' ? 'Est. Month' : 'Net Flow'}
+                    </p>
+                    <p
+                      className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${
+                        analyticsRange === 'month'
+                          ? ui.textSand
+                          : analyticsData.netFlow >= 0
+                          ? 'text-[#52B788]'
+                          : 'text-[#F26B5B]'
+                      }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span
-                          className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
-                          style={{ backgroundColor: accent }}
-                        >
-                          {c?.icon || '💸'}
+                      {analyticsRange === 'month' ? (
+                        <>
+                          {currencySymbol}
+                          {analyticsData.projectedMonthSpend.toLocaleString('en-IN')}
+                        </>
+                      ) : (
+                        <>
+                          {analyticsData.netFlow >= 0 ? '+' : '-'}
+                          {currencySymbol}
+                          {Math.abs(analyticsData.netFlow).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                        </>
+                      )}
+                    </p>
+                    <p className={`text-[10.5px] font-semibold ${ui.textMuted}`}>
+                      {analyticsRange === 'month' ? 'Monthly pace' : `${analyticsData.shortcutPct}% Back Tap`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`w-full h-3 rounded-full overflow-hidden flex p-0.5 gap-0.5 ${ui.trackBg}`}>
+                  {analyticsData.totalIncome > 0 && (
+                    <div
+                      className="h-full rounded-l-full bg-[#52B788] transition-all duration-500"
+                      style={{
+                        width: `${Math.max(
+                          8,
+                          Math.round(
+                            (analyticsData.totalIncome /
+                              (analyticsData.totalIncome + analyticsData.totalExpense)) *
+                              100
+                          )
+                        )}%`
+                      }}
+                    />
+                  )}
+                  {analyticsData.totalExpense > 0 && (
+                    <div
+                      className="h-full rounded-r-full bg-[#F26B5B] transition-all duration-500"
+                      style={{
+                        width: `${Math.max(
+                          8,
+                          Math.round(
+                            (analyticsData.totalExpense /
+                              (analyticsData.totalIncome + analyticsData.totalExpense)) *
+                              100
+                          )
+                        )}%`
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className={`pt-2.5 border-t-2 border-dashed grid grid-cols-3 gap-2 text-center ${ui.divider}`}>
+                  <div>
+                    <p className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>No-Spend</p>
+                    <p className="text-xs font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5">
+                      {analyticsData.noSpendDays}d ({analyticsData.noSpendPct}%)
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Avg Spend</p>
+                    <p className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textSand}`}>
+                      {currencySymbol}
+                      {analyticsData.avgTicket.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Entries</p>
+                    <p className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textPrimary}`}>
+                      {analyticsData.expenseCount} out
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Spending Rhythm Bar Chart */}
+              <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Spending Rhythm</h4>
+                    {selectedDayObj && (
+                      <p className={`text-[11px] font-semibold tabular-nums ${ui.textSecondary}`}>
+                        {selectedDayObj.fullDateLabel}:{' '}
+                        <span className={`font-bold ${ui.textSand}`}>
+                          {currencySymbol}
+                          {selectedDayObj.amount.toLocaleString('en-IN')}
                         </span>
-                        <div className="min-w-0">
-                          <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                            {cleanNote || c?.name || 'Expense'}
-                          </p>
-                          <p className={`text-[10px] font-semibold truncate ${ui.textMuted}`}>
-                            {w?.name || 'Account'} · {formatDayGroupLabel(tx.created_at)}
-                          </p>
+                      </p>
+                    )}
+                  </div>
+                  <span className={`text-[11px] font-cartoon font-bold tabular-nums ${ui.textMuted}`}>
+                    Avg: {currencySymbol}
+                    {Math.round(analyticsData.trendAvg).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                <div
+                  className="grid gap-1.5 items-end h-28 pt-2"
+                  style={{
+                    gridTemplateColumns: `repeat(${analyticsData.trendBars.length}, minmax(0, 1fr))`
+                  }}
+                >
+                  {analyticsData.trendBars.map((day, idx) => {
+                    const isSelected = safeBarIdx === idx;
+                    const heightPct =
+                      day.amount > 0
+                        ? Math.max(16, Math.round((day.amount / analyticsData.maxTrendSpend) * 100))
+                        : 8;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        aria-pressed={isSelected}
+                        aria-label={`${day.fullDateLabel}: ${currencySymbol}${Math.round(day.amount)}`}
+                        onClick={() => {
+                          playQuickChip();
+                          setSelectedBarIdx(idx);
+                        }}
+                        className="flex flex-col items-center justify-end h-full gap-1 key-press min-w-0"
+                      >
+                        <span
+                          className={`text-[10.5px] font-cartoon font-bold tabular-nums truncate max-w-full ${
+                            isSelected ? ui.textSand : ui.textMuted
+                          }`}
+                        >
+                          {day.amount > 0
+                            ? day.amount >= 1000
+                              ? `${(day.amount / 1000).toFixed(1)}k`
+                              : Math.round(day.amount)
+                            : ''}
+                        </span>
+                        <div
+                          className={`w-full rounded-xl h-16 flex items-end p-0.5 transition-colors ${
+                            isSelected ? ui.trackActiveBg : ui.trackBg
+                          }`}
+                        >
+                          <div
+                            className={`w-full rounded-lg transition-all duration-500 ios-spring ${
+                              isSelected
+                                ? 'bg-[#F4B942]'
+                                : day.isToday
+                                ? 'bg-[#D8CBB3]'
+                                : day.amount > 0
+                                ? 'bg-[#52B788]'
+                                : 'bg-transparent'
+                            }`}
+                            style={{ height: `${heightPct}%` }}
+                          />
                         </div>
-                      </div>
-                      <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
-                        -{currencySymbol}
-                        {Number(tx.amount || 0).toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  );
-                })}
+                        <span
+                          className={`text-[10.5px] font-cartoon font-bold truncate max-w-full ${
+                            isSelected || day.isToday ? ui.textSand : ui.textMuted
+                          }`}
+                        >
+                          {day.isToday && analyticsData.trendBars.length <= 7 ? 'Today' : day.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+
+              {/* Biggest Splurges */}
+              {analyticsData.topExpenses.length > 0 && (
+                <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
+                  <div className="flex items-center justify-between">
+                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Biggest Splurges</h4>
+                    <span className={`text-[11px] font-semibold ${ui.textMuted}`}>Tap to edit</span>
+                  </div>
+                  <div className="space-y-2">
+                    {analyticsData.topExpenses.map((tx, idx) => {
+                      const w = wallets.find((item) => item.id === tx.wallet_id);
+                      const { category: c, cleanNote } = resolveTxCategory(tx);
+                      const accent = getCategoryAccentColor(c, idx);
+                      return (
+                        <div
+                          key={tx.id}
+                          onClick={() => openEditTransaction(tx)}
+                          className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
+                              style={{ backgroundColor: accent }}
+                            >
+                              {c?.icon || '💸'}
+                            </span>
+                            <div className="min-w-0">
+                              <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
+                                {cleanNote || c?.name || 'Expense'}
+                              </p>
+                              <p className={`text-[11px] font-semibold truncate ${ui.textMuted}`}>
+                                {w?.name || 'Account'} · {formatDayGroupLabel(tx.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
+                            -{currencySymbol}
+                            {Number(tx.amount || 0).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1067,28 +1208,31 @@ export function InsightsTab({
       {/* SECTION 2: BREAKDOWN (Categories, Budgets, Accounts) */}
       {insightsView === 'breakdown' && (
         <div key="insights-breakdown" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
-          {/* Interactive SVG Category Donut + Breakdown */}
-          <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
-            <div className="flex items-center justify-between">
-              <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Where It Went</h4>
-              <span className={`text-[10px] font-semibold ${ui.textMuted}`}>Tap a slice to inspect</span>
-            </div>
+          {analyticsData.categoryBreakdown.length === 0 ? (
+            <EmptyStateCard
+              ui={ui}
+              icon="🍩"
+              title="No expenses to break down"
+              subtitle={`No expenses were recorded in ${analyticsData.windowLabel}. Try switching the timeframe above.`}
+            />
+          ) : (
+            <>
+              {/* Interactive SVG Category Donut + Breakdown */}
+              <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
+                <div className="flex items-center justify-between">
+                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Where It Went</h4>
+                  <span className={`text-[11px] font-semibold ${ui.textMuted}`}>Tap a slice to inspect</span>
+                </div>
 
-            {analyticsData.categoryBreakdown.length === 0 ? (
-              <p className={`text-xs py-4 text-center font-cartoon ${ui.textMuted}`}>
-                No expenses recorded in this timeframe.
-              </p>
-            ) : (
-              <>
                 <div className="flex items-center gap-4 py-1">
                   <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                    <svg className="w-28 h-28 -rotate-90" viewBox="0 0 112 112">
+                    <svg className="w-28 h-28 -rotate-90" viewBox="0 0 112 112" aria-label="Spending by category donut chart">
                       <circle
                         cx="56"
                         cy="56"
                         r={donutRadius}
                         fill="none"
-                        stroke={isDark ? '#181816' : '#D8CBB3'}
+                        stroke={isDark ? '#181816' : '#E2D9C6'}
                         strokeWidth="14"
                       />
                       {analyticsData.categoryBreakdown.map((item) => {
@@ -1136,7 +1280,7 @@ export function InsightsTab({
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className="w-3 h-3 rounded-full border border-[#111110] shrink-0"
+                          className={`w-3 h-3 rounded-full border shrink-0 ${ui.badgeBorder}`}
                           style={{ backgroundColor: activeDonutCat.color }}
                         />
                         <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
@@ -1147,7 +1291,7 @@ export function InsightsTab({
                         {currencySymbol}
                         {activeDonutCat.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                       </p>
-                      <div className={`text-[10px] font-semibold space-y-0.5 ${ui.textSecondary}`}>
+                      <div className={`text-[11px] font-semibold space-y-0.5 ${ui.textSecondary}`}>
                         <p>
                           {activeDonutCat.count} {activeDonutCat.count === 1 ? 'entry' : 'entries'} · Avg{' '}
                           {currencySymbol}
@@ -1171,6 +1315,7 @@ export function InsightsTab({
                       <button
                         key={item.id}
                         type="button"
+                        aria-pressed={isFocused}
                         onClick={() => {
                           playQuickChip();
                           setSelectedDonutCatId(item.id);
@@ -1181,13 +1326,13 @@ export function InsightsTab({
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span
-                            className="w-7 h-7 rounded-xl border-2 border-[#111110] flex items-center justify-center text-xs shrink-0"
+                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
                             style={{ backgroundColor: item.color }}
                           >
                             {item.icon}
                           </span>
                           <span className={`font-cartoon font-bold truncate ${ui.textPrimary}`}>{item.name}</span>
-                          <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({item.count})</span>
+                          <span className={`text-[11px] font-semibold ${ui.textMuted}`}>({item.count})</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 tabular-nums">
                           <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
@@ -1195,7 +1340,7 @@ export function InsightsTab({
                             {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                           </span>
                           <span
-                            className="text-[10px] px-2 py-0.5 rounded-lg border border-[#111110] font-cartoon font-bold text-[#1e1e1c]"
+                            className={`text-[10.5px] px-2 py-0.5 rounded-lg border font-cartoon font-bold text-[#1e1e1c] ${ui.badgeBorder}`}
                             style={{ backgroundColor: item.color }}
                           >
                             {item.pct}%
@@ -1205,80 +1350,80 @@ export function InsightsTab({
                     );
                   })}
                 </div>
-              </>
-            )}
-          </div>
-
-          {/* Category Budget Guardrails */}
-          {analyticsData.budgetedCategories.length > 0 && (
-            <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-              <div className="flex items-center justify-between">
-                <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Budget Guardrails</h4>
-                <span className={`text-[10px] font-cartoon font-bold tabular-nums ${ui.textSand}`}>
-                  {currencySymbol}
-                  {analyticsData.totalBudgetSpent.toLocaleString('en-IN')} / {currencySymbol}
-                  {analyticsData.totalBudgetLimit.toLocaleString('en-IN')}
-                </span>
               </div>
 
-              <div className="space-y-2.5">
-                {analyticsData.budgetedCategories.map((b) => (
-                  <div key={b.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs tabular-nums">
-                      <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                        {b.icon} {b.name}
-                      </span>
-                      <span className={`font-cartoon font-bold ${b.overBy > 0 ? 'text-[#F26B5B]' : ui.textPrimary}`}>
-                        {currencySymbol}
-                        {b.spent.toLocaleString('en-IN')} / {currencySymbol}
-                        {b.limit.toLocaleString('en-IN')} ({b.pct}%)
-                      </span>
-                    </div>
-                    <div className="w-full h-3 rounded-full overflow-hidden bg-[#181816] border-2 border-[#111110] p-0.5">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ios-spring ${
-                          b.pct >= 100
-                            ? 'bg-[#F26B5B]'
-                            : b.pct >= 80
-                            ? 'bg-[#F4B942]'
-                            : 'bg-[#52B788]'
-                        }`}
-                        style={{ width: `${Math.min(100, Math.max(6, b.pct))}%` }}
-                      />
-                    </div>
+              {/* Category Budget Guardrails */}
+              {analyticsData.budgetedCategories.length > 0 && (
+                <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
+                  <div className="flex items-center justify-between">
+                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Budget Guardrails</h4>
+                    <span className={`text-[11px] font-cartoon font-bold tabular-nums ${ui.textSand}`}>
+                      {currencySymbol}
+                      {analyticsData.totalBudgetSpent.toLocaleString('en-IN')} / {currencySymbol}
+                      {analyticsData.totalBudgetLimit.toLocaleString('en-IN')}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Account Share Breakdown */}
-          {analyticsData.walletBreakdown.length > 0 && (
-            <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
-              <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Account Share</h4>
-              <div className="space-y-2.5">
-                {analyticsData.walletBreakdown.map((w) => (
-                  <div key={w.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs tabular-nums">
-                      <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                        {w.icon} {w.name}
-                      </span>
-                      <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                        {currencySymbol}
-                        {w.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}{' '}
-                        <span className={`text-[10px] font-semibold ${ui.textMuted}`}>({w.pct}%)</span>
-                      </span>
-                    </div>
-                    <div className="w-full h-3 rounded-full overflow-hidden bg-[#181816] border-2 border-[#111110] p-0.5">
-                      <div
-                        className="h-full rounded-full transition-all duration-500 ios-spring"
-                        style={{ width: `${Math.max(6, w.pct)}%`, backgroundColor: w.color }}
-                      />
-                    </div>
+                  <div className="space-y-2.5">
+                    {analyticsData.budgetedCategories.map((b) => (
+                      <div key={b.id} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs tabular-nums">
+                          <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
+                            {b.icon} {b.name}
+                          </span>
+                          <span className={`font-cartoon font-bold ${b.overBy > 0 ? 'text-[#F26B5B]' : ui.textPrimary}`}>
+                            {currencySymbol}
+                            {b.spent.toLocaleString('en-IN')} / {currencySymbol}
+                            {b.limit.toLocaleString('en-IN')} ({b.pct}%)
+                          </span>
+                        </div>
+                        <div className={`w-full h-3 rounded-full overflow-hidden p-0.5 ${ui.trackBg}`}>
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ios-spring ${
+                              b.pct >= 100
+                                ? 'bg-[#F26B5B]'
+                                : b.pct >= 80
+                                ? 'bg-[#F4B942]'
+                                : 'bg-[#52B788]'
+                            }`}
+                            style={{ width: `${Math.min(100, Math.max(6, b.pct))}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+
+              {/* Account Share Breakdown */}
+              {analyticsData.walletBreakdown.length > 0 && (
+                <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
+                  <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Account Share</h4>
+                  <div className="space-y-2.5">
+                    {analyticsData.walletBreakdown.map((w) => (
+                      <div key={w.id} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs tabular-nums">
+                          <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
+                            {w.icon} {w.name}
+                          </span>
+                          <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
+                            {currencySymbol}
+                            {w.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}{' '}
+                            <span className={`text-[11px] font-semibold ${ui.textMuted}`}>({w.pct}%)</span>
+                          </span>
+                        </div>
+                        <div className={`w-full h-3 rounded-full overflow-hidden p-0.5 ${ui.trackBg}`}>
+                          <div
+                            className="h-full rounded-full transition-all duration-500 ios-spring"
+                            style={{ width: `${Math.max(6, w.pct)}%`, backgroundColor: w.color }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1287,90 +1432,105 @@ export function InsightsTab({
       {insightsView === 'habits' && (
         <div key="insights-habits" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
           {analyticsData.expenseCount === 0 ? (
-            <div className={`p-6 rounded-3xl text-center text-xs font-cartoon ${ui.card} ${ui.textMuted}`}>
-              Log a few expenses in this period to unlock spending habit patterns.
-            </div>
+            <EmptyStateCard
+              ui={ui}
+              icon="🧭"
+              title="No habit patterns yet"
+              subtitle="Log a few expenses in this period to reveal your peak spending days, time windows, and ticket sizes."
+            />
           ) : (
             <>
               {/* Pace & Ticket Metrics Strip */}
               <div className="grid grid-cols-3 gap-2">
                 <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
-                  <span className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
+                  <span className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                     🛡️ No-Spend
                   </span>
                   <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-1">
                     {analyticsData.noSpendDays} {analyticsData.noSpendDays === 1 ? 'Day' : 'Days'}
                   </p>
-                  <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>
+                  <span className={`text-[10.5px] font-semibold ${ui.textSecondary}`}>
                     {analyticsData.noSpendPct}% of period
                   </span>
                 </div>
 
                 <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
-                  <span className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
+                  <span className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                     🎯 Avg Spend
                   </span>
                   <p className={`text-base font-cartoon font-bold tabular-nums mt-1 ${ui.textSand}`}>
                     {currencySymbol}
                     {analyticsData.avgTicket.toLocaleString('en-IN')}
                   </p>
-                  <span className={`text-[10px] font-semibold tabular-nums ${ui.textSecondary}`}>
-                    Median {currencySymbol}
+                  <span className={`text-[10.5px] font-semibold tabular-nums ${ui.textSecondary}`}>
+                    Med {currencySymbol}
                     {analyticsData.medianTicket.toLocaleString('en-IN')}
                   </span>
                 </div>
 
                 <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
-                  <span className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
+                  <span className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                     ⚡ Frequency
                   </span>
                   <p className={`text-base font-cartoon font-bold tabular-nums mt-1 ${ui.textPrimary}`}>
                     {(analyticsData.expenseCount / Math.max(1, analyticsData.effectiveDays)).toFixed(1)}/d
                   </p>
-                  <span className={`text-[10px] font-semibold ${ui.textSecondary}`}>
+                  <span className={`text-[10.5px] font-semibold ${ui.textSecondary}`}>
                     {analyticsData.activeSpendDays} active days
                   </span>
                 </div>
               </div>
 
-              {/* Day-of-Week Heatmap (Mon–Sun) */}
+              {/* Interactive Day-of-Week Heatmap (Mon–Sun) */}
               <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div>
                     <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Day-of-Week Heatmap</h4>
-                    <p className={`text-[10px] font-semibold ${ui.textMuted}`}>
-                      Which days drain your wallet most
+                    <p className={`text-[11px] font-semibold ${ui.textMuted}`}>
+                      Tap any day to inspect details
                     </p>
                   </div>
                   {analyticsData.peakDow && analyticsData.peakDow.amount > 0 && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-cartoon font-bold bg-[#F4B942] text-[#1e1e1c] border border-[#111110]">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-cartoon font-bold bg-[#F4B942] text-[#1e1e1c] border ${ui.badgeBorder}`}
+                    >
                       Peak: {analyticsData.peakDow.label} ({analyticsData.peakDow.sharePct}%)
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-7 gap-1.5 pt-1">
+                <div className="grid grid-cols-7 gap-1.5 pt-0.5">
                   {analyticsData.dowBreakdown.map((d) => {
                     const isPeak = analyticsData.peakDow?.dayNum === d.dayNum && d.amount > 0;
+                    const isSelected = activeDowObj?.dayNum === d.dayNum;
                     return (
-                      <div
+                      <button
                         key={d.dayNum}
-                        className={`p-2 rounded-2xl border-2 border-[#111110] flex flex-col items-center gap-1 ${
-                          isPeak
-                            ? 'bg-[#F4B942] text-[#1e1e1c] shadow-[0_3px_0_#111110]'
+                        type="button"
+                        aria-pressed={isSelected}
+                        aria-label={`${d.label}: ${currencySymbol}${Math.round(d.amount)} across ${d.count} entries`}
+                        onClick={() => {
+                          playQuickChip();
+                          setSelectedDow(d.dayNum);
+                        }}
+                        className={`p-2 rounded-2xl flex flex-col items-center gap-1 transition-all duration-150 key-press ${
+                          isSelected
+                            ? `bg-[#F4B942] text-[#1e1e1c] ${ui.pillSelectedBorder}`
+                            : isPeak
+                            ? `bg-[#D8CBB3]/25 border border-[#F4B942]/70 ${ui.textPrimary}`
                             : ui.cardSubtle
                         }`}
                       >
                         <span
-                          className={`text-[10px] font-cartoon font-bold ${
-                            isPeak ? 'text-[#1e1e1c]' : ui.textSecondary
+                          className={`text-[10.5px] font-cartoon font-bold ${
+                            isSelected ? 'text-[#1e1e1c]' : ui.textSecondary
                           }`}
                         >
                           {d.label}
                         </span>
                         <span
-                          className={`text-[10px] font-cartoon font-bold tabular-nums ${
-                            isPeak ? 'text-[#1e1e1c]' : ui.textPrimary
+                          className={`text-[10.5px] font-cartoon font-bold tabular-nums ${
+                            isSelected ? 'text-[#1e1e1c]' : ui.textPrimary
                           }`}
                         >
                           {d.amount >= 1000
@@ -1378,68 +1538,123 @@ export function InsightsTab({
                             : Math.round(d.amount)}
                         </span>
                         <span
-                          className={`text-[8.5px] font-semibold ${
-                            isPeak ? 'text-[#1e1e1c]/80' : ui.textMuted
+                          className={`text-[10.5px] font-semibold ${
+                            isSelected ? 'text-[#1e1e1c]/80' : ui.textMuted
                           }`}
                         >
                           {d.count}x
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
+
+                {/* Interactive Selected-Day Tooltip Bar */}
+                {activeDowObj && (
+                  <div
+                    className={`px-3 py-2 rounded-2xl flex items-center justify-between text-[11px] font-semibold transition-all ${ui.cardSubtle}`}
+                  >
+                    <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
+                      {activeDowObj.label} Total:{' '}
+                      <span className={ui.textSand}>
+                        {currencySymbol}
+                        {Math.round(activeDowObj.amount).toLocaleString('en-IN')}
+                      </span>
+                    </span>
+                    <span className={`tabular-nums ${ui.textSecondary}`}>
+                      {activeDowObj.sharePct}% share · {activeDowObj.count}{' '}
+                      {activeDowObj.count === 1 ? 'entry' : 'entries'}
+                      {activeDowObj.count > 0
+                        ? ` (avg ${currencySymbol}${Math.round(
+                            activeDowObj.amount / activeDowObj.count
+                          ).toLocaleString('en-IN')})`
+                        : ''}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Time-of-Day Rhythm + Ticket Size Buckets */}
-              <div className={`p-4 rounded-3xl space-y-3.5 ${ui.card}`}>
+              {/* Interactive Time-of-Day Rhythm + Ticket Size Buckets */}
+              <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
                 <div className="flex items-center justify-between">
                   <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>
                     Time-of-Day &amp; Ticket Size
                   </h4>
-                  <span className={`text-[10px] font-semibold ${ui.textMuted}`}>Habit breakdown</span>
+                  <span className={`text-[11px] font-semibold ${ui.textMuted}`}>Tap card to inspect</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {analyticsData.timeOfDayBreakdown.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className={`p-2.5 rounded-2xl flex items-center justify-between ${ui.cardSubtle}`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span
-                          className="w-7 h-7 rounded-xl border border-[#111110] flex items-center justify-center text-xs shrink-0"
-                          style={{ backgroundColor: slot.color }}
-                        >
-                          {slot.icon}
-                        </span>
-                        <div className="min-w-0">
-                          <p className={`text-[11px] font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                            {slot.label}
-                          </p>
-                          <p className={`text-[9px] font-semibold ${ui.textMuted}`}>{slot.sub}</p>
+                  {analyticsData.timeOfDayBreakdown.map((slot) => {
+                    const isSelected = activeTimeSlotObj?.id === slot.id;
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => {
+                          playQuickChip();
+                          setSelectedTimeSlotId(slot.id);
+                        }}
+                        className={`p-2.5 rounded-2xl flex items-center justify-between text-left transition-all duration-150 key-press ${
+                          isSelected ? ui.cardElevated : ui.cardSubtle
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
+                            style={{ backgroundColor: slot.color }}
+                          >
+                            {slot.icon}
+                          </span>
+                          <div className="min-w-0">
+                            <p className={`text-[11px] font-cartoon font-bold truncate ${ui.textPrimary}`}>
+                              {slot.label}
+                            </p>
+                            <p className={`text-[10.5px] font-semibold ${ui.textMuted}`}>{slot.sub}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right shrink-0 tabular-nums">
-                        <p className={`text-[11px] font-cartoon font-bold ${ui.textSand}`}>{slot.pct}%</p>
-                        <p className={`text-[9px] font-semibold ${ui.textMuted}`}>{slot.count}x</p>
-                      </div>
-                    </div>
-                  ))}
+                        <div className="text-right shrink-0 tabular-nums">
+                          <p className={`text-[11px] font-cartoon font-bold ${ui.textSand}`}>{slot.pct}%</p>
+                          <p className={`text-[10.5px] font-semibold ${ui.textMuted}`}>{slot.count}x</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1">
+                {/* Interactive Selected Time-of-Day Detail Strip */}
+                {activeTimeSlotObj && (
+                  <div
+                    className={`px-3 py-2 rounded-2xl flex items-center justify-between text-[11px] font-semibold ${ui.cardSubtle}`}
+                  >
+                    <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
+                      {activeTimeSlotObj.icon} {activeTimeSlotObj.label} ({activeTimeSlotObj.sub})
+                    </span>
+                    <span className={`tabular-nums ${ui.textSand} font-cartoon font-bold`}>
+                      {currencySymbol}
+                      {Math.round(activeTimeSlotObj.amount).toLocaleString('en-IN')}
+                      {activeTimeSlotObj.count > 0
+                        ? ` · avg ${currencySymbol}${Math.round(
+                            activeTimeSlotObj.amount / activeTimeSlotObj.count
+                          ).toLocaleString('en-IN')}`
+                        : ''}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-3 gap-2 pt-0.5">
                   {Object.values(analyticsData.ticketBuckets).map((b) => (
                     <div
                       key={b.label}
                       className={`p-2.5 rounded-2xl text-center space-y-0.5 ${ui.cardSubtle}`}
                     >
-                      <p className={`text-[9.5px] font-cartoon font-bold ${ui.textSecondary}`}>
+                      <p className={`text-[10.5px] font-cartoon font-bold ${ui.textSecondary}`}>
                         {b.label}
                       </p>
                       <p className={`text-sm font-cartoon font-bold tabular-nums ${ui.textPrimary}`}>
-                        {b.count} <span className={`text-[10px] font-normal ${ui.textMuted}`}>txns</span>
+                        {b.count} <span className={`text-[10.5px] font-normal ${ui.textMuted}`}>txns</span>
                       </p>
-                      <p className="text-[10px] font-cartoon font-bold tabular-nums" style={{ color: b.color }}>
+                      <p className="text-[11px] font-cartoon font-bold tabular-nums" style={{ color: b.color }}>
                         {currencySymbol}
                         {Math.round(b.amount).toLocaleString('en-IN')}
                       </p>
@@ -1448,7 +1663,7 @@ export function InsightsTab({
                 </div>
               </div>
 
-              {/* Smart Pocket Insights (Clean Vertical Stack) */}
+              {/* Smart Pocket Insights */}
               {analyticsData.smartInsights.length > 0 && (
                 <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
                   <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Smart Takeaways</h4>
@@ -1458,14 +1673,16 @@ export function InsightsTab({
                         key={i}
                         className={`p-2.5 rounded-2xl flex items-center gap-2.5 ${ui.cardSubtle}`}
                       >
-                        <span className="w-8 h-8 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] flex items-center justify-center text-sm shrink-0">
+                        <span
+                          className={`w-8 h-8 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
+                        >
                           {ins.icon}
                         </span>
                         <div className="min-w-0">
                           <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
                             {ins.title}
                           </p>
-                          <p className={`text-[10px] font-medium leading-snug ${ui.textSecondary}`}>
+                          <p className={`text-[11px] font-medium leading-snug ${ui.textSecondary}`}>
                             {ins.detail}
                           </p>
                         </div>
@@ -1516,7 +1733,7 @@ export function SettingsTab({
         <div className="flex items-center justify-between">
           <div>
             <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
-            <p className={`text-[10px] font-medium ${ui.textMuted}`}>Select your preferred theme</p>
+            <p className={`text-[11px] font-medium ${ui.textMuted}`}>Select your preferred theme</p>
           </div>
           <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
             {[
@@ -1527,6 +1744,7 @@ export function SettingsTab({
               <button
                 key={m.id}
                 type="button"
+                aria-pressed={themePref === m.id}
                 onClick={() => {
                   if (themePref !== m.id) playQuickChip();
                   setThemePref(m.id);
@@ -1544,7 +1762,7 @@ export function SettingsTab({
         <div className={`pt-2.5 border-t-2 border-dashed flex items-center justify-between ${ui.divider}`}>
           <div>
             <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Sound Effects</p>
-            <p className={`text-[10px] font-medium ${ui.textMuted}`}>Tactile keypad pops &amp; chimes</p>
+            <p className={`text-[11px] font-medium ${ui.textMuted}`}>Tactile keypad pops &amp; chimes</p>
           </div>
           <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
             {[
@@ -1554,6 +1772,7 @@ export function SettingsTab({
               <button
                 key={String(opt.id)}
                 type="button"
+                aria-pressed={soundEnabled === opt.id}
                 onClick={() => onToggleSound(opt.id)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
                   soundEnabled === opt.id
@@ -1568,13 +1787,20 @@ export function SettingsTab({
         </div>
       </div>
 
-      <div className={`relative grid grid-cols-2 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}>
+      <div
+        role="tablist"
+        aria-label="Settings sections"
+        className={`relative grid grid-cols-2 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}
+      >
         <div
+          aria-hidden="true"
           className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
           style={{ transform: `translate3d(${settingsSubIndex * 100}%, 0, 0)` }}
         />
         <button
           type="button"
+          role="tab"
+          aria-selected={settingsSection === 'shortcut'}
           onClick={() => {
             if (settingsSection !== 'shortcut') playTabSwitch();
             setSettingsSection('shortcut');
@@ -1587,6 +1813,8 @@ export function SettingsTab({
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={settingsSection === 'budgets'}
           onClick={() => {
             if (settingsSection !== 'budgets') playTabSwitch();
             setSettingsSection('budgets');
@@ -1604,31 +1832,34 @@ export function SettingsTab({
           <div className={`p-4 rounded-2xl space-y-3 ${ui.card}`}>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>IOS Shortcut Installer</h3>
-                <p className={`text-[10px] font-medium ${ui.textMuted}`}>
+                <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>iOS Shortcut Installer</h3>
+                <p className={`text-[11px] font-medium ${ui.textMuted}`}>
                   Log from Lock Screen with double-tap on the back of your iPhone
                 </p>
               </div>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] font-cartoon font-bold">
+              <span
+                className={`text-[10.5px] px-2.5 py-0.5 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
+              >
                 iOS
               </span>
             </div>
 
             <div className="space-y-1">
-              <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
+              <label className={`text-[11px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                 Your Personal Shortcut URL
               </label>
               <div className="flex items-center gap-1.5">
                 <input
                   type="text"
                   readOnly
+                  aria-label="Personal Shortcut URL"
                   value={personalApiUrl}
-                  className={`flex-1 rounded-xl px-2.5 py-2 text-[11px] font-mono ${ui.input}`}
+                  className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-[16px] leading-snug font-mono ${ui.input}`}
                 />
                 <button
                   type="button"
                   onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
-                  className={`px-3 py-2 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
+                  className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
                 >
                   {copiedField === 'apiUrl' ? 'Copied!' : 'Copy'}
                 </button>
@@ -1644,7 +1875,9 @@ export function SettingsTab({
             </button>
 
             <div className={`pt-2 border-t-2 border-dashed space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
-              <p className={`font-cartoon font-bold ${ui.textPrimary}`}>Quick Setup (If you want it to be a Back tap Shortcut):</p>
+              <p className={`font-cartoon font-bold ${ui.textPrimary}`}>
+                Quick Setup (If you want it to be a Back Tap Shortcut):
+              </p>
               <ol className="list-decimal list-inside space-y-1 leading-relaxed font-medium">
                 <li>Tap the button above (your Personal URL copies automatically).</li>
                 <li>
@@ -1660,27 +1893,29 @@ export function SettingsTab({
           </div>
 
           <div className={`p-3.5 rounded-2xl space-y-1.5 ${ui.card}`}>
-            <label className={`text-[10px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
+            <label className={`text-[11px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
               Shortcut Security Token
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 readOnly
+                aria-label="Shortcut Security Token"
                 value={settings?.shortcut_token || ''}
-                className={`flex-1 rounded-xl px-3 py-1.5 text-xs font-mono ${ui.input}`}
+                className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-[16px] leading-snug font-mono ${ui.input}`}
               />
               <button
                 type="button"
                 onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
+                className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
               >
                 {copiedField === 'token' ? 'Copied!' : 'Copy'}
               </button>
               <button
                 type="button"
                 onClick={handleRegenerateToken}
-                className={`px-3 py-1.5 rounded-xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
+                aria-label="Regenerate Shortcut Security Token"
+                className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
                 title="Regenerate Token"
               >
                 ↻
@@ -1716,19 +1951,19 @@ export function SettingsTab({
                 <div
                   key={c.id}
                   onClick={() => openEditCategory(c)}
-                  className={`p-3 rounded-2xl space-y-2 cursor-pointer key-press ${ui.card}`}
+                  className={`p-3 rounded-2xl space-y-2 cursor-pointer key-press ${ui.listRow}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
-                        className="w-8 h-8 rounded-xl border-2 border-[#111110] flex items-center justify-center text-sm shrink-0"
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
                         style={{ backgroundColor: accent }}
                       >
                         {c.icon}
                       </span>
                       <div className="min-w-0">
                         <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>{c.name}</p>
-                        <p className={`text-[10px] font-semibold capitalize ${ui.textMuted}`}>
+                        <p className={`text-[11px] font-semibold capitalize ${ui.textMuted}`}>
                           {c.type} {budget > 0 ? `· ${pct}% of limit` : ''}
                         </p>
                       </div>
@@ -1747,16 +1982,17 @@ export function SettingsTab({
                       <button
                         type="button"
                         onClick={() => openEditCategory(c)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${ui.pillIdle}`}
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-cartoon font-bold key-press ${ui.pillIdle}`}
                       >
                         Edit
                       </button>
                       <button
                         type="button"
+                        aria-label={`Delete ${c.name} category`}
                         onClick={() => handleDeleteCategory(c.id)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-cartoon font-bold key-press ${
+                        className={`px-2 py-1 rounded-lg text-[10.5px] font-cartoon font-bold key-press ${
                           confirmDeleteId === c.id
-                            ? 'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110]'
+                            ? ui.dangerBtn
                             : `${ui.textMuted} hover:text-[#F26B5B]`
                         }`}
                       >
@@ -1765,7 +2001,7 @@ export function SettingsTab({
                     </div>
                   </div>
                   {budget > 0 && c.type === 'expense' && (
-                    <div className="w-full h-2.5 rounded-full overflow-hidden bg-[#181816] border border-[#111110] p-0.5">
+                    <div className={`w-full h-2.5 rounded-full overflow-hidden p-0.5 ${ui.trackBg}`}>
                       <div
                         className={`h-full rounded-full transition-all duration-500 ios-spring ${
                           pct >= 90 ? 'bg-[#F26B5B]' : pct >= 75 ? 'bg-[#F4B942]' : 'bg-[#52B788]'
@@ -1796,7 +2032,7 @@ export function SettingsTab({
           <button
             type="button"
             onClick={handleLogout}
-            className="px-3 py-1.5 rounded-full bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] text-xs font-cartoon font-bold key-press"
+            className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold key-press ${ui.dangerBtn}`}
           >
             Sign Out
           </button>

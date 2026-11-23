@@ -199,30 +199,50 @@ export function getUiTheme(isDark) {
   if (isDark) {
     return {
       bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
-      sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6]',
-      card: 'bg-[#282825] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
-      cardElevated:
-        'bg-[#30302c] border-2 border-[#111110] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      cardSubtle: 'bg-[#22221f] border-2 border-[#111110]/80',
+      sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6] shadow-[0_8px_0_#111110]',
+      sheetHandle: 'bg-[#D8CBB3]/35',
+      // Hero surfaces retain the signature chunky tactile outline + shadow
       heroCard: 'bg-[#282825] border-2 border-[#D8CBB3]/35 shadow-[0_5px_0_#111110]',
+      heroCardWarning: 'bg-[#282825] border-2 border-[#F26B5B]/70 shadow-[0_5px_0_#111110]',
+      walletCardHero: 'border-2 border-[#111110] shadow-[0_4px_0_#111110]',
+      // Secondary containers use softer borders & lighter elevation to reduce visual clutter
+      card: 'bg-[#262623] border border-[#3A3934] shadow-[0_2px_0_#141412]',
+      cardElevated:
+        'bg-[#30302c] border-[1.5px] border-[#4A473E] shadow-[0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      cardSubtle: 'bg-[#20201D] border border-[#32322D]',
+      listRow: 'bg-[#262623] border border-[#34342F] hover:bg-[#2C2C28]',
       input:
-        'bg-[#181816] border-2 border-[#111110] text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
+        'bg-[#181816] border-[1.5px] border-[#383732] focus-within:border-[#D8CBB3]/65 focus:border-[#D8CBB3]/65 text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.35)]',
       pillIdle:
-        'bg-[#282825] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_3px_0_#111110] active:shadow-none',
+        'bg-[#282825] border border-[#3D3C36] text-[#D8CBB3] shadow-[0_2px_0_#141412] active:shadow-none',
       pillActive:
         'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[0_3px_0_#111110] active:shadow-none',
+      pillSelectedBorder: 'border-2 border-[#111110] shadow-[0_3px_0_#111110]',
       numpadKey:
-        'bg-[#282825] border-2 border-[#111110] text-[#F5EFE6] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#30302c]',
+        'bg-[#2A2A27] border-[1.5px] border-[#111110] text-[#F5EFE6] shadow-[0_3px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#32322E]',
       numpadKeySpecial:
-        'bg-[#32302b] border-2 border-[#111110] text-[#D8CBB3] shadow-[0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        'bg-[#33312C] border-[1.5px] border-[#111110] text-[#D8CBB3] shadow-[0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
       segmentedBg:
-        'bg-[#161614] border-2 border-[#111110] shadow-[inset_0_2px_0_rgba(0,0,0,0.5)]',
-      segmentedThumb: 'bg-[#D8CBB3] border-2 border-[#111110] shadow-[0_2px_0_#111110]',
+        'bg-[#161614] border border-[#32322D] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
+      segmentedThumb: 'bg-[#D8CBB3] border-[1.5px] border-[#111110] shadow-[0_2px_0_#111110]',
       segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
+      // Semantic chart, progress & badge tokens
+      outline: 'border-[#111110]',
+      outlineSubtle: 'border-[#3A3934]',
+      badgeBorder: 'border-[#111110]',
+      iconBadge: 'border border-[#111110] shadow-[0_2px_0_#111110]',
+      trackBg: 'bg-[#161614] border border-[#34342F]',
+      trackActiveBg: 'bg-[#181816] border-[1.5px] border-[#D8CBB3]/70',
+      dashBorder: 'border-[#D8CBB3]/35',
+      toastBg: 'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
+      dangerBtn:
+        'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] active:shadow-none',
+      dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#F26B5B] border border-[#F26B5B]/40',
+      warningBanner: 'bg-[#F26B5B]/15 border border-[#F26B5B]/45 text-[#F26B5B]',
       textPrimary: 'text-[#F5EFE6]',
       textSand: 'text-[#D8CBB3]',
       textSecondary: 'text-[#B8AA93]',
-      textMuted: 'text-[#877D6E]',
+      textMuted: 'text-[#968C7C]',
       islandBar: 'cartoon-dock-dark',
       islandLens: 'cartoon-pill-lens-dark',
       islandTextActive: 'text-[#1e1e1c]',
@@ -240,39 +260,61 @@ export function getUiTheme(isDark) {
 
   return {
     bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
-    sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c]',
-    card: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
-    cardElevated:
-      'bg-[#FFFFFF] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    cardSubtle: 'bg-[#E5DEC9] border-2 border-[#1e1e1c]',
+    sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_8px_0_rgba(30,30,28,0.22)]',
+    sheetHandle: 'bg-[#1e1e1c]/20',
+    // Hero surfaces retain the signature tactile Charcoal & Sand weight
     heroCard: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] shadow-[0_5px_0_#1e1e1c]',
-    input: 'bg-[#FFFFFF] border-2 border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
+    heroCardWarning: 'bg-[#FAF6EE] border-2 border-[#D94F3D] shadow-[0_5px_0_#D94F3D]',
+    walletCardHero: 'border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
+    // Secondary containers feel light, native, and cohesive in Light mode
+    card: 'bg-[#FAF6EE] border border-[#1e1e1c]/18 shadow-[0_2px_0_rgba(30,30,28,0.1)]',
+    cardElevated:
+      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/35 shadow-[0_3px_0_rgba(30,30,28,0.16)] active:shadow-[0_1px_0_rgba(30,30,28,0.16)]',
+    cardSubtle: 'bg-[#E8E0D0]/75 border border-[#1e1e1c]/12',
+    listRow: 'bg-[#FAF6EE] border border-[#1e1e1c]/14 hover:bg-[#FFFFFF]',
+    input:
+      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/25 focus-within:border-[#1e1e1c] focus:border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
     pillIdle:
-      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
+      'bg-[#FAF6EE] border border-[#1e1e1c]/22 text-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.12)] active:shadow-none',
     pillActive:
-      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#524E46] active:shadow-none',
+      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#6B655B] active:shadow-none',
+    pillSelectedBorder: 'border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c]',
     numpadKey:
-      'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      'bg-[#FAF6EE] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c] hover:bg-[#FFFFFF]',
     numpadKeySpecial:
-      'bg-[#D8CBB3] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    segmentedBg: 'bg-[#D8CBB3] border-2 border-[#1e1e1c]',
-    segmentedThumb: 'bg-[#1e1e1c] border-2 border-[#1e1e1c]',
+      'bg-[#E4DBCA] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    segmentedBg:
+      'bg-[#E2D9C6] border border-[#1e1e1c]/18 shadow-[inset_0_1px_2px_rgba(30,30,28,0.1)]',
+    segmentedThumb: 'bg-[#1e1e1c] border-[1.5px] border-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.22)]',
     segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
+    // Semantic chart, progress & badge tokens
+    outline: 'border-[#1e1e1c]',
+    outlineSubtle: 'border-[#1e1e1c]/20',
+    badgeBorder: 'border-[#1e1e1c]/70',
+    iconBadge: 'border border-[#1e1e1c]/75 shadow-[0_2px_0_rgba(30,30,28,0.2)]',
+    trackBg: 'bg-[#E2D9C6] border border-[#1e1e1c]/20',
+    trackActiveBg: 'bg-[#EFE7DA] border-[1.5px] border-[#1e1e1c]',
+    dashBorder: 'border-[#1e1e1c]/30',
+    toastBg: 'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#6B655B]',
+    dangerBtn:
+      'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
+    dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#B83224] border border-[#D94F3D]/40',
+    warningBanner: 'bg-[#F26B5B]/15 border border-[#D94F3D]/45 text-[#B83224]',
     textPrimary: 'text-[#1e1e1c]',
     textSand: 'text-[#1e1e1c]',
     textSecondary: 'text-[#524E46]',
-    textMuted: 'text-[#7A7367]',
+    textMuted: 'text-[#6E675C]',
     islandBar: 'cartoon-dock-light',
     islandLens: 'cartoon-pill-lens-light',
     islandTextActive: 'text-[#D8CBB3]',
     islandTextIdle: 'text-[#524E46]',
     primaryBtnExpense:
-      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#524E46] active:shadow-[0_1px_0_#524E46]',
+      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#6B655B] active:shadow-[0_1px_0_#6B655B]',
     primaryBtnIncome:
       'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
     primaryBtnTransfer:
       'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    divider: 'border-[#1e1e1c]/20',
+    divider: 'border-[#1e1e1c]/18',
     stickyHeader: 'bg-[#EFE7DA]'
   };
 }

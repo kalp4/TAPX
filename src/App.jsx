@@ -9,7 +9,6 @@ import {
   CACHE_KEY,
   THEME_KEY,
   SOUND_KEY,
-  BUDGET_CLEANUP_KEY,
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
   getUiTheme
@@ -75,10 +74,11 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="h-full w-full bg-[#1e1e1c] text-[#D8CBB3] flex flex-col items-center justify-center p-6 max-w-md mx-auto text-center space-y-4 overflow-hidden">
           <p className="text-base font-cartoon font-bold text-[#F5EFE6]">Oops! Something tripped up</p>
-          <p className="text-xs text-[#F26B5B] bg-[#282825] border-2 border-[#111110] p-3 rounded-2xl font-mono break-all shadow-[0_4px_0_#111110]">
+          <p className="text-xs text-[#F26B5B] bg-[#282825] border border-[#3A3934] p-3 rounded-2xl font-mono break-all shadow-[0_3px_0_#111110]">
             {this.state.errorMessage}
           </p>
           <button
+            type="button"
             onClick={() => window.location.reload()}
             className="px-5 py-2.5 rounded-2xl bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110] text-xs font-bold key-press"
           >
@@ -548,15 +548,6 @@ function TapxMainApp() {
         let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
         let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
         let fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
-
-        const alreadyCleanedBudgets = localStorage.getItem(BUDGET_CLEANUP_KEY);
-        if (!alreadyCleanedBudgets && fetchedCategories.some((c) => c.monthly_budget !== null)) {
-          await supabase.from('categories').update({ monthly_budget: null }).eq('user_id', userId);
-          fetchedCategories = fetchedCategories.map((c) => ({ ...c, monthly_budget: null }));
-          localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
-        } else if (!alreadyCleanedBudgets) {
-          localStorage.setItem(BUDGET_CLEANUP_KEY, 'true');
-        }
 
         if (!seedingRef.current) {
           seedingRef.current = true;
@@ -1583,7 +1574,7 @@ function TapxMainApp() {
     return (
       <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
         <TapxLogo className="w-20 h-20 animate-bounce" />
-        <div className="w-6 h-6 rounded-full border-3 border-[#D8CBB3] border-t-transparent animate-spin" />
+        <div className="w-6 h-6 rounded-full border-[3px] border-[#D8CBB3] border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -1603,37 +1594,22 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)'
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)'
       }}
     >
-      <style>{`
-        @media screen and (max-width: 768px) {
-          input, select, textarea {
-            font-size: 16px !important;
-          }
-        }
-        @keyframes sheetSlideUp {
-          0% { opacity: 0; transform: translate3d(0, 100%, 0); }
-          100% { opacity: 1; transform: translate3d(0, 0, 0); }
-        }
-        .animate-sheet-up {
-          animation: sheetSlideUp 280ms cubic-bezier(0.34, 1.35, 0.64, 1) forwards;
-        }
-      `}</style>
-
       {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
-          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold border-2 border-[#111110] shadow-[0_4px_0_#111110] flex items-center gap-3 animate-tab ${
-            isDark ? 'bg-[#D8CBB3] text-[#1e1e1c]' : 'bg-[#1e1e1c] text-[#D8CBB3]'
-          }`}
+          role="status"
+          aria-live="polite"
+          className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold flex items-center gap-3 animate-tab ${ui.toastBg}`}
         >
           <span>{toast.message}</span>
           {toast.onUndo && (
             <button
               type="button"
               onClick={toast.onUndo}
-              className="px-2.5 py-0.5 rounded-full bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] font-bold text-[11px] key-press"
+              className={`px-2.5 py-0.5 rounded-full bg-[#F4B942] text-[#1e1e1c] border font-bold text-[11px] key-press ${ui.badgeBorder}`}
             >
               Undo
             </button>
@@ -1642,7 +1618,10 @@ function TapxMainApp() {
       )}
 
       {dbError && (
-        <div className="relative z-10 mx-5 mt-1 p-2.5 rounded-2xl bg-[#F26B5B]/20 border-2 border-[#F26B5B] text-[#F26B5B] text-xs font-bold flex items-center justify-between shrink-0">
+        <div
+          role="alert"
+          className={`relative z-10 mx-5 mt-1 p-2.5 rounded-2xl text-xs font-bold flex items-center justify-between shrink-0 ${ui.warningBanner}`}
+        >
           <span className="truncate">{dbError}</span>
           <button
             type="button"
@@ -1656,31 +1635,46 @@ function TapxMainApp() {
 
       {/* Top Header */}
       <header className="relative z-10 px-5 pt-0.5 pb-1.5 flex items-center justify-between shrink-0">
-        <div onClick={() => handleSelectTab('wallets')} className="cursor-pointer group">
+        <button
+          type="button"
+          onClick={() => handleSelectTab('wallets')}
+          aria-label="View accounts and total balance"
+          className="cursor-pointer group text-left"
+        >
           <div className="flex items-center gap-2">
             <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
               Total Balance
             </span>
             {!isOnline ? (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#F4B942] text-[#1e1e1c] border border-[#111110] flex items-center gap-1">
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#F4B942] text-[#1e1e1c] border flex items-center gap-1 ${ui.badgeBorder}`}
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1e1e1c]" />
                 Offline{offlineQueue.length > 0 ? ` · ${offlineQueue.length}` : ''}
               </span>
             ) : offlineQueue.length > 0 ? (
-              <button
-                type="button"
+              <span
+                role="button"
+                tabIndex={0}
                 onClick={(e) => {
                   e.stopPropagation();
                   flushOfflineQueue(session.user.id);
                 }}
-                className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#5C9EAD] text-[#1e1e1c] border border-[#111110] flex items-center gap-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.stopPropagation();
+                    flushOfflineQueue(session.user.id);
+                  }
+                }}
+                className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#5C9EAD] text-[#1e1e1c] border flex items-center gap-1 ${ui.badgeBorder}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1e1e1c] animate-ping" />
                 Syncing {offlineQueue.length}
-              </button>
+              </span>
             ) : (
               <span
-                className={`w-2.5 h-2.5 rounded-full border border-[#111110] transition-colors duration-300 ${
+                aria-label={isSyncingBg ? 'Syncing with cloud' : 'Connected and synced'}
+                className={`w-2.5 h-2.5 rounded-full border transition-colors duration-300 ${ui.badgeBorder} ${
                   isSyncingBg ? 'bg-[#F4B942] animate-pulse' : 'bg-[#52B788]'
                 }`}
               />
@@ -1690,7 +1684,7 @@ function TapxMainApp() {
             {currencySymbol}
             {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </h2>
-        </div>
+        </button>
 
         <button
           type="button"
@@ -1699,17 +1693,18 @@ function TapxMainApp() {
             resetWalletModal();
             setShowWalletModal(true);
           }}
+          aria-label="Add new account"
           className={`px-3.5 py-2 rounded-2xl text-xs font-cartoon font-bold key-press ${ui.pillActive}`}
         >
           + Account
         </button>
       </header>
 
-      {/* MAIN VIEWPORT (Flush bottom padding matching tight dock position) */}
+      {/* MAIN VIEWPORT (Safe-area aware spacing above floating dock) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom), 4px) + 74px)'
+          paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 8px) + 74px)'
         }}
       >
         {activeTab === 'pad' && (
@@ -1908,15 +1903,17 @@ function TapxMainApp() {
         />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR (Anchored flush at bottom) */}
+      {/* CHUNKY CARTOON DOCK BAR (Safe-area aware with spring scrubbing) */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
-          bottom: 'max(env(safe-area-inset-bottom), 4px)'
+          bottom: 'max(env(safe-area-inset-bottom, 0px), 8px)'
         }}
       >
         <nav
           ref={navBarRef}
+          role="tablist"
+          aria-label="Primary navigation"
           onPointerDown={handleNavPointerDown}
           onPointerMove={handleNavPointerMove}
           onPointerUp={handleNavPointerUpOrCancel}
@@ -1926,6 +1923,7 @@ function TapxMainApp() {
           } ${ui.islandBar}`}
         >
           <div
+            aria-hidden="true"
             className={`absolute top-[5px] bottom-[5px] left-[5px] w-[calc(25%-2.5px)] rounded-full pointer-events-none z-20 ${ui.islandLens}`}
             style={{
               transition:
@@ -1948,6 +1946,9 @@ function TapxMainApp() {
               <button
                 key={item.id}
                 type="button"
+                role="tab"
+                aria-selected={active}
+                aria-label={item.label}
                 onClick={() => handleSelectTab(item.id)}
                 className={`relative z-30 h-full flex flex-col items-center justify-center gap-[2px] rounded-full transition-colors duration-200 ${
                   active ? ui.islandTextActive : ui.islandTextIdle
