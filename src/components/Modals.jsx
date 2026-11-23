@@ -357,6 +357,10 @@ export function LoginScreen({ ui, savedAccounts, onGoogleLogin, onRemoveSavedAcc
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)'
       }}
     >
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 top-0 h-72 z-0 ${ui.ambientGlow}`}
+      />
       <div />
 
       <div className="relative z-10 flex flex-col items-center text-center space-y-3">
@@ -735,6 +739,8 @@ export function EditTransactionModal({
   currencySymbol,
   editTxAmount,
   setEditTxAmount,
+  editTxDate,
+  setEditTxDate,
   editTxWalletId,
   setEditTxWalletId,
   editTxToWalletId,
@@ -809,7 +815,22 @@ export function EditTransactionModal({
             </div>
             <div className="space-y-1">
               <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Account
+                Date
+              </label>
+              <input
+                type="date"
+                value={editTxDate}
+                onChange={(e) => setEditTxDate(e.target.value)}
+                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+                {editingTx.type === 'transfer' ? 'From Account' : 'Account'}
               </label>
               <select
                 value={editTxWalletId}
@@ -823,47 +844,47 @@ export function EditTransactionModal({
                 ))}
               </select>
             </div>
-          </div>
 
-          {editingTx.type === 'transfer' ? (
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                To Account
-              </label>
-              <select
-                value={editTxToWalletId}
-                onChange={(e) => setEditTxToWalletId(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-              >
-                {wallets
-                  .filter((w) => w.id !== editTxWalletId)
-                  .map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.icon} {w.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Category
-              </label>
-              <select
-                value={editTxCategoryId}
-                onChange={(e) => setEditTxCategoryId(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-              >
-                {categories
-                  .filter((c) => c.type === editingTx.type)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.icon} {c.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          )}
+            {editingTx.type === 'transfer' ? (
+              <div className="space-y-1">
+                <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+                  To Account
+                </label>
+                <select
+                  value={editTxToWalletId}
+                  onChange={(e) => setEditTxToWalletId(e.target.value)}
+                  className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+                >
+                  {wallets
+                    .filter((w) => w.id !== editTxWalletId)
+                    .map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.icon} {w.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+                  Category
+                </label>
+                <select
+                  value={editTxCategoryId}
+                  onChange={(e) => setEditTxCategoryId(e.target.value)}
+                  className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+                >
+                  {categories
+                    .filter((c) => c.type === editingTx.type)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.icon} {c.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+          </div>
 
           <div className="space-y-1">
             <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>

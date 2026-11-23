@@ -9,6 +9,7 @@ import {
   CACHE_KEY,
   THEME_KEY,
   SOUND_KEY,
+  PRIVACY_KEY,
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
   getUiTheme
@@ -51,6 +52,31 @@ import {
   InsightsTab,
   SettingsTab
 } from './components/Tabs';
+
+function getTodayDateString() {
+  return new Date().toLocaleDateString('en-CA');
+}
+
+function buildIsoForLocalDate(dateStr, referenceIso = null) {
+  const todayStr = getTodayDateString();
+  if (!dateStr || (!referenceIso && dateStr === todayStr)) {
+    return new Date().toISOString();
+  }
+  const refDate = referenceIso ? new Date(referenceIso) : new Date();
+  const validRef = !isNaN(refDate.getTime()) ? refDate : new Date();
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return new Date().toISOString();
+  const combined = new Date(
+    y,
+    m - 1,
+    d,
+    validRef.getHours(),
+    validRef.getMinutes(),
+    validRef.getSeconds(),
+    0
+  );
+  return combined.toISOString();
+}
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -127,6 +153,25 @@ function TapxMainApp() {
   const flushingQueueRef = useRef(false);
 
   const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
+  const [privacyMode, setPrivacyMode] = useState(() => {
+    try {
+      return localStorage.getItem(PRIVACY_KEY) === 'on';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleTogglePrivacy = useCallback(() => {
+    playQuickChip();
+    setPrivacyMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(PRIVACY_KEY, next ? 'on' : 'off');
+      } catch {}
+      return next;
+    });
+  }, []);
+
   const [soundEnabled, setSoundEnabledState] = useState(() => {
     try {
       return localStorage.getItem(SOUND_KEY) !== 'off';
@@ -200,7 +245,7 @@ function TapxMainApp() {
     d.setDate(1);
     return d.toLocaleDateString('en-CA');
   });
-  const [customEndDate, setCustomEndDate] = useState(() => new Date().toLocaleDateString('en-CA'));
+  const [customEndDate, setCustomEndDate] = useState(() => getTodayDateString());
   const [selectedBarIdx, setSelectedBarIdx] = useState(6);
   const [selectedDonutCatId, setSelectedDonutCatId] = useState(null);
   const [amountPulse, setAmountPulse] = useState(false);
@@ -317,6 +362,7 @@ function TapxMainApp() {
   // Quick Pad Entry State
   const [entryType, setEntryType] = useState('expense');
   const [amountStr, setAmountStr] = useState('0');
+  const [entryDate, setEntryDate] = useState(() => getTodayDateString());
   const [selectedWalletId, setSelectedWalletId] = useState(cachedData?.wallets?.[0]?.id || '');
   const [toWalletId, setToWalletId] = useState(cachedData?.wallets?.[1]?.id || '');
   const [selectedCategoryId, setSelectedCategoryId] = useState(
@@ -349,6 +395,7 @@ function TapxMainApp() {
 
   const [editingTx, setEditingTx] = useState(null);
   const [editTxAmount, setEditTxAmount] = useState('');
+  const [editTxDate, setEditTxDate] = useState('');
   const [editTxNote, setEditTxNote] = useState('');
   const [editTxWalletId, setEditTxWalletId] = useState('');
   const [editTxToWalletId, setEditTxToWalletId] = useState('');
@@ -805,6 +852,23 @@ function TapxMainApp() {
     });
   };
 
+  const handleApplySmartPreset = useCallback(
+    (preset) => {
+      if (!preset) return;
+      playQuickChip();
+      triggerAmountPulse();
+      setAmountStr(String(preset.amount));
+      setNote(preset.note || '');
+      if (preset.categoryId && categories.some((c) => c.id === preset.categoryId)) {
+        setSelectedCategoryId(preset.categoryId);
+      }
+      if (preset.walletId && wallets.some((w) => w.id === preset.walletId)) {
+        setSelectedWalletId(preset.walletId);
+      }
+    },
+    [categories, wallets, triggerAmountPulse]
+  );
+
   const handleSwapTransferWallets = () => {
     if (!selectedWalletId || !toWalletId) return;
     playQuickChip();
@@ -875,7 +939,7 @@ function TapxMainApp() {
         ? Number(toWalletObj.balance || 0) + numericAmount
         : null;
 
-    const nowIso = new Date().toISOString();
+    const createdAtIso = buildIsoForLocalDate(entryDate);
     const tempId = `temp-${Date.now()}`;
     const insertPayload = {
       user_id: session.user.id,
@@ -886,13 +950,17 @@ function TapxMainApp() {
       amount: numericAmount,
       note: cleanNote,
       source: 'app',
-      created_at: nowIso
+      created_at: createdAtIso
     };
 
     const currentlyOffline = typeof navigator !== 'undefined' && !navigator.onLine;
     const optimisticTx = { id: tempId, ...insertPayload, pendingSync: currentlyOffline };
 
-    setTransactions((prev) => [optimisticTx, ...prev]);
+    setTransactions((prev) =>
+      [optimisticTx, ...prev].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+    );
     setWallets((prev) =>
       prev.map((w) => {
         if (w.id === fromId) return { ...w, balance: expectedFromBalance };
@@ -903,8 +971,10 @@ function TapxMainApp() {
       })
     );
 
+    const loggedOnDifferentDay = entryDate && entryDate !== getTodayDateString();
     setAmountStr('0');
     setNote('');
+    setEntryDate(getTodayDateString());
     playSuccess(currentType);
 
     const enqueueOfflineItem = () => {
@@ -928,7 +998,10 @@ function TapxMainApp() {
     }
 
     const actionPrefix = currentType === 'income' ? '+' : currentType === 'expense' ? '-' : '⇄ ';
-    showToast(`${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged!`);
+    const daySuffix = loggedOnDifferentDay ? ` (${formatDayGroupLabel(createdAtIso)})` : '';
+    showToast(
+      `${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged${daySuffix}!`
+    );
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
@@ -964,7 +1037,11 @@ function TapxMainApp() {
     }
 
     if (insertedRow) {
-      setTransactions((prev) => prev.map((tx) => (tx.id === tempId ? insertedRow : tx)));
+      setTransactions((prev) =>
+        prev
+          .map((tx) => (tx.id === tempId ? insertedRow : tx))
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      );
     }
   };
 
@@ -1061,8 +1138,14 @@ function TapxMainApp() {
       (tagCategoryName && findMatchingCategoryObj(tagCategoryName, categories)) ||
       categories.find((c) => c.id === tx.category_id);
 
+    const txDateObj = tx.created_at ? new Date(tx.created_at) : new Date();
+    const txDateStr = !isNaN(txDateObj.getTime())
+      ? txDateObj.toLocaleDateString('en-CA')
+      : getTodayDateString();
+
     setEditingTx(tx);
     setEditTxAmount(String(tx.amount ?? ''));
+    setEditTxDate(txDateStr);
     setEditTxNote(cleanNote || '');
     setEditTxWalletId(tx.wallet_id || wallets[0]?.id || '');
     setEditTxToWalletId(tx.to_wallet_id || wallets[1]?.id || '');
@@ -1085,6 +1168,13 @@ function TapxMainApp() {
     const nextWalletId = editTxWalletId || oldTx.wallet_id;
     const nextToWalletId = oldTx.type === 'transfer' ? editTxToWalletId : null;
     const nextCategoryId = oldTx.type === 'transfer' ? null : editTxCategoryId || null;
+
+    const oldDateObj = oldTx.created_at ? new Date(oldTx.created_at) : new Date();
+    const oldDateStr = !isNaN(oldDateObj.getTime()) ? oldDateObj.toLocaleDateString('en-CA') : '';
+    const nextCreatedAt =
+      editTxDate && editTxDate !== oldDateStr
+        ? buildIsoForLocalDate(editTxDate, oldTx.created_at)
+        : oldTx.created_at;
 
     if (oldTx.type === 'transfer' && nextWalletId === nextToWalletId) {
       playError();
@@ -1125,18 +1215,21 @@ function TapxMainApp() {
     );
 
     setTransactions((prev) =>
-      prev.map((t) =>
-        t.id === oldTx.id
-          ? {
-              ...t,
-              amount: newAmt,
-              note: cleanNote,
-              wallet_id: nextWalletId,
-              to_wallet_id: nextToWalletId,
-              category_id: nextCategoryId
-            }
-          : t
-      )
+      prev
+        .map((t) =>
+          t.id === oldTx.id
+            ? {
+                ...t,
+                amount: newAmt,
+                note: cleanNote,
+                wallet_id: nextWalletId,
+                to_wallet_id: nextToWalletId,
+                category_id: nextCategoryId,
+                created_at: nextCreatedAt
+              }
+            : t
+        )
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     );
 
     setEditingTx(null);
@@ -1151,7 +1244,8 @@ function TapxMainApp() {
           note: cleanNote,
           wallet_id: nextWalletId,
           to_wallet_id: nextToWalletId,
-          category_id: nextCategoryId
+          category_id: nextCategoryId,
+          created_at: nextCreatedAt
         })
         .eq('id', oldTx.id);
 
@@ -1403,6 +1497,46 @@ function TapxMainApp() {
     [categories]
   );
 
+  // Smart Repeat Presets derived from frequent/recent entries matching current entryType
+  const smartRepeatPresets = useMemo(() => {
+    if (entryType === 'transfer') return [];
+    const counts = new Map();
+
+    transactions.slice(0, 120).forEach((tx, index) => {
+      if (tx.type !== entryType) return;
+      const amt = Number(tx.amount) || 0;
+      if (amt <= 0) return;
+      const { category: c, cleanNote } = resolveTxCategory(tx);
+      const label = cleanNote || c?.name || '';
+      if (!label) return;
+
+      const key = `${c?.id || 'none'}|${label.toLowerCase()}|${amt}`;
+      const existing = counts.get(key);
+      // Weight recency + repeat frequency
+      const recencyBoost = Math.max(0, 1 - index / 120);
+      if (existing) {
+        existing.count += 1;
+        existing.score += 1.4 + recencyBoost;
+      } else {
+        counts.set(key, {
+          key,
+          label,
+          note: cleanNote || '',
+          amount: amt,
+          icon: c?.icon || (entryType === 'income' ? '💰' : '💸'),
+          categoryId: c?.id || tx.category_id || '',
+          walletId: tx.wallet_id || '',
+          count: 1,
+          score: 1 + recencyBoost
+        });
+      }
+    });
+
+    return Array.from(counts.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4);
+  }, [transactions, entryType, resolveTxCategory]);
+
   const visibleTransactions = useMemo(() => {
     const q = activitySearch.trim().toLowerCase();
     return transactions
@@ -1597,6 +1731,12 @@ function TapxMainApp() {
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)'
       }}
     >
+      {/* Subtle Top Atmospheric Glow */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 top-0 h-64 z-0 ${ui.ambientGlow}`}
+      />
+
       {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
@@ -1634,17 +1774,16 @@ function TapxMainApp() {
       )}
 
       {/* Top Header */}
-      <header className="relative z-10 px-5 pt-0.5 pb-1.5 flex items-center justify-between shrink-0">
-        <button
-          type="button"
-          onClick={() => handleSelectTab('wallets')}
-          aria-label="View accounts and total balance"
-          className="cursor-pointer group text-left"
-        >
+      <header className="relative z-10 px-5 pt-0.5 pb-1.5 flex items-center justify-between gap-2 shrink-0">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
+            <button
+              type="button"
+              onClick={() => handleSelectTab('wallets')}
+              className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}
+            >
               Total Balance
-            </span>
+            </button>
             {!isOnline ? (
               <span
                 className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#F4B942] text-[#1e1e1c] border flex items-center gap-1 ${ui.badgeBorder}`}
@@ -1653,24 +1792,14 @@ function TapxMainApp() {
                 Offline{offlineQueue.length > 0 ? ` · ${offlineQueue.length}` : ''}
               </span>
             ) : offlineQueue.length > 0 ? (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  flushOfflineQueue(session.user.id);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.stopPropagation();
-                    flushOfflineQueue(session.user.id);
-                  }
-                }}
+              <button
+                type="button"
+                onClick={() => flushOfflineQueue(session.user.id)}
                 className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#5C9EAD] text-[#1e1e1c] border flex items-center gap-1 ${ui.badgeBorder}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1e1e1c] animate-ping" />
                 Syncing {offlineQueue.length}
-              </span>
+              </button>
             ) : (
               <span
                 aria-label={isSyncingBg ? 'Syncing with cloud' : 'Connected and synced'}
@@ -1680,11 +1809,49 @@ function TapxMainApp() {
               />
             )}
           </div>
-          <h2 className={`text-[28px] leading-tight font-cartoon font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
-            {currencySymbol}
-            {Number(totalNetWorth || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </h2>
-        </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleSelectTab('wallets')}
+              aria-label="Open accounts tab"
+              className={`text-[28px] leading-tight font-cartoon font-bold tracking-tight tabular-nums text-left ${ui.textPrimary}`}
+            >
+              {privacyMode
+                ? `${currencySymbol}•••••`
+                : `${currencySymbol}${Number(totalNetWorth || 0).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2
+                  })}`}
+            </button>
+            <button
+              type="button"
+              onClick={handleTogglePrivacy}
+              aria-label={privacyMode ? 'Show balances' : 'Hide balances'}
+              aria-pressed={privacyMode}
+              title={privacyMode ? 'Show balances' : 'Hide balances'}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 key-press ${ui.pillIdle}`}
+            >
+              {privacyMode ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
+                  />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
 
         <button
           type="button"
@@ -1694,13 +1861,13 @@ function TapxMainApp() {
             setShowWalletModal(true);
           }}
           aria-label="Add new account"
-          className={`px-3.5 py-2 rounded-2xl text-xs font-cartoon font-bold key-press ${ui.pillActive}`}
+          className={`px-3.5 py-2 rounded-2xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillActive}`}
         >
           + Account
         </button>
       </header>
 
-      {/* MAIN VIEWPORT (Safe-area aware spacing above floating dock) */}
+      {/* MAIN VIEWPORT */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
@@ -1712,8 +1879,12 @@ function TapxMainApp() {
             key="tab-pad"
             ui={ui}
             tabAnimClass={tabAnimClass}
+            privacyMode={privacyMode}
             entryType={entryType}
             setEntryType={setEntryType}
+            entryDate={entryDate}
+            setEntryDate={setEntryDate}
+            todayDateStr={getTodayDateString()}
             categories={categories}
             setSelectedCategoryId={setSelectedCategoryId}
             amountStr={amountStr}
@@ -1724,6 +1895,8 @@ function TapxMainApp() {
             note={note}
             setNote={setNote}
             noteInputRef={noteInputRef}
+            smartRepeatPresets={smartRepeatPresets}
+            onApplySmartPreset={handleApplySmartPreset}
             selectedWalletObj={selectedWalletObj}
             wallets={wallets}
             selectedWalletId={selectedWalletId}
@@ -1756,6 +1929,7 @@ function TapxMainApp() {
             key="tab-wallets"
             ui={ui}
             isDark={isDark}
+            privacyMode={privacyMode}
             tabAnimClass={tabAnimClass}
             wallets={wallets}
             currencySymbol={currencySymbol}
@@ -1774,7 +1948,6 @@ function TapxMainApp() {
               setShowWalletModal(true);
             }}
             openEditTransaction={openEditTransaction}
-            handleDeleteTransaction={handleDeleteTransaction}
           />
         )}
 
@@ -1783,6 +1956,7 @@ function TapxMainApp() {
             key="tab-analytics"
             ui={ui}
             isDark={isDark}
+            privacyMode={privacyMode}
             tabAnimClass={tabAnimClass}
             analyticsRange={analyticsRange}
             setAnalyticsRange={setAnalyticsRange}
@@ -1887,6 +2061,8 @@ function TapxMainApp() {
           currencySymbol={currencySymbol}
           editTxAmount={editTxAmount}
           setEditTxAmount={setEditTxAmount}
+          editTxDate={editTxDate}
+          setEditTxDate={setEditTxDate}
           editTxWalletId={editTxWalletId}
           setEditTxWalletId={setEditTxWalletId}
           editTxToWalletId={editTxToWalletId}
@@ -1903,7 +2079,7 @@ function TapxMainApp() {
         />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR (Safe-area aware with spring scrubbing) */}
+      {/* CHUNKY CARTOON DOCK BAR */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{

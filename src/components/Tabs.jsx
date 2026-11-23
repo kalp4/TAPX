@@ -19,6 +19,21 @@ const INSIGHTS_SECTIONS = [
   { id: 'habits', label: 'Habits' }
 ];
 
+function formatCompactDateBadge(dateStr, todayDateStr) {
+  if (!dateStr || dateStr === todayDateStr) return 'Today';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return 'Today';
+  const target = new Date(y, m - 1, d);
+  const now = new Date();
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  if (target.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return target.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    ...(target.getFullYear() !== now.getFullYear() ? { year: '2-digit' } : {})
+  });
+}
+
 function EmptyStateCard({ ui, icon, title, subtitle }) {
   return (
     <div className={`p-6 rounded-3xl flex flex-col items-center text-center space-y-2 ${ui.card}`}>
@@ -39,8 +54,12 @@ function EmptyStateCard({ ui, icon, title, subtitle }) {
 export function KeypadTab({
   ui,
   tabAnimClass,
+  privacyMode,
   entryType,
   setEntryType,
+  entryDate,
+  setEntryDate,
+  todayDateStr,
   categories,
   setSelectedCategoryId,
   amountStr,
@@ -51,6 +70,8 @@ export function KeypadTab({
   note,
   setNote,
   noteInputRef,
+  smartRepeatPresets,
+  onApplySmartPreset,
   selectedWalletObj,
   wallets,
   selectedWalletId,
@@ -84,6 +105,9 @@ export function KeypadTab({
   const willGoNegative = Boolean(
     selectedWalletObj && numericAmount > 0 && entryType !== 'income' && projectedBalance < 0
   );
+
+  const isCustomDate = Boolean(entryDate && entryDate !== todayDateStr);
+  const dateBadgeLabel = formatCompactDateBadge(entryDate, todayDateStr);
 
   return (
     <div className={`flex-1 min-h-0 flex flex-col gap-2 overflow-hidden ${tabAnimClass}`}>
@@ -125,28 +149,69 @@ export function KeypadTab({
         ))}
       </div>
 
-      {/* Primary Hero Amount Card */}
+      {/* Primary Hero Amount Stage */}
       <div
-        className={`py-3 px-4 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden transition-colors duration-200 ${
+        className={`py-2.5 px-3.5 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden transition-colors duration-200 ${
           willGoNegative ? ui.heroCardWarning : ui.heroCard
         }`}
       >
-        {amountStr !== '0' && (
-          <button
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              handleDigitPress('CLEAR');
-            }}
-            aria-label="Reset amount"
-            className={`absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-cartoon font-bold key-press ${ui.pillIdle}`}
+        {/* Top Utility Strip: Any-Day Date Picker Pill & Reset */}
+        <div className="w-full flex items-center justify-between gap-2 mb-1">
+          <label
+            className={`relative inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold cursor-pointer key-press ${
+              isCustomDate
+                ? `bg-[#F4B942] text-[#1e1e1c] border ${ui.badgeBorder}`
+                : ui.pillIdle
+            }`}
           >
-            Reset
-          </button>
-        )}
+            <span aria-hidden="true">📅</span>
+            <span>{dateBadgeLabel}</span>
+            <input
+              type="date"
+              aria-label="Transaction date"
+              max={todayDateStr}
+              value={entryDate}
+              onChange={(e) => {
+                playQuickChip();
+                setEntryDate(e.target.value || todayDateStr);
+              }}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+            />
+          </label>
 
+          <div className="flex items-center gap-1.5">
+            {isCustomDate && (
+              <button
+                type="button"
+                onClick={() => {
+                  playQuickChip();
+                  setEntryDate(todayDateStr);
+                }}
+                aria-label="Reset date to today"
+                className={`px-2 py-0.5 rounded-full text-[10.5px] font-cartoon font-bold key-press ${ui.pillIdle}`}
+              >
+                Today
+              </button>
+            )}
+            {amountStr !== '0' && (
+              <button
+                type="button"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  handleDigitPress('CLEAR');
+                }}
+                aria-label="Reset amount"
+                className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold key-press ${ui.pillIdle}`}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Amount Readout */}
         <div
-          className={`${amountFontSizeClass} leading-none font-cartoon font-bold tracking-tight tabular-nums transition-transform duration-100 ${
+          className={`${amountFontSizeClass} leading-none font-cartoon font-bold tracking-tight tabular-nums transition-transform duration-100 my-0.5 ${
             amountPulse ? 'scale-[1.06] -rotate-1' : 'scale-100'
           } ${
             willGoNegative
@@ -165,53 +230,88 @@ export function KeypadTab({
           {formattedDisplayAmount}
         </div>
 
-        <input
-          ref={noteInputRef}
-          type="text"
-          enterKeyHint="done"
-          aria-label="Transaction note"
-          placeholder={
-            entryType === 'transfer'
-              ? 'Transfer note (e.g. ATM withdrawal)...'
-              : 'Write a quick note...'
-          }
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') e.currentTarget.blur();
-          }}
-          className={`mt-1.5 w-full bg-transparent text-center text-[16px] leading-snug font-medium py-0.5 px-2 focus:outline-none ${ui.textSecondary}`}
-        />
-
-        <div className="flex items-center gap-1.5 mt-1.5">
-          {[50, 100, 500, 1000].map((val) => (
-            <button
-              key={val}
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                handleQuickAddAmount(val);
-              }}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
-            >
-              +{currencySymbol}
-              {val >= 1000 ? '1k' : val}
-            </button>
-          ))}
+        {/* Framed Note Input Pill */}
+        <div className={`mt-1.5 w-full max-w-[280px] rounded-xl px-3 py-1 transition-colors ${ui.notePill}`}>
+          <input
+            ref={noteInputRef}
+            type="text"
+            enterKeyHint="done"
+            aria-label="Transaction note"
+            placeholder={
+              entryType === 'transfer'
+                ? 'Transfer note (e.g. ATM)...'
+                : 'Add a quick note...'
+            }
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
+            className={`w-full bg-transparent text-center text-[16px] leading-snug font-medium focus:outline-none ${ui.textSecondary}`}
+          />
         </div>
 
+        {/* Quick-Add Chips OR Smart Repeat Presets */}
+        {amountStr === '0' && smartRepeatPresets.length > 0 ? (
+          <div className="w-full flex items-center gap-1.5 mt-2 overflow-x-auto no-scrollbar justify-start sm:justify-center">
+            {smartRepeatPresets.map((preset) => (
+              <button
+                key={preset.key}
+                type="button"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  onApplySmartPreset(preset);
+                }}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${ui.chipSoft}`}
+              >
+                <span>{preset.icon}</span>
+                <span className="max-w-[78px] truncate">{preset.label}</span>
+                <span className={`tabular-nums ${ui.textMuted}`}>
+                  {currencySymbol}
+                  {preset.amount.toLocaleString('en-IN')}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 mt-2">
+            {[50, 100, 500, 1000].map((val) => (
+              <button
+                key={val}
+                type="button"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  handleQuickAddAmount(val);
+                }}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
+              >
+                +{currencySymbol}
+                {val >= 1000 ? '1k' : val}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Selected Wallet Balance Preview Strip */}
         {selectedWalletObj && (
           <div
-            className={`mt-2.5 pt-2 border-t-2 border-dashed w-full flex items-center justify-center flex-wrap gap-1.5 text-[11px] font-semibold ${ui.divider} ${ui.textMuted}`}
+            className={`mt-2 pt-1.5 border-t border-dashed w-full flex items-center justify-center flex-wrap gap-1.5 text-[11px] font-semibold ${ui.divider} ${ui.textMuted}`}
           >
-            <span>{selectedWalletObj.icon}</span>
-            <span className={`font-bold ${ui.textSecondary}`}>{selectedWalletObj.name}</span>
+            <span
+              className={`w-2 h-2 rounded-full border shrink-0 ${ui.badgeBorder}`}
+              style={{ backgroundColor: selectedWalletObj.color || '#D8CBB3' }}
+              aria-hidden="true"
+            />
+            <span className={`font-bold ${ui.textSecondary}`}>
+              {selectedWalletObj.icon} {selectedWalletObj.name}
+            </span>
             <span>·</span>
             <span className="tabular-nums">
-              {currencySymbol}
-              {currentWalletBalance.toLocaleString('en-IN')}
+              {privacyMode
+                ? `${currencySymbol}••••`
+                : `${currencySymbol}${currentWalletBalance.toLocaleString('en-IN')}`}
             </span>
-            {numericAmount > 0 && (
+            {numericAmount > 0 && !privacyMode && (
               <>
                 <span aria-hidden="true">→</span>
                 <span
@@ -255,12 +355,12 @@ export function KeypadTab({
               </button>
             )}
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
             {wallets.length === 0 ? (
               <button
                 type="button"
                 onClick={onOpenNewWallet}
-                className={`px-3.5 py-2 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
               >
                 + Add your first account
               </button>
@@ -292,8 +392,9 @@ export function KeypadTab({
                     <span>{w.icon}</span>
                     <span>{w.name}</span>
                     <span className={`text-[11px] tabular-nums ${active ? 'opacity-90 font-extrabold' : 'opacity-75'}`}>
-                      {currencySymbol}
-                      {Number(w.balance || 0).toLocaleString('en-IN')}
+                      {privacyMode
+                        ? `${currencySymbol}•••`
+                        : `${currencySymbol}${Number(w.balance || 0).toLocaleString('en-IN')}`}
                     </span>
                   </button>
                 );
@@ -302,7 +403,7 @@ export function KeypadTab({
           </div>
 
           {entryType === 'transfer' && wallets.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pt-0.5 pb-1 no-scrollbar">
+            <div className="flex gap-2 overflow-x-auto pt-0.5 pb-0.5 no-scrollbar">
               {wallets
                 .filter((w) => w.id !== selectedWalletId)
                 .map((w) => (
@@ -341,7 +442,7 @@ export function KeypadTab({
                 + Custom
               </button>
             </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
               {filteredCategories.map((c, idx) => {
                 const active = selectedCategoryId === c.id;
                 const accent = getCategoryAccentColor(c, idx);
@@ -378,7 +479,7 @@ export function KeypadTab({
 
       {/* Fluid Thumb-Zone Numpad */}
       <div className="flex-1 min-h-0 flex flex-col justify-end gap-2">
-        <div className="flex-1 min-h-[208px] max-h-[264px] grid grid-cols-3 grid-rows-4 gap-2">
+        <div className="flex-1 min-h-[196px] max-h-[260px] grid grid-cols-3 grid-rows-4 gap-2">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
             <button
               key={key}
@@ -404,7 +505,7 @@ export function KeypadTab({
                   clearTimeout(delHoldTimerRef.current);
                 }
               }}
-              className={`h-full min-h-[48px] max-h-[60px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
+              className={`h-full min-h-[46px] max-h-[60px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
                 key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
               }`}
             >
@@ -433,9 +534,12 @@ export function KeypadTab({
         <button
           type="button"
           onClick={handleLogTransaction}
-          className={`w-full py-3.5 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass}`}
+          className={`w-full py-3.5 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass} ${
+            numericAmount <= 0 ? 'opacity-70' : 'opacity-100'
+          }`}
         >
           Save {entryType === 'transfer' ? 'Transfer ⇄' : entryType === 'income' ? 'Income 💰' : 'Expense 💸'}
+          {isCustomDate ? ` · ${dateBadgeLabel}` : ''}
         </button>
       </div>
     </div>
@@ -445,6 +549,7 @@ export function KeypadTab({
 export function AccountsTab({
   ui,
   isDark,
+  privacyMode,
   tabAnimClass,
   wallets,
   currencySymbol,
@@ -458,8 +563,7 @@ export function AccountsTab({
   resolveTxCategory,
   openEditWallet,
   onOpenNewWallet,
-  openEditTransaction,
-  handleDeleteTransaction
+  openEditTransaction
 }) {
   return (
     <div className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
@@ -496,8 +600,8 @@ export function AccountsTab({
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
                 }}
-                className={`min-w-[168px] p-3.5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
-                  isFiltered ? ui.walletCardHero : ui.card
+                className={`min-w-[172px] p-3.5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
+                  isFiltered ? ui.walletCardHero : `${ui.card} wallet-sheen`
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 relative z-10">
@@ -532,15 +636,18 @@ export function AccountsTab({
                     Edit
                   </button>
                 </div>
-                <div className="mt-3 relative z-10 flex items-baseline justify-between gap-2">
+                <div className="mt-3.5 relative z-10 flex items-baseline justify-between gap-2">
                   <div>
                     <p
-                      className={`font-cartoon font-bold text-sm tabular-nums ${
+                      className={`font-cartoon font-bold text-[15px] tabular-nums ${
                         isFiltered ? 'text-[#1e1e1c]' : ui.textPrimary
                       }`}
                     >
-                      {currencySymbol}
-                      {Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {privacyMode
+                        ? `${currencySymbol}••••`
+                        : `${currencySymbol}${Number(w.balance || 0).toLocaleString('en-IN', {
+                            minimumFractionDigits: 2
+                          })}`}
                     </p>
                     <p
                       className={`text-[10.5px] font-semibold ${
@@ -571,7 +678,7 @@ export function AccountsTab({
         </div>
       </div>
 
-      {/* Search & Filter Row (native 16px input, zero scale hacks) */}
+      {/* Search & Filter Row */}
       <div className="flex items-center gap-2 shrink-0">
         <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-xl ${ui.input}`}>
           <svg
@@ -653,9 +760,11 @@ export function AccountsTab({
               >
                 <span className={ui.textSecondary}>{group.label}</span>
                 <span className={`tabular-nums ${group.netSpend > 0 ? 'text-[#52B788]' : ui.textMuted}`}>
-                  {group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}
-                  {currencySymbol}
-                  {Math.abs(group.netSpend).toLocaleString('en-IN')}
+                  {privacyMode
+                    ? `${currencySymbol}•••`
+                    : `${group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}${currencySymbol}${Math.abs(
+                        group.netSpend
+                      ).toLocaleString('en-IN')}`}
                 </span>
               </div>
 
@@ -671,10 +780,11 @@ export function AccountsTab({
                     : getCategoryAccentColor(c, idx);
 
                 return (
-                  <div
+                  <button
                     key={tx.id}
+                    type="button"
                     onClick={() => openEditTransaction(tx)}
-                    className={`p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.listRow}`}
+                    className={`w-full p-3 rounded-2xl flex items-center justify-between text-left cursor-pointer key-press ${ui.listRow}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
@@ -712,7 +822,7 @@ export function AccountsTab({
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 pl-2">
                       <span
                         className={`text-xs font-cartoon font-bold tabular-nums ${
                           tx.type === 'income'
@@ -722,24 +832,17 @@ export function AccountsTab({
                             : ui.textSand
                         }`}
                       >
-                        {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                        {currencySymbol}
-                        {Number(tx.amount || 0).toLocaleString('en-IN')}
+                        {privacyMode
+                          ? `${currencySymbol}•••`
+                          : `${tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}${currencySymbol}${Number(
+                              tx.amount || 0
+                            ).toLocaleString('en-IN')}`}
                       </span>
-                      <button
-                        type="button"
-                        aria-label="Delete transaction"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTransaction(tx.id);
-                        }}
-                        className={`p-1.5 rounded-lg text-xs font-bold key-press ${ui.textMuted} hover:text-[#F26B5B]`}
-                        title="Delete"
-                      >
-                        ✕
-                      </button>
+                      <span className={`text-sm font-bold opacity-45 ${ui.textMuted}`} aria-hidden="true">
+                        ›
+                      </span>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -753,6 +856,7 @@ export function AccountsTab({
 export function InsightsTab({
   ui,
   isDark,
+  privacyMode,
   tabAnimClass,
   analyticsRange,
   setAnalyticsRange,
@@ -776,6 +880,9 @@ export function InsightsTab({
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState(null);
 
   const insightsSubIndex = INSIGHTS_SECTIONS.findIndex((s) => s.id === insightsView);
+
+  const fmtAmt = (val, opts = { maximumFractionDigits: 0 }) =>
+    privacyMode ? `${currencySymbol}••••` : `${currencySymbol}${Number(val || 0).toLocaleString('en-IN', opts)}`;
 
   const safeBarIdx = Math.min(
     selectedBarIdx,
@@ -957,12 +1064,10 @@ export function InsightsTab({
                       Spent
                     </p>
                     <p className={`text-base font-cartoon font-bold tabular-nums mt-0.5 truncate ${ui.textPrimary}`}>
-                      {currencySymbol}
-                      {analyticsData.totalExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      {fmtAmt(analyticsData.totalExpense)}
                     </p>
                     <p className={`text-[10.5px] font-semibold tabular-nums ${ui.textMuted}`}>
-                      {currencySymbol}
-                      {analyticsData.dailyAvgExpense.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/day
+                      {fmtAmt(analyticsData.dailyAvgExpense)}/day
                     </p>
                   </div>
 
@@ -971,8 +1076,7 @@ export function InsightsTab({
                       Income
                     </p>
                     <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5 truncate">
-                      +{currencySymbol}
-                      {analyticsData.totalIncome.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      +{fmtAmt(analyticsData.totalIncome)}
                     </p>
                     <p className={`text-[10.5px] font-semibold tabular-nums ${ui.textMuted}`}>
                       {analyticsData.savingsRate !== null
@@ -995,15 +1099,11 @@ export function InsightsTab({
                       }`}
                     >
                       {analyticsRange === 'month' ? (
-                        <>
-                          {currencySymbol}
-                          {analyticsData.projectedMonthSpend.toLocaleString('en-IN')}
-                        </>
+                        fmtAmt(analyticsData.projectedMonthSpend)
                       ) : (
                         <>
                           {analyticsData.netFlow >= 0 ? '+' : '-'}
-                          {currencySymbol}
-                          {Math.abs(analyticsData.netFlow).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                          {fmtAmt(Math.abs(analyticsData.netFlow))}
                         </>
                       )}
                     </p>
@@ -1046,7 +1146,7 @@ export function InsightsTab({
                   )}
                 </div>
 
-                <div className={`pt-2.5 border-t-2 border-dashed grid grid-cols-3 gap-2 text-center ${ui.divider}`}>
+                <div className={`pt-2.5 border-t border-dashed grid grid-cols-3 gap-2 text-center ${ui.divider}`}>
                   <div>
                     <p className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>No-Spend</p>
                     <p className="text-xs font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5">
@@ -1056,8 +1156,7 @@ export function InsightsTab({
                   <div>
                     <p className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>Avg Spend</p>
                     <p className={`text-xs font-cartoon font-bold tabular-nums mt-0.5 ${ui.textSand}`}>
-                      {currencySymbol}
-                      {analyticsData.avgTicket.toLocaleString('en-IN')}
+                      {fmtAmt(analyticsData.avgTicket)}
                     </p>
                   </div>
                   <div>
@@ -1078,15 +1177,13 @@ export function InsightsTab({
                       <p className={`text-[11px] font-semibold tabular-nums ${ui.textSecondary}`}>
                         {selectedDayObj.fullDateLabel}:{' '}
                         <span className={`font-bold ${ui.textSand}`}>
-                          {currencySymbol}
-                          {selectedDayObj.amount.toLocaleString('en-IN')}
+                          {fmtAmt(selectedDayObj.amount)}
                         </span>
                       </p>
                     )}
                   </div>
                   <span className={`text-[11px] font-cartoon font-bold tabular-nums ${ui.textMuted}`}>
-                    Avg: {currencySymbol}
-                    {Math.round(analyticsData.trendAvg).toLocaleString('en-IN')}
+                    Avg: {fmtAmt(Math.round(analyticsData.trendAvg))}
                   </span>
                 </div>
 
@@ -1119,7 +1216,11 @@ export function InsightsTab({
                             isSelected ? ui.textSand : ui.textMuted
                           }`}
                         >
-                          {day.amount > 0
+                          {privacyMode
+                            ? day.amount > 0
+                              ? '••'
+                              : ''
+                            : day.amount > 0
                             ? day.amount >= 1000
                               ? `${(day.amount / 1000).toFixed(1)}k`
                               : Math.round(day.amount)
@@ -1191,8 +1292,7 @@ export function InsightsTab({
                             </div>
                           </div>
                           <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
-                            -{currencySymbol}
-                            {Number(tx.amount || 0).toLocaleString('en-IN')}
+                            -{fmtAmt(tx.amount)}
                           </span>
                         </div>
                       );
@@ -1205,7 +1305,7 @@ export function InsightsTab({
         </div>
       )}
 
-      {/* SECTION 2: BREAKDOWN (Categories, Budgets, Accounts) */}
+      {/* SECTION 2: BREAKDOWN */}
       {insightsView === 'breakdown' && (
         <div key="insights-breakdown" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
           {analyticsData.categoryBreakdown.length === 0 ? (
@@ -1288,19 +1388,16 @@ export function InsightsTab({
                         </p>
                       </div>
                       <p className={`text-lg font-cartoon font-bold tabular-nums leading-tight ${ui.textSand}`}>
-                        {currencySymbol}
-                        {activeDonutCat.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                        {fmtAmt(activeDonutCat.amount)}
                       </p>
                       <div className={`text-[11px] font-semibold space-y-0.5 ${ui.textSecondary}`}>
                         <p>
                           {activeDonutCat.count} {activeDonutCat.count === 1 ? 'entry' : 'entries'} · Avg{' '}
-                          {currencySymbol}
-                          {activeDonutCat.avgTicket.toLocaleString('en-IN')}
+                          {fmtAmt(activeDonutCat.avgTicket)}
                         </p>
                         {activeDonutCat.budget > 0 && (
                           <p className="text-[#F4B942]">
-                            Limit: {currencySymbol}
-                            {activeDonutCat.budget.toLocaleString('en-IN')} ({activeDonutCat.budgetPct}%)
+                            Limit: {fmtAmt(activeDonutCat.budget)} ({activeDonutCat.budgetPct}%)
                           </p>
                         )}
                       </div>
@@ -1336,8 +1433,7 @@ export function InsightsTab({
                         </div>
                         <div className="flex items-center gap-2 shrink-0 tabular-nums">
                           <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                            {currencySymbol}
-                            {item.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                            {fmtAmt(item.amount)}
                           </span>
                           <span
                             className={`text-[10.5px] px-2 py-0.5 rounded-lg border font-cartoon font-bold text-[#1e1e1c] ${ui.badgeBorder}`}
@@ -1358,9 +1454,7 @@ export function InsightsTab({
                   <div className="flex items-center justify-between">
                     <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Budget Guardrails</h4>
                     <span className={`text-[11px] font-cartoon font-bold tabular-nums ${ui.textSand}`}>
-                      {currencySymbol}
-                      {analyticsData.totalBudgetSpent.toLocaleString('en-IN')} / {currencySymbol}
-                      {analyticsData.totalBudgetLimit.toLocaleString('en-IN')}
+                      {fmtAmt(analyticsData.totalBudgetSpent)} / {fmtAmt(analyticsData.totalBudgetLimit)}
                     </span>
                   </div>
 
@@ -1372,9 +1466,7 @@ export function InsightsTab({
                             {b.icon} {b.name}
                           </span>
                           <span className={`font-cartoon font-bold ${b.overBy > 0 ? 'text-[#F26B5B]' : ui.textPrimary}`}>
-                            {currencySymbol}
-                            {b.spent.toLocaleString('en-IN')} / {currencySymbol}
-                            {b.limit.toLocaleString('en-IN')} ({b.pct}%)
+                            {fmtAmt(b.spent)} / {fmtAmt(b.limit)} ({b.pct}%)
                           </span>
                         </div>
                         <div className={`w-full h-3 rounded-full overflow-hidden p-0.5 ${ui.trackBg}`}>
@@ -1407,8 +1499,7 @@ export function InsightsTab({
                             {w.icon} {w.name}
                           </span>
                           <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
-                            {currencySymbol}
-                            {w.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}{' '}
+                            {fmtAmt(w.amount)}{' '}
                             <span className={`text-[11px] font-semibold ${ui.textMuted}`}>({w.pct}%)</span>
                           </span>
                         </div>
@@ -1428,7 +1519,7 @@ export function InsightsTab({
         </div>
       )}
 
-      {/* SECTION 3: HABITS (Velocity, Weekday Heatmap, Time of Day, Ticket Size, Smart Insights) */}
+      {/* SECTION 3: HABITS */}
       {insightsView === 'habits' && (
         <div key="insights-habits" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
           {analyticsData.expenseCount === 0 ? (
@@ -1459,12 +1550,10 @@ export function InsightsTab({
                     🎯 Avg Spend
                   </span>
                   <p className={`text-base font-cartoon font-bold tabular-nums mt-1 ${ui.textSand}`}>
-                    {currencySymbol}
-                    {analyticsData.avgTicket.toLocaleString('en-IN')}
+                    {fmtAmt(analyticsData.avgTicket)}
                   </p>
                   <span className={`text-[10.5px] font-semibold tabular-nums ${ui.textSecondary}`}>
-                    Med {currencySymbol}
-                    {analyticsData.medianTicket.toLocaleString('en-IN')}
+                    Med {fmtAmt(analyticsData.medianTicket)}
                   </span>
                 </div>
 
@@ -1533,7 +1622,9 @@ export function InsightsTab({
                             isSelected ? 'text-[#1e1e1c]' : ui.textPrimary
                           }`}
                         >
-                          {d.amount >= 1000
+                          {privacyMode
+                            ? '••'
+                            : d.amount >= 1000
                             ? `${(d.amount / 1000).toFixed(1)}k`
                             : Math.round(d.amount)}
                         </span>
@@ -1549,22 +1640,18 @@ export function InsightsTab({
                   })}
                 </div>
 
-                {/* Interactive Selected-Day Tooltip Bar */}
                 {activeDowObj && (
                   <div
                     className={`px-3 py-2 rounded-2xl flex items-center justify-between text-[11px] font-semibold transition-all ${ui.cardSubtle}`}
                   >
                     <span className={`font-cartoon font-bold ${ui.textPrimary}`}>
                       {activeDowObj.label} Total:{' '}
-                      <span className={ui.textSand}>
-                        {currencySymbol}
-                        {Math.round(activeDowObj.amount).toLocaleString('en-IN')}
-                      </span>
+                      <span className={ui.textSand}>{fmtAmt(Math.round(activeDowObj.amount))}</span>
                     </span>
                     <span className={`tabular-nums ${ui.textSecondary}`}>
                       {activeDowObj.sharePct}% share · {activeDowObj.count}{' '}
                       {activeDowObj.count === 1 ? 'entry' : 'entries'}
-                      {activeDowObj.count > 0
+                      {activeDowObj.count > 0 && !privacyMode
                         ? ` (avg ${currencySymbol}${Math.round(
                             activeDowObj.amount / activeDowObj.count
                           ).toLocaleString('en-IN')})`
@@ -1622,7 +1709,6 @@ export function InsightsTab({
                   })}
                 </div>
 
-                {/* Interactive Selected Time-of-Day Detail Strip */}
                 {activeTimeSlotObj && (
                   <div
                     className={`px-3 py-2 rounded-2xl flex items-center justify-between text-[11px] font-semibold ${ui.cardSubtle}`}
@@ -1631,9 +1717,8 @@ export function InsightsTab({
                       {activeTimeSlotObj.icon} {activeTimeSlotObj.label} ({activeTimeSlotObj.sub})
                     </span>
                     <span className={`tabular-nums ${ui.textSand} font-cartoon font-bold`}>
-                      {currencySymbol}
-                      {Math.round(activeTimeSlotObj.amount).toLocaleString('en-IN')}
-                      {activeTimeSlotObj.count > 0
+                      {fmtAmt(Math.round(activeTimeSlotObj.amount))}
+                      {activeTimeSlotObj.count > 0 && !privacyMode
                         ? ` · avg ${currencySymbol}${Math.round(
                             activeTimeSlotObj.amount / activeTimeSlotObj.count
                           ).toLocaleString('en-IN')}`
@@ -1655,8 +1740,7 @@ export function InsightsTab({
                         {b.count} <span className={`text-[10.5px] font-normal ${ui.textMuted}`}>txns</span>
                       </p>
                       <p className="text-[11px] font-cartoon font-bold tabular-nums" style={{ color: b.color }}>
-                        {currencySymbol}
-                        {Math.round(b.amount).toLocaleString('en-IN')}
+                        {fmtAmt(Math.round(b.amount))}
                       </p>
                     </div>
                   ))}
@@ -1759,7 +1843,7 @@ export function SettingsTab({
           </div>
         </div>
 
-        <div className={`pt-2.5 border-t-2 border-dashed flex items-center justify-between ${ui.divider}`}>
+        <div className={`pt-2.5 border-t border-dashed flex items-center justify-between ${ui.divider}`}>
           <div>
             <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Sound Effects</p>
             <p className={`text-[11px] font-medium ${ui.textMuted}`}>Tactile keypad pops &amp; chimes</p>
@@ -1874,7 +1958,7 @@ export function SettingsTab({
               Copy Personal URL &amp; Install Shortcut
             </button>
 
-            <div className={`pt-2 border-t-2 border-dashed space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
+            <div className={`pt-2 border-t border-dashed space-y-1.5 text-[11px] ${ui.divider} ${ui.textSecondary}`}>
               <p className={`font-cartoon font-bold ${ui.textPrimary}`}>
                 Quick Setup (If you want it to be a Back Tap Shortcut):
               </p>
@@ -2017,7 +2101,7 @@ export function SettingsTab({
         </div>
       )}
 
-      <div className={`pt-2 border-t-2 border-dashed flex items-center justify-between shrink-0 ${ui.divider}`}>
+      <div className={`pt-2 border-t border-dashed flex items-center justify-between shrink-0 ${ui.divider}`}>
         <span className={`text-[11px] font-semibold truncate max-w-[180px] ${ui.textMuted}`}>
           {session?.user?.email}
         </span>
