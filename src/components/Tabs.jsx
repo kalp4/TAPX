@@ -477,9 +477,9 @@ export function KeypadTab({
         )}
       </div>
 
-      {/* Fluid Thumb-Zone Numpad */}
+      {/* Fluid Thumb-Zone Numpad (fills reclaimed screen height cleanly) */}
       <div className="flex-1 min-h-0 flex flex-col justify-end gap-2">
-        <div className="flex-1 min-h-[196px] max-h-[260px] grid grid-cols-3 grid-rows-4 gap-2">
+        <div className="flex-1 min-h-[196px] max-h-[296px] grid grid-cols-3 grid-rows-4 gap-2">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
             <button
               key={key}
@@ -505,7 +505,7 @@ export function KeypadTab({
                   clearTimeout(delHoldTimerRef.current);
                 }
               }}
-              className={`h-full min-h-[46px] max-h-[60px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
+              className={`h-full min-h-[46px] max-h-[68px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
                 key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
               }`}
             >

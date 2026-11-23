@@ -9,7 +9,6 @@ import {
   CACHE_KEY,
   THEME_KEY,
   SOUND_KEY,
-  PRIVACY_KEY,
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
   getUiTheme
@@ -153,23 +152,11 @@ function TapxMainApp() {
   const flushingQueueRef = useRef(false);
 
   const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
-  const [privacyMode, setPrivacyMode] = useState(() => {
-    try {
-      return localStorage.getItem(PRIVACY_KEY) === 'on';
-    } catch {
-      return false;
-    }
-  });
+  const [privacyMode, setPrivacyMode] = useState(true);
 
   const handleTogglePrivacy = useCallback(() => {
     playQuickChip();
-    setPrivacyMode((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(PRIVACY_KEY, next ? 'on' : 'off');
-      } catch {}
-      return next;
-    });
+    setPrivacyMode((prev) => !prev);
   }, []);
 
   const [soundEnabled, setSoundEnabledState] = useState(() => {
@@ -239,7 +226,7 @@ function TapxMainApp() {
   const isScrubbingRef = useRef(false);
 
   const [settingsSection, setSettingsSection] = useState('shortcut');
-  const [analyticsRange, setAnalyticsRange] = useState('month');
+  const [analyticsRange, setAnalyticsRange] = useState('week');
   const [customStartDate, setCustomStartDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -1512,7 +1499,6 @@ function TapxMainApp() {
 
       const key = `${c?.id || 'none'}|${label.toLowerCase()}|${amt}`;
       const existing = counts.get(key);
-      // Weight recency + repeat frequency
       const recencyBoost = Math.max(0, 1 - index / 120);
       if (existing) {
         existing.count += 1;
@@ -1728,15 +1714,9 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)'
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)'
       }}
     >
-      {/* Subtle Top Atmospheric Glow */}
-      <div
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-x-0 top-0 h-64 z-0 ${ui.ambientGlow}`}
-      />
-
       {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
@@ -1867,11 +1847,11 @@ function TapxMainApp() {
         </button>
       </header>
 
-      {/* MAIN VIEWPORT */}
+      {/* MAIN VIEWPORT (Tight flush spacing above floating dock to maximize phone height) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 8px) + 74px)'
+          paddingBottom: 'calc(max(calc(env(safe-area-inset-bottom, 0px) - 18px), 8px) + 70px)'
         }}
       >
         {activeTab === 'pad' && (
@@ -2079,11 +2059,11 @@ function TapxMainApp() {
         />
       )}
 
-      {/* CHUNKY CARTOON DOCK BAR */}
+      {/* CHUNKY CARTOON DOCK BAR (Anchored close to home indicator to eliminate bottom void) */}
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
-          bottom: 'max(env(safe-area-inset-bottom, 0px), 8px)'
+          bottom: 'max(calc(env(safe-area-inset-bottom, 0px) - 18px), 8px)'
         }}
       >
         <nav
@@ -2094,7 +2074,7 @@ function TapxMainApp() {
           onPointerMove={handleNavPointerMove}
           onPointerUp={handleNavPointerUpOrCancel}
           onPointerCancel={handleNavPointerUpOrCancel}
-          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[62px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
+          className={`pointer-events-auto relative grid grid-cols-4 items-center w-full max-w-[388px] h-[60px] p-[5px] rounded-full touch-none transition-transform duration-300 ios-spring ${
             lensBulge ? 'scale-[1.02]' : 'scale-100'
           } ${ui.islandBar}`}
         >
