@@ -9,11 +9,14 @@ import {
   CACHE_KEY,
   THEME_KEY,
   SOUND_KEY,
+  PRIVACY_KEY,
+  SEEDED_KEY_PREFIX,
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
   getUiTheme
 } from './constants';
 import {
+  roundMoney,
   getInitialSyncSession,
   hasOAuthParamsInUrl,
   parseShortcutCategoryTag,
@@ -52,6 +55,10 @@ import {
   SettingsTab
 } from './components/Tabs';
 
+const FOCUS_REFETCH_COOLDOWN_MS = 15000;
+const TX_PAGE_SIZE = 500;
+const TX_MAX_ROWS = 5000;
+
 function getTodayDateString() {
   return new Date().toLocaleDateString('en-CA');
 }
@@ -75,6 +82,20 @@ function buildIsoForLocalDate(dateStr, referenceIso = null) {
     0
   );
   return combined.toISOString();
+}
+
+// Apply a relative balance delta against the latest DB balance to avoid overwriting concurrent Back Tap updates
+async function applyWalletBalanceDelta(walletId, delta) {
+  if (!walletId || !delta) return;
+  const { data: currentRow, error } = await supabase
+    .from('wallets')
+    .select('balance')
+    .eq('id', walletId)
+    .maybeSingle();
+
+  if (error || !currentRow) return;
+  const nextBal = roundMoney(Number(currentRow.balance || 0) + delta);
+  await supabase.from('wallets').update({ balance: nextBal }).eq('id', walletId);
 }
 
 class ErrorBoundary extends React.Component {
@@ -150,13 +171,27 @@ function TapxMainApp() {
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
   const flushingQueueRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
+  const lastKnownTodayRef = useRef(getTodayDateString());
 
   const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
-  const [privacyMode, setPrivacyMode] = useState(true);
+  const [privacyMode, setPrivacyMode] = useState(() => {
+    try {
+      return localStorage.getItem(PRIVACY_KEY) !== 'off';
+    } catch {
+      return true;
+    }
+  });
 
   const handleTogglePrivacy = useCallback(() => {
     playQuickChip();
-    setPrivacyMode((prev) => !prev);
+    setPrivacyMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(PRIVACY_KEY, next ? 'on' : 'off');
+      } catch {}
+      return next;
+    });
   }, []);
 
   const [soundEnabled, setSoundEnabledState] = useState(() => {
@@ -391,6 +426,8 @@ function TapxMainApp() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [copiedField, setCopiedField] = useState('');
 
+  const walletById = useMemo(() => new Map(wallets.map((w) => [w.id, w])), [wallets]);
+
   useEffect(() => {
     if (wallets.length > 1 && selectedWalletId === toWalletId) {
       const fallback = wallets.find((w) => w.id !== selectedWalletId);
@@ -481,6 +518,14 @@ function TapxMainApp() {
       for (const item of currentQueue) {
         try {
           if (item.action === 'insert_tx') {
+            // Read current DB balances before inserting so we can detect if a DB trigger handles them
+            const preFromRes = item.fromWalletId
+              ? await supabase.from('wallets').select('balance').eq('id', item.fromWalletId).maybeSingle()
+              : null;
+            const preToRes = item.toWalletId
+              ? await supabase.from('wallets').select('balance').eq('id', item.toWalletId).maybeSingle()
+              : null;
+
             const { data: insertedRow, error } = await supabase
               .from('transactions')
               .insert([item.payload])
@@ -489,17 +534,51 @@ function TapxMainApp() {
 
             if (error) throw error;
 
-            if (item.fromWalletId && item.expectedFromBalance !== undefined) {
-              await supabase
+            const amt = Number(item.payload?.amount) || 0;
+            const fromDelta =
+              item.fromDelta !== undefined
+                ? item.fromDelta
+                : item.payload?.type === 'income'
+                ? amt
+                : -amt;
+            const toDelta =
+              item.toDelta !== undefined
+                ? item.toDelta
+                : item.payload?.type === 'transfer'
+                ? amt
+                : 0;
+
+            if (item.fromWalletId && fromDelta) {
+              const postFromRes = await supabase
                 .from('wallets')
-                .update({ balance: item.expectedFromBalance })
-                .eq('id', item.fromWalletId);
+                .select('balance')
+                .eq('id', item.fromWalletId)
+                .maybeSingle();
+              const preBal = Number(preFromRes?.data?.balance ?? 0);
+              const postBal = Number(postFromRes?.data?.balance ?? preBal);
+              // Only apply delta if no DB trigger already moved the balance
+              if (postFromRes?.data && Math.abs(postBal - preBal) < 0.001) {
+                await supabase
+                  .from('wallets')
+                  .update({ balance: roundMoney(postBal + fromDelta) })
+                  .eq('id', item.fromWalletId);
+              }
             }
-            if (item.toWalletId && item.expectedToBalance !== undefined && item.expectedToBalance !== null) {
-              await supabase
+
+            if (item.toWalletId && toDelta) {
+              const postToRes = await supabase
                 .from('wallets')
-                .update({ balance: item.expectedToBalance })
-                .eq('id', item.toWalletId);
+                .select('balance')
+                .eq('id', item.toWalletId)
+                .maybeSingle();
+              const preBal = Number(preToRes?.data?.balance ?? 0);
+              const postBal = Number(postToRes?.data?.balance ?? preBal);
+              if (postToRes?.data && Math.abs(postBal - preBal) < 0.001) {
+                await supabase
+                  .from('wallets')
+                  .update({ balance: roundMoney(postBal + toDelta) })
+                  .eq('id', item.toWalletId);
+              }
             }
 
             if (insertedRow) {
@@ -526,12 +605,18 @@ function TapxMainApp() {
   );
 
   const fetchUserData = useCallback(
-    async (userId) => {
+    async (userId, { force = false } = {}) => {
       if (!userId) return;
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setIsOnline(false);
         return;
       }
+
+      const nowMs = Date.now();
+      if (!force && nowMs - lastFetchAtRef.current < FOCUS_REFETCH_COOLDOWN_MS) {
+        return;
+      }
+      lastFetchAtRef.current = nowMs;
 
       setIsSyncingBg(true);
       setDbError('');
@@ -564,29 +649,47 @@ function TapxMainApp() {
           });
         }
 
-        const [walletsRes, categoriesRes, txRes] = await Promise.all([
+        const [walletsRes, categoriesRes] = await Promise.all([
           supabase.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-          supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-          supabase
-            .from('transactions')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(500)
+          supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true })
         ]);
 
         if (walletsRes.error) throw walletsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
-        if (txRes.error) throw txRes.error;
+
+        // Paginate transactions past Supabase's 500/1000 row page boundary
+        let fetchedTx = [];
+        for (let offset = 0; offset < TX_MAX_ROWS; offset += TX_PAGE_SIZE) {
+          const txRes = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + TX_PAGE_SIZE - 1);
+
+          if (txRes.error) throw txRes.error;
+          const batch = Array.isArray(txRes.data) ? txRes.data : [];
+          fetchedTx = fetchedTx.concat(batch);
+          if (batch.length < TX_PAGE_SIZE) break;
+        }
 
         let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
         let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
-        let fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
+
+        // Seed starter wallets & categories only once for brand-new accounts (never resurrect deleted categories)
+        const seededStorageKey = `${SEEDED_KEY_PREFIX}${userId}`;
+        const alreadySeeded = (() => {
+          try {
+            return localStorage.getItem(seededStorageKey) === '1';
+          } catch {
+            return false;
+          }
+        })();
 
         if (!seedingRef.current) {
           seedingRef.current = true;
 
-          if (fetchedWallets.length === 0 && fetchedTx.length === 0) {
+          if (!alreadySeeded && fetchedWallets.length === 0 && fetchedTx.length === 0) {
             const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({ ...w, user_id: userId }));
             const { data: seededWallets } = await supabase.from('wallets').insert(starterWallets).select();
             if (Array.isArray(seededWallets) && seededWallets.length > 0) {
@@ -594,18 +697,18 @@ function TapxMainApp() {
             }
           }
 
-          if (fetchedCategories.length < 7) {
-            const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
-            const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
-              (item) => !existingNames.has(item.name.toLowerCase())
-            ).map((item) => ({ ...item, user_id: userId }));
-
-            if (missingDefaults.length > 0) {
-              const { data: seededCats } = await supabase.from('categories').insert(missingDefaults).select();
-              if (Array.isArray(seededCats)) {
-                fetchedCategories = [...fetchedCategories, ...seededCats];
-              }
+          if (!alreadySeeded && fetchedCategories.length === 0 && fetchedTx.length === 0) {
+            const starterCats = DEFAULT_CATEGORIES_TEMPLATE.map((item) => ({ ...item, user_id: userId }));
+            const { data: seededCats } = await supabase.from('categories').insert(starterCats).select();
+            if (Array.isArray(seededCats) && seededCats.length > 0) {
+              fetchedCategories = seededCats;
             }
+          }
+
+          if (fetchedWallets.length > 0 || fetchedCategories.length > 0 || fetchedTx.length > 0) {
+            try {
+              localStorage.setItem(seededStorageKey, '1');
+            } catch {}
           }
         }
 
@@ -677,7 +780,7 @@ function TapxMainApp() {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      if (session?.user?.id) fetchUserData(session.user.id);
+      if (session?.user?.id) fetchUserData(session.user.id, { force: true });
     };
     const handleOffline = () => setIsOnline(false);
 
@@ -740,13 +843,22 @@ function TapxMainApp() {
   }, []);
 
   useEffect(() => {
-    if (session?.user?.id) fetchUserData(session.user.id);
+    if (session?.user?.id) fetchUserData(session.user.id, { force: true });
   }, [session?.user?.id, fetchUserData]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
     const handleVisibilityOrFocus = () => {
-      if (document.visibilityState === 'visible') fetchUserData(session.user.id);
+      if (document.visibilityState === 'visible') {
+        // Auto-advance entryDate if the calendar day rolled over while the PWA was backgrounded
+        const currentToday = getTodayDateString();
+        if (currentToday !== lastKnownTodayRef.current) {
+          const prevToday = lastKnownTodayRef.current;
+          lastKnownTodayRef.current = currentToday;
+          setEntryDate((prev) => (prev === prevToday ? currentToday : prev));
+        }
+        fetchUserData(session.user.id);
+      }
     };
     window.addEventListener('focus', handleVisibilityOrFocus);
     document.addEventListener('visibilitychange', handleVisibilityOrFocus);
@@ -834,7 +946,7 @@ function TapxMainApp() {
     triggerAmountPulse();
     setAmountStr((prev) => {
       const current = parseFloat(prev) || 0;
-      const next = Math.max(0, Number((current + delta).toFixed(2)));
+      const next = Math.max(0, roundMoney(current + delta));
       return String(next);
     });
   };
@@ -888,7 +1000,7 @@ function TapxMainApp() {
       document.activeElement.blur();
     }
 
-    const numericAmount = parseFloat(amountStr);
+    const numericAmount = roundMoney(parseFloat(amountStr));
     if (!numericAmount || numericAmount <= 0) {
       playError();
       showToast('Pop in an amount above 0!');
@@ -913,17 +1025,16 @@ function TapxMainApp() {
     const destId = currentType === 'transfer' ? toWalletId : null;
     const catId = currentType === 'transfer' ? null : selectedCategoryId || null;
 
-    const fromWalletObj = wallets.find((w) => w.id === fromId);
-    const toWalletObj = destId ? wallets.find((w) => w.id === destId) : null;
+    const fromWalletObj = walletById.get(fromId);
+    const toWalletObj = destId ? walletById.get(destId) : null;
 
-    const expectedFromBalance =
-      currentType === 'income'
-        ? Number(fromWalletObj?.balance || 0) + numericAmount
-        : Number(fromWalletObj?.balance || 0) - numericAmount;
+    const fromDelta = currentType === 'income' ? numericAmount : -numericAmount;
+    const toDelta = currentType === 'transfer' && destId ? numericAmount : 0;
 
-    const expectedToBalance =
+    const optimisticFromBalance = roundMoney(Number(fromWalletObj?.balance || 0) + fromDelta);
+    const optimisticToBalance =
       currentType === 'transfer' && toWalletObj
-        ? Number(toWalletObj.balance || 0) + numericAmount
+        ? roundMoney(Number(toWalletObj.balance || 0) + toDelta)
         : null;
 
     const createdAtIso = buildIsoForLocalDate(entryDate);
@@ -950,9 +1061,9 @@ function TapxMainApp() {
     );
     setWallets((prev) =>
       prev.map((w) => {
-        if (w.id === fromId) return { ...w, balance: expectedFromBalance };
-        if (currentType === 'transfer' && w.id === destId && expectedToBalance !== null) {
-          return { ...w, balance: expectedToBalance };
+        if (w.id === fromId) return { ...w, balance: optimisticFromBalance };
+        if (currentType === 'transfer' && w.id === destId && optimisticToBalance !== null) {
+          return { ...w, balance: optimisticToBalance };
         }
         return w;
       })
@@ -970,9 +1081,9 @@ function TapxMainApp() {
         action: 'insert_tx',
         payload: insertPayload,
         fromWalletId: fromId,
-        expectedFromBalance,
+        fromDelta,
         toWalletId: destId,
-        expectedToBalance
+        toDelta
       };
       setOfflineQueue((prev) => [...prev, queueEntry]);
       setTransactions((prev) => prev.map((tx) => (tx.id === tempId ? { ...tx, pendingSync: true } : tx)));
@@ -989,6 +1100,14 @@ function TapxMainApp() {
     showToast(
       `${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged${daySuffix}!`
     );
+
+    // Snapshot DB balance right before insert to detect whether a DB trigger already updates wallets.balance
+    const [preFromRes, preToRes] = await Promise.all([
+      supabase.from('wallets').select('balance').eq('id', fromId).maybeSingle(),
+      currentType === 'transfer' && destId
+        ? supabase.from('wallets').select('balance').eq('id', destId).maybeSingle()
+        : Promise.resolve(null)
+    ]);
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
@@ -1007,19 +1126,29 @@ function TapxMainApp() {
       .eq('id', fromId)
       .maybeSingle();
 
-    if (checkFromWallet && Number(checkFromWallet.balance) !== expectedFromBalance) {
-      await supabase.from('wallets').update({ balance: expectedFromBalance }).eq('id', fromId);
+    if (checkFromWallet) {
+      const preBal = Number(preFromRes?.data?.balance ?? 0);
+      const postBal = Number(checkFromWallet.balance ?? preBal);
+      if (Math.abs(postBal - preBal) < 0.001) {
+        const nextDbBal = roundMoney(postBal + fromDelta);
+        await supabase.from('wallets').update({ balance: nextDbBal }).eq('id', fromId);
+      }
     }
 
-    if (currentType === 'transfer' && destId && expectedToBalance !== null) {
+    if (currentType === 'transfer' && destId && toDelta) {
       const { data: checkToWallet } = await supabase
         .from('wallets')
         .select('balance')
         .eq('id', destId)
         .maybeSingle();
 
-      if (checkToWallet && Number(checkToWallet.balance) !== expectedToBalance) {
-        await supabase.from('wallets').update({ balance: expectedToBalance }).eq('id', destId);
+      if (checkToWallet) {
+        const preBal = Number(preToRes?.data?.balance ?? 0);
+        const postBal = Number(checkToWallet.balance ?? preBal);
+        if (Math.abs(postBal - preBal) < 0.001) {
+          const nextDbBal = roundMoney(postBal + toDelta);
+          await supabase.from('wallets').update({ balance: nextDbBal }).eq('id', destId);
+        }
       }
     }
 
@@ -1038,30 +1167,19 @@ function TapxMainApp() {
 
     playDelete();
 
-    const amt = Number(targetTx.amount) || 0;
-    const fromWallet = wallets.find((w) => w.id === targetTx.wallet_id);
-    const toWallet = targetTx.to_wallet_id ? wallets.find((w) => w.id === targetTx.to_wallet_id) : null;
-
-    const origFromBal = fromWallet ? Number(fromWallet.balance || 0) : null;
-    const origToBal = toWallet ? Number(toWallet.balance || 0) : null;
-
-    const restoredFromBalance = fromWallet
-      ? targetTx.type === 'income'
-        ? origFromBal - amt
-        : origFromBal + amt
-      : null;
-
-    const restoredToBalance = targetTx.type === 'transfer' && toWallet ? origToBal - amt : null;
+    const amt = roundMoney(Number(targetTx.amount) || 0);
+    const fromRestoreDelta = targetTx.type === 'income' ? -amt : amt;
+    const toRestoreDelta = targetTx.type === 'transfer' && targetTx.to_wallet_id ? -amt : 0;
 
     setTransactions((prev) => prev.filter((t) => t.id !== id));
     setOfflineQueue((prev) => prev.filter((item) => item.tempId !== id));
     setWallets((prev) =>
       prev.map((w) => {
-        if (w.id === targetTx.wallet_id && restoredFromBalance !== null) {
-          return { ...w, balance: restoredFromBalance };
+        if (w.id === targetTx.wallet_id) {
+          return { ...w, balance: roundMoney(Number(w.balance || 0) + fromRestoreDelta) };
         }
-        if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && restoredToBalance !== null) {
-          return { ...w, balance: restoredToBalance };
+        if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && toRestoreDelta) {
+          return { ...w, balance: roundMoney(Number(w.balance || 0) + toRestoreDelta) };
         }
         return w;
       })
@@ -1070,14 +1188,14 @@ function TapxMainApp() {
     if (editingTx?.id === id) setEditingTx(null);
 
     if (!String(id).startsWith('temp-')) {
-      await supabase.from('transactions').delete().eq('id', id);
-
-      if (targetTx.wallet_id && restoredFromBalance !== null) {
-        await supabase.from('wallets').update({ balance: restoredFromBalance }).eq('id', targetTx.wallet_id);
-      }
-
-      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && restoredToBalance !== null) {
-        await supabase.from('wallets').update({ balance: restoredToBalance }).eq('id', targetTx.to_wallet_id);
+      const { error: deleteErr } = await supabase.from('transactions').delete().eq('id', id);
+      if (!deleteErr) {
+        if (targetTx.wallet_id) {
+          await applyWalletBalanceDelta(targetTx.wallet_id, fromRestoreDelta);
+        }
+        if (targetTx.type === 'transfer' && targetTx.to_wallet_id && toRestoreDelta) {
+          await applyWalletBalanceDelta(targetTx.to_wallet_id, toRestoreDelta);
+        }
       }
     }
 
@@ -1085,34 +1203,70 @@ function TapxMainApp() {
       playUndo();
       setToast(null);
       const { id: _oldId, pendingSync: _ps, ...reinsertPayload } = targetTx;
-      const { data: restoredRow } = await supabase
+      const undoFromDelta = -fromRestoreDelta;
+      const undoToDelta = -toRestoreDelta;
+
+      setWallets((prev) =>
+        prev.map((w) => {
+          if (w.id === targetTx.wallet_id) {
+            return { ...w, balance: roundMoney(Number(w.balance || 0) + undoFromDelta) };
+          }
+          if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && undoToDelta) {
+            return { ...w, balance: roundMoney(Number(w.balance || 0) + undoToDelta) };
+          }
+          return w;
+        })
+      );
+
+      const isCurrentlyOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+      if (isCurrentlyOffline) {
+        const tempUndoId = `temp-${Date.now()}`;
+        const queuedTx = { id: tempUndoId, ...reinsertPayload, pendingSync: true };
+        setTransactions((prev) =>
+          [queuedTx, ...prev].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )
+        );
+        setOfflineQueue((prev) => [
+          ...prev,
+          {
+            tempId: tempUndoId,
+            action: 'insert_tx',
+            payload: reinsertPayload,
+            fromWalletId: targetTx.wallet_id,
+            fromDelta: undoFromDelta,
+            toWalletId: targetTx.to_wallet_id || null,
+            toDelta: undoToDelta
+          }
+        ]);
+        showToast('Entry restored offline!');
+        return;
+      }
+
+      const { data: restoredRow, error: restoreErr } = await supabase
         .from('transactions')
         .insert([reinsertPayload])
         .select()
         .maybeSingle();
 
-      if (targetTx.wallet_id && origFromBal !== null) {
-        await supabase.from('wallets').update({ balance: origFromBal }).eq('id', targetTx.wallet_id);
-      }
-      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && origToBal !== null) {
-        await supabase.from('wallets').update({ balance: origToBal }).eq('id', targetTx.to_wallet_id);
+      if (restoreErr || !restoredRow) {
+        playError();
+        showToast('Could not restore entry');
+        fetchUserData(session.user.id, { force: true });
+        return;
       }
 
-      if (restoredRow) {
-        setTransactions((prev) =>
-          [restoredRow, ...prev].sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )
-        );
+      if (targetTx.wallet_id) {
+        await applyWalletBalanceDelta(targetTx.wallet_id, undoFromDelta);
       }
-      setWallets((prev) =>
-        prev.map((w) => {
-          if (w.id === targetTx.wallet_id && origFromBal !== null) return { ...w, balance: origFromBal };
-          if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && origToBal !== null) {
-            return { ...w, balance: origToBal };
-          }
-          return w;
-        })
+      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && undoToDelta) {
+        await applyWalletBalanceDelta(targetTx.to_wallet_id, undoToDelta);
+      }
+
+      setTransactions((prev) =>
+        [restoredRow, ...prev].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
       );
       showToast('Entry restored!');
     });
@@ -1142,7 +1296,7 @@ function TapxMainApp() {
   const handleSaveEditedTransaction = async (e) => {
     e.preventDefault();
     if (!editingTx) return;
-    const newAmt = parseFloat(editTxAmount);
+    const newAmt = roundMoney(parseFloat(editTxAmount));
     if (!newAmt || newAmt <= 0) {
       playError();
       showToast('Enter a valid amount');
@@ -1150,7 +1304,7 @@ function TapxMainApp() {
     }
 
     const oldTx = editingTx;
-    const oldAmt = Number(oldTx.amount) || 0;
+    const oldAmt = roundMoney(Number(oldTx.amount) || 0);
     const cleanNote = editTxNote.trim();
     const nextWalletId = editTxWalletId || oldTx.wallet_id;
     const nextToWalletId = oldTx.type === 'transfer' ? editTxToWalletId : null;
@@ -1172,7 +1326,7 @@ function TapxMainApp() {
     const balanceDeltas = {};
     const addDelta = (wId, delta) => {
       if (!wId) return;
-      balanceDeltas[wId] = (balanceDeltas[wId] || 0) + delta;
+      balanceDeltas[wId] = roundMoney((balanceDeltas[wId] || 0) + delta);
     };
 
     if (oldTx.type === 'income') addDelta(oldTx.wallet_id, -oldAmt);
@@ -1189,13 +1343,10 @@ function TapxMainApp() {
       addDelta(nextToWalletId, newAmt);
     }
 
-    const updatedWalletsMap = {};
     setWallets((prev) =>
       prev.map((w) => {
         if (balanceDeltas[w.id]) {
-          const nextBal = Number(w.balance || 0) + balanceDeltas[w.id];
-          updatedWalletsMap[w.id] = nextBal;
-          return { ...w, balance: nextBal };
+          return { ...w, balance: roundMoney(Number(w.balance || 0) + balanceDeltas[w.id]) };
         }
         return w;
       })
@@ -1219,6 +1370,34 @@ function TapxMainApp() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     );
 
+    // Keep queued offline items in sync if the user edits a pending transaction before reconnection
+    if (String(oldTx.id).startsWith('temp-')) {
+      const nextFromDelta = oldTx.type === 'income' ? newAmt : -newAmt;
+      const nextToDelta = oldTx.type === 'transfer' ? newAmt : 0;
+      setOfflineQueue((prev) =>
+        prev.map((item) =>
+          item.tempId === oldTx.id
+            ? {
+                ...item,
+                payload: {
+                  ...item.payload,
+                  amount: newAmt,
+                  note: cleanNote,
+                  wallet_id: nextWalletId,
+                  to_wallet_id: nextToWalletId,
+                  category_id: nextCategoryId,
+                  created_at: nextCreatedAt
+                },
+                fromWalletId: nextWalletId,
+                fromDelta: nextFromDelta,
+                toWalletId: nextToWalletId,
+                toDelta: nextToDelta
+              }
+            : item
+        )
+      );
+    }
+
     setEditingTx(null);
     playSuccess('save');
     showToast('Transaction updated!');
@@ -1236,8 +1415,10 @@ function TapxMainApp() {
         })
         .eq('id', oldTx.id);
 
-      for (const [wId, nextBal] of Object.entries(updatedWalletsMap)) {
-        await supabase.from('wallets').update({ balance: nextBal }).eq('id', wId);
+      for (const [wId, delta] of Object.entries(balanceDeltas)) {
+        if (delta) {
+          await applyWalletBalanceDelta(wId, delta);
+        }
       }
     }
   };
@@ -1258,7 +1439,7 @@ function TapxMainApp() {
     if (!newWalletName.trim()) return;
 
     const nameVal = newWalletName.trim();
-    const balVal = parseFloat(newWalletBalance) || 0;
+    const balVal = roundMoney(parseFloat(newWalletBalance) || 0);
     const typeVal = newWalletType;
     const colorVal = newWalletColor;
     const iconVal = newWalletIcon || '💳';
@@ -1285,7 +1466,7 @@ function TapxMainApp() {
       if (error) {
         playError();
         showToast(error.message);
-        fetchUserData(session.user.id);
+        fetchUserData(session.user.id, { force: true });
       }
       return;
     }
@@ -1328,9 +1509,23 @@ function TapxMainApp() {
     }
     playDelete();
     setConfirmDeleteId(null);
-    setWallets((prev) => prev.filter((w) => w.id !== id));
+
+    const remainingWallets = wallets.filter((w) => w.id !== id);
+    setWallets(remainingWallets);
+    // Match PostgreSQL ON DELETE CASCADE locally so no orphaned transactions remain
+    setTransactions((prev) => prev.filter((t) => t.wallet_id !== id && t.to_wallet_id !== id));
+    setOfflineQueue((prev) => prev.filter((item) => item.fromWalletId !== id && item.toWalletId !== id));
+
+    if (selectedWalletId === id) {
+      setSelectedWalletId(remainingWallets[0]?.id || '');
+    }
+    if (toWalletId === id) {
+      const nextFallback = remainingWallets.find((w) => w.id !== selectedWalletId) || remainingWallets[0];
+      setToWalletId(nextFallback?.id || '');
+    }
     if (activityWalletFilter === id) setActivityWalletFilter('all');
     if (editingWalletId === id) resetWalletModal();
+
     showToast('Account removed');
     await supabase.from('wallets').delete().eq('id', id);
   };
@@ -1352,7 +1547,7 @@ function TapxMainApp() {
     const nameVal = newCatName.trim();
     const typeVal = newCatType;
     const iconVal = newCatIcon || '🍔';
-    const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? parseFloat(newCatBudget) : null;
+    const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? roundMoney(parseFloat(newCatBudget)) : null;
     const targetEditId = editingCatId;
 
     resetCategoryModal();
@@ -1376,7 +1571,7 @@ function TapxMainApp() {
       if (error) {
         playError();
         showToast(error.message);
-        fetchUserData(session.user.id);
+        fetchUserData(session.user.id, { force: true });
       }
       return;
     }
@@ -1420,8 +1615,16 @@ function TapxMainApp() {
     }
     playDelete();
     setConfirmDeleteId(null);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+
+    const remainingCats = categories.filter((c) => c.id !== id);
+    setCategories(remainingCats);
+    if (selectedCategoryId === id) {
+      const targetType = entryType === 'income' ? 'income' : 'expense';
+      const fallbackCat = remainingCats.find((c) => c.type === targetType) || remainingCats[0];
+      setSelectedCategoryId(fallbackCat?.id || '');
+    }
     if (editingCatId === id) resetCategoryModal();
+
     showToast('Category deleted');
     await supabase.from('categories').delete().eq('id', id);
   };
@@ -1437,33 +1640,42 @@ function TapxMainApp() {
     await supabase.from('user_settings').update({ shortcut_token: randomHex }).eq('user_id', session.user.id);
   };
 
-  const copyToClipboard = (text, label) => {
-    navigator.clipboard.writeText(text || '');
-    playCopy();
-    setCopiedField(label);
-    showToast('Copied to clipboard!');
-    setTimeout(() => setCopiedField(''), 2000);
+  const copyToClipboard = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text || '');
+      playCopy();
+      setCopiedField(label);
+      showToast('Copied to clipboard!');
+      setTimeout(() => setCopiedField(''), 2000);
+    } catch {
+      playError();
+      showToast('Could not copy · Please copy manually');
+    }
   };
 
   const personalApiUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`;
 
-  const handleOneTapShortcut = () => {
-    navigator.clipboard.writeText(personalApiUrl);
-    playCopy();
-    showToast('Personal URL copied · Opening Shortcuts');
+  const handleOneTapShortcut = async () => {
+    try {
+      await navigator.clipboard.writeText(personalApiUrl);
+      playCopy();
+      showToast('Personal URL copied · Opening Shortcuts');
+    } catch {
+      showToast('Opening Shortcuts · Copy URL above if needed');
+    }
     setTimeout(() => {
       window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
     }, 450);
   };
 
   const totalNetWorth = useMemo(
-    () => wallets.reduce((acc, w) => acc + (Number(w?.balance) || 0), 0),
+    () => roundMoney(wallets.reduce((acc, w) => acc + (Number(w?.balance) || 0), 0)),
     [wallets]
   );
 
   const selectedWalletObj = useMemo(
-    () => wallets.find((w) => w.id === selectedWalletId) || wallets[0] || null,
-    [wallets, selectedWalletId]
+    () => walletById.get(selectedWalletId) || wallets[0] || null,
+    [walletById, wallets, selectedWalletId]
   );
 
   const filteredCategories = useMemo(
@@ -1536,8 +1748,8 @@ function TapxMainApp() {
         }
         if (activityTypeFilter !== 'all' && tx.type !== activityTypeFilter) return false;
         if (!q) return true;
-        const w = wallets.find((item) => item.id === tx.wallet_id);
-        const toW = wallets.find((item) => item.id === tx.to_wallet_id);
+        const w = walletById.get(tx.wallet_id);
+        const toW = walletById.get(tx.to_wallet_id);
         const { category: c, cleanNote } = resolveTxCategory(tx);
         const haystack = [cleanNote, w?.name, toW?.name, c?.name, String(tx.amount || '')]
           .filter(Boolean)
@@ -1546,7 +1758,7 @@ function TapxMainApp() {
         return haystack.includes(q);
       })
       .slice(0, 80);
-  }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, wallets, resolveTxCategory]);
+  }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, walletById, resolveTxCategory]);
 
   const groupedTransactions = useMemo(() => {
     const groups = [];
@@ -1562,8 +1774,8 @@ function TapxMainApp() {
       const group = groupMap.get(label);
       group.items.push(tx);
       const amt = Number(tx.amount) || 0;
-      if (tx.type === 'expense') group.netSpend -= amt;
-      else if (tx.type === 'income') group.netSpend += amt;
+      if (tx.type === 'expense') group.netSpend = roundMoney(group.netSpend - amt);
+      else if (tx.type === 'income') group.netSpend = roundMoney(group.netSpend + amt);
     });
 
     return groups;
@@ -1583,7 +1795,7 @@ function TapxMainApp() {
         d.getMonth() === now.getMonth() &&
         d.getFullYear() === now.getFullYear()
       ) {
-        map[catId] = (map[catId] || 0) + (Number(tx.amount) || 0);
+        map[catId] = roundMoney((map[catId] || 0) + (Number(tx.amount) || 0));
       }
     });
     return map;
@@ -1639,8 +1851,8 @@ function TapxMainApp() {
       const timeStr = !isNaN(d.getTime())
         ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
         : '';
-      const w = wallets.find((item) => item.id === tx.wallet_id);
-      const toW = wallets.find((item) => item.id === tx.to_wallet_id);
+      const w = walletById.get(tx.wallet_id);
+      const toW = walletById.get(tx.to_wallet_id);
       const { category: c, cleanNote } = resolveTxCategory(tx);
 
       csvLines.push(
@@ -1678,7 +1890,7 @@ function TapxMainApp() {
 
     playCopy();
     showToast(`Exported ${sourceRows.length} entries to CSV!`);
-  }, [analyticsData.filteredTx, transactions, wallets, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
+  }, [analyticsData.filteredTx, transactions, walletById, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
 
   const currencySymbol = settings?.currency || '₹';
   const formattedDisplayAmount = useMemo(() => formatDisplayAmount(amountStr), [amountStr]);
@@ -1745,7 +1957,7 @@ function TapxMainApp() {
           <span className="truncate">{dbError}</span>
           <button
             type="button"
-            onClick={() => fetchUserData(session.user.id)}
+            onClick={() => fetchUserData(session.user.id, { force: true })}
             className="ml-2 underline font-extrabold shrink-0"
           >
             Retry
@@ -1988,7 +2200,7 @@ function TapxMainApp() {
             session={session}
             onSync={() => {
               playSuccess('save');
-              fetchUserData(session.user.id);
+              fetchUserData(session.user.id, { force: true });
               showToast('Synced!');
             }}
             handleLogout={handleLogout}

@@ -76,6 +76,12 @@ This section contains the contents of the repository's files.
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
+  // Enforce Vercel Cron secret when configured in project environment variables
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && req.headers.authorization !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
@@ -100,6 +106,10 @@ google-site-verification: google40e4585462743276.html
 
 <file path="src/analytics.js">
 import { WALLET_COLORS, CHART_COLORS } from './constants';
+
+export function roundMoney(val) {
+  return Math.round((Number(val) || 0) * 100) / 100;
+}
 
 export function getInitialSyncSession(cachedData) {
   try {
@@ -241,8 +251,12 @@ export function formatTimeOnly(isoString) {
 }
 
 export function escapeCsvCell(val) {
-  const str = String(val ?? '').replace(/"/g, '""');
-  return `"${str}"`;
+  let str = String(val ?? '');
+  // Neutralize spreadsheet formula injection characters
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  return `"${str.replace(/"/g, '""')}"`;
 }
 
 function startOfDay(d) {
@@ -320,6 +334,33 @@ export function resolvePeriodWindow(analyticsRange, customStartStr, customEndStr
   return { start: null, end: todayEnd, label: 'All Time', daysCount: null };
 }
 
+function resolvePreviousPeriodWindow(analyticsRange, windowObj, now) {
+  if (!windowObj.start) return null;
+
+  if (analyticsRange === 'month') {
+    const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const prevMonthIdx = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const daysInPrevMonth = new Date(prevMonthYear, prevMonthIdx + 1, 0).getDate();
+    const matchedDay = Math.min(now.getDate(), daysInPrevMonth);
+    return {
+      start: new Date(prevMonthYear, prevMonthIdx, 1, 0, 0, 0, 0),
+      end: new Date(prevMonthYear, prevMonthIdx, matchedDay, 23, 59, 59, 999)
+    };
+  }
+
+  if (analyticsRange === 'last_month') {
+    return {
+      start: new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0),
+      end: new Date(now.getFullYear(), now.getMonth() - 1, 0, 23, 59, 59, 999)
+    };
+  }
+
+  const durationMs = windowObj.end.getTime() - windowObj.start.getTime();
+  const prevEnd = new Date(windowObj.start.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - durationMs);
+  return { start: prevStart, end: prevEnd };
+}
+
 export function computeAnalytics({
   transactions,
   categories,
@@ -333,12 +374,30 @@ export function computeAnalytics({
   const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const windowObj = resolvePeriodWindow(analyticsRange, customStartDate, customEndDate);
 
+  const categoryById = new Map(categories.map((c) => [c.id, c]));
+  const walletById = new Map(wallets.map((w) => [w.id, w]));
+
   const filteredTx = transactions.filter((tx) => {
     if (!tx?.created_at) return false;
     const d = new Date(tx.created_at);
     if (isNaN(d.getTime())) return false;
     if (!windowObj.start) return true;
     return d >= windowObj.start && d <= windowObj.end;
+  });
+
+  // Always compute current-month spend per category so monthly budget guardrails stay accurate
+  const currentMonthCatTotals = {};
+  transactions.forEach((tx) => {
+    if (!tx?.created_at || tx.type !== 'expense') return;
+    const d = new Date(tx.created_at);
+    if (isNaN(d.getTime())) return;
+    if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+      const { category: c } = resolveTxCategory(tx);
+      const catKey = c?.id || tx.category_id;
+      if (catKey) {
+        currentMonthCatTotals[catKey] = (currentMonthCatTotals[catKey] || 0) + (Number(tx.amount) || 0);
+      }
+    }
   });
 
   let effectiveDays = windowObj.daysCount;
@@ -369,24 +428,21 @@ export function computeAnalytics({
   let prevPeriodIncome = null;
   let expenseDeltaPct = null;
 
-  if (windowObj.start) {
-    const durationMs = windowObj.end.getTime() - windowObj.start.getTime();
-    const prevEnd = new Date(windowObj.start.getTime() - 1);
-    const prevStart = new Date(prevEnd.getTime() - durationMs);
-
+  const prevWindow = resolvePreviousPeriodWindow(analyticsRange, windowObj, now);
+  if (prevWindow) {
     let pExp = 0;
     let pInc = 0;
     transactions.forEach((tx) => {
       if (!tx?.created_at) return;
       const d = new Date(tx.created_at);
-      if (d >= prevStart && d <= prevEnd) {
+      if (d >= prevWindow.start && d <= prevWindow.end) {
         const amt = Number(tx.amount) || 0;
         if (tx.type === 'expense') pExp += amt;
         else if (tx.type === 'income') pInc += amt;
       }
     });
-    prevPeriodExpense = pExp;
-    prevPeriodIncome = pInc;
+    prevPeriodExpense = roundMoney(pExp);
+    prevPeriodIncome = roundMoney(pInc);
     if (pExp > 0) {
       const currExp = filteredTx.reduce(
         (acc, t) => (t.type === 'expense' ? acc + (Number(t.amount) || 0) : acc),
@@ -483,6 +539,9 @@ export function computeAnalytics({
     }
   });
 
+  totalExpense = roundMoney(totalExpense);
+  totalIncome = roundMoney(totalIncome);
+
   const dailyAvgExpense = totalExpense / Math.max(1, effectiveDays);
   const projectedMonthSpend = Math.round(dailyAvgExpense * daysInCurrentMonth);
   const savingsRate =
@@ -490,21 +549,24 @@ export function computeAnalytics({
 
   const sortedAmounts = [...expenseAmounts].sort((a, b) => a - b);
   const avgTicket = expenseCount > 0 ? Math.round(totalExpense / expenseCount) : 0;
-  const medianTicket =
-    sortedAmounts.length > 0
-      ? Math.round(sortedAmounts[Math.floor(sortedAmounts.length / 2)])
-      : 0;
+  let medianTicket = 0;
+  if (sortedAmounts.length > 0) {
+    const mid = Math.floor(sortedAmounts.length / 2);
+    medianTicket =
+      sortedAmounts.length % 2 === 1
+        ? Math.round(sortedAmounts[mid])
+        : Math.round((sortedAmounts[mid - 1] + sortedAmounts[mid]) / 2);
+  }
 
   const activeSpendDays = activeSpendDaysSet.size;
   const noSpendDays = Math.max(0, effectiveDays - activeSpendDays);
   const noSpendPct = Math.round((noSpendDays / Math.max(1, effectiveDays)) * 100);
 
   const trendBars = [];
-  const barCount = effectiveDays <= 14 ? Math.max(7, effectiveDays) : 7;
   const endAnchor = windowObj.end || endOfDay(now);
   const startAnchor =
-    windowObj.start ||
-    new Date(startOfDay(endAnchor).getTime() - (barCount - 1) * 86400000);
+    periodStartDate ||
+    new Date(startOfDay(endAnchor).getTime() - (Math.max(7, effectiveDays) - 1) * 86400000);
 
   if (effectiveDays <= 14) {
     const daysToRender = Math.min(14, Math.max(7, effectiveDays));
@@ -532,20 +594,28 @@ export function computeAnalytics({
         label,
         fullDateLabel,
         isToday: dayStr === now.toDateString(),
-        amount: daySum
+        amount: roundMoney(daySum)
       });
     }
   } else {
-    const totalMs = Math.max(86400000 * 7, endAnchor.getTime() - startAnchor.getTime());
-    const bucketMs = totalMs / 7;
+    // Divide into 7 non-overlapping whole-calendar-day buckets
+    const startDayDate = startOfDay(startAnchor);
+    const totalDays = Math.max(7, effectiveDays);
     for (let i = 0; i < 7; i++) {
-      const bStart = new Date(startAnchor.getTime() + i * bucketMs);
-      const bEnd = new Date(startAnchor.getTime() + (i + 1) * bucketMs - 1);
+      const startOffset = Math.floor((i * totalDays) / 7);
+      const endOffset = Math.max(startOffset, Math.floor(((i + 1) * totalDays) / 7) - 1);
+
+      const bStart = new Date(startDayDate);
+      bStart.setDate(bStart.getDate() + startOffset);
+      const bEndDay = new Date(startDayDate);
+      bEndDay.setDate(bEndDay.getDate() + endOffset);
+      const bEnd = endOfDay(bEndDay);
+
       const label = bStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-      const fullDateLabel = `${bStart.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short'
-      })} – ${bEnd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+      const fullDateLabel =
+        bStart.toDateString() === bEndDay.toDateString()
+          ? label
+          : `${label} – ${bEndDay.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
 
       const bucketSum = filteredTx.reduce((sum, tx) => {
         if (!tx?.created_at || tx.type !== 'expense') return sum;
@@ -559,7 +629,7 @@ export function computeAnalytics({
         label,
         fullDateLabel,
         isToday: i === 6,
-        amount: bucketSum
+        amount: roundMoney(bucketSum)
       });
     }
   }
@@ -571,7 +641,7 @@ export function computeAnalytics({
   const dowBreakdown = dowOrder.map((dayNum) => ({
     dayNum,
     label: dowLabels[dayNum],
-    amount: dowTotals[dayNum] || 0,
+    amount: roundMoney(dowTotals[dayNum] || 0),
     count: dowCounts[dayNum] || 0,
     pctOfMax: Math.round(((dowTotals[dayNum] || 0) / maxDowSpend) * 100),
     sharePct: totalExpense > 0 ? Math.round(((dowTotals[dayNum] || 0) / totalExpense) * 100) : 0
@@ -580,18 +650,20 @@ export function computeAnalytics({
 
   const timeOfDayBreakdown = Object.values(timeOfDayMap).map((slot) => ({
     ...slot,
+    amount: roundMoney(slot.amount),
     pct: totalExpense > 0 ? Math.round((slot.amount / totalExpense) * 100) : 0
   }));
   const peakTimeSlot = [...timeOfDayBreakdown].sort((a, b) => b.amount - a.amount)[0] || null;
 
   const categoryBreakdown = Object.keys(categoryTotals)
     .map((catId, index) => {
-      const catObj = categories.find((c) => c.id === catId);
-      const amount = categoryTotals[catId];
+      const catObj = categoryById.get(catId);
+      const amount = roundMoney(categoryTotals[catId]);
       const count = categoryCounts[catId] || 0;
       const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
       const exactShare = totalExpense > 0 ? amount / totalExpense : 0;
       const budget = Number(catObj?.monthly_budget) || 0;
+      const currentMonthSpent = roundMoney(currentMonthCatTotals[catId] || 0);
       return {
         id: catId,
         name: catObj?.name || 'Other',
@@ -602,16 +674,17 @@ export function computeAnalytics({
         pct,
         exactShare,
         budget,
-        budgetPct: budget > 0 ? Math.round((amount / budget) * 100) : null,
+        budgetPct: budget > 0 ? Math.round((currentMonthSpent / budget) * 100) : null,
         color: getCategoryAccentColor(catObj, index)
       };
     })
     .sort((a, b) => b.amount - a.amount);
 
+  // Budget Guardrails always evaluate against current-month spend
   const budgetedCategories = categories
     .filter((c) => c.type === 'expense' && Number(c.monthly_budget) > 0)
     .map((c, idx) => {
-      const spent = categoryTotals[c.id] || 0;
+      const spent = roundMoney(currentMonthCatTotals[c.id] || 0);
       const limit = Number(c.monthly_budget);
       const pct = Math.round((spent / limit) * 100);
       return {
@@ -620,21 +693,21 @@ export function computeAnalytics({
         icon: c.icon || '💸',
         spent,
         limit,
-        remaining: Math.max(0, limit - spent),
-        overBy: Math.max(0, spent - limit),
+        remaining: Math.max(0, roundMoney(limit - spent)),
+        overBy: Math.max(0, roundMoney(spent - limit)),
         pct,
         color: getCategoryAccentColor(c, idx)
       };
     })
     .sort((a, b) => b.pct - a.pct);
 
-  const totalBudgetLimit = budgetedCategories.reduce((s, c) => s + c.limit, 0);
-  const totalBudgetSpent = budgetedCategories.reduce((s, c) => s + c.spent, 0);
+  const totalBudgetLimit = roundMoney(budgetedCategories.reduce((s, c) => s + c.limit, 0));
+  const totalBudgetSpent = roundMoney(budgetedCategories.reduce((s, c) => s + c.spent, 0));
 
   const walletBreakdown = Object.keys(walletTotals)
     .map((wId, idx) => {
-      const wObj = wallets.find((w) => w.id === wId);
-      const amount = walletTotals[wId];
+      const wObj = walletById.get(wId);
+      const amount = roundMoney(walletTotals[wId]);
       const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
       return {
         id: wId,
@@ -690,7 +763,7 @@ export function computeAnalytics({
     filteredTx,
     totalExpense,
     totalIncome,
-    netFlow: totalIncome - totalExpense,
+    netFlow: roundMoney(totalIncome - totalExpense),
     prevPeriodExpense,
     prevPeriodIncome,
     expenseDeltaPct,
@@ -1350,8 +1423,6 @@ A multi-wallet personal expense tracker and Progressive Web App (PWA) with a ser
 
 **Production:** [xtap.vercel.app](https://xtap.vercel.app) · **Privacy Policy:** [xtap.vercel.app/privacy.html](https://xtap.vercel.app/privacy.html)
 
----
-
 ## Overview
 
 Logging small daily transactions often fails because opening an app, waiting for authentication, and navigating forms introduces too much friction.
@@ -1360,28 +1431,22 @@ TAPX solves this in two ways:
 1. **Headless Ingestion (`/api/shortcut`):** A stateless Vercel Serverless Function that lets iOS Shortcuts (triggered via iPhone Back Tap) fetch live account metadata and commit transactions directly to PostgreSQL from the Lock Screen.
 2. **Optimistic Offline-Ready PWA:** A React 19 web client that hydrates synchronously from `localStorage` (`tapx_local_cache_v4`), applies optimistic balance updates, queues offline entries (`tapx_offline_queue_v1`), and reconciles with Supabase in the background.
 
----
-
 ## Key Features
 
 - **Tactile Keypad & Multi-Wallet Tracking:** Fast expense, income, and inter-wallet transfer entry with quick-add chips (`+₹50`, `+₹100`, `+₹500`, `+₹1k`) and instant balance previews.
 - **iPhone Back Tap Integration:** One-tap iCloud Shortcut setup with revocable per-user security tokens and fuzzy wallet/category matching.
-- **Organized Insights & CSV Export:** Period presets (`7D`, `This Month`, `Last Month`, `30D`, `90D`, `All`, `Custom`), interactive SVG category donut, spending trend chart, day-of-week heatmap, time-of-day & ticket-size habits, budget guardrails, and UTF-8 BOM CSV export.
+- **Organized Insights & CSV Export:** Period presets (`7D`, `This Month`, `Last Month`, `30D`, `90D`, `All`, `Custom`), interactive SVG category donut, spending trend chart, day-of-week heatmap, time-of-day & ticket-size habits, current-month budget guardrails, and UTF-8 BOM CSV export.
 - **Custom Accounts & 110+ Icon Library:** Searchable emoji picker with custom keyboard emoji input, custom sticker colors, and optional monthly category limits.
 - **Zero-Dependency Sound & Haptics Engine:** Synthesized Web Audio API keypad pops, chimes, and cross-platform haptics (Vibration API + iOS 17.4+ Taptic switch fallback) with a persistent mute toggle.
-- **Charcoal & Warm Sand Theme:** Auto (system), Light, and Dark modes with fixed viewport locking and dynamically rendered 512x512 PNG iOS touch icons.
-
----
+- **Charcoal & Warm Sand Theme:** Auto (system), Light, and Dark modes with fixed viewport locking and persistent privacy balance masking.
 
 ## Architecture
 
 - **Frontend (`src/`):** React 19, Vite 6, and Tailwind CSS. Modularized into UI components, analytics computation, theme/icon constants, and Web Audio synthesis.
 - **Serverless API (`api/`):** Node.js handlers deployed on Vercel:
   - `api/shortcut.js`: Normalizes JSON, URL-encoded form data, or shorthand query strings from Apple Shortcuts, resolves fuzzy wallet/category matches, and invokes database RPCs.
-  - `api/keepalive.js`: Triggered daily at `08:00 UTC` via Vercel Cron (`vercel.json`) to run a lightweight RPC ping and prevent Supabase project hibernation.
+  - `api/keepalive.js`: Triggered daily at `08:00 UTC` via Vercel Cron (`vercel.json`) to run a lightweight RPC ping and prevent Supabase project hibernation (supports optional `CRON_SECRET` Bearer auth).
 - **Database & Auth:** Supabase (PostgreSQL + Google OAuth 2.0). All tables enforce Row-Level Security (RLS) scoped to `auth.uid() = user_id`.
-
----
 
 ## Repository Structure
 
@@ -1407,13 +1472,11 @@ tapx/
 │   ├── sounds.js               # Web Audio API sound synthesizer and haptics
 │   └── supabaseClient.js       # Supabase client singleton
 ├── .oxlintrc.json              # Oxlint ruleset
-├── index.html                  # App shell, pre-paint theme script, and iOS touch-icon canvas
+├── index.html                  # App shell and pre-paint theme script
 ├── package.json                # Dependencies and build scripts
 ├── vercel.json                 # Cron definitions and SPA/API routing rewrites
 └── vite.config.js              # Vite bundler configuration
 ```
-
----
 
 ## Webhook API Reference
 
@@ -1470,8 +1533,6 @@ Parses a single freeform string for amount, direction (`+` or keywords like `inc
 - **Expense:** `/api/shortcut?token=TOKEN&q=150%20upi%20food%20coffee`
 - **Income:** `/api/shortcut?token=TOKEN&q=%2B500%20cash%20allowance`
 
----
-
 ## Database Schema
 
 Configure a Supabase project with the following tables and RPC functions:
@@ -1509,8 +1570,6 @@ Configure a Supabase project with the following tables and RPC functions:
 - `shortcut_quick_log(p_token text, p_amount numeric, p_wallet_name text, p_category_name text, p_type text, p_note text)`: Validates `p_token`, resolves wallet/category IDs, inserts the transaction with `source = 'shortcut'`, updates `wallets.balance`, and returns `amount`, `wallet_name`, `category_name`, `type`, `currency`, and `new_balance`.
 - `keep_alive_ping()`: Returns a lightweight status payload (`SELECT 1`) for the daily cron job.
 
----
-
 ## Local Development
 
 ### Prerequisites
@@ -1531,7 +1590,7 @@ Configure a Supabase project with the following tables and RPC functions:
    VITE_SUPABASE_URL=[https://your-project-ref.supabase.co](https://your-project-ref.supabase.co)
    VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
    ```
-   *Both variables must also be configured in your Vercel project settings so the serverless functions in `api/` can initialize Supabase.*
+   *Both variables must also be configured in your Vercel project settings so the serverless functions in `api/` can initialize Supabase. Optionally add `CRON_SECRET` in Vercel to lock down `/api/keepalive` to Vercel Cron requests.*
 
 3. Start the Vite development server:
    ```bash
@@ -1544,16 +1603,12 @@ Configure a Supabase project with the following tables and RPC functions:
    npm run preview
    ```
 
----
-
 ## iOS Shortcut Configuration
 
 1. Sign in to TAPX and open **Settings → Shortcut Setup**.
-2. Tap **Copy Personal URL & Install Shortcut** (or open the [shared iCloud Shortcut template](https://www.icloud.com/shortcuts/f14c323b56b34217a774b466a558c57b)).
+2. Tap **Copy Personal URL & Install Shortcut** (or open the [shared iCloud Shortcut template](https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a)).
 3. Paste your personal URL when prompted and tap **Add Shortcut**.
 4. Bind it to hardware gestures in iOS **Settings → Accessibility → Touch → Back Tap → Double Tap** and choose **TAPX**.
-
----
 
 ## Author
 **Kalp Patel**
@@ -1644,7 +1699,7 @@ Configure a Supabase project with the following tables and RPC functions:
 
 <file path="src/constants.js">
 export const SHARED_ICLOUD_SHORTCUT_URL =
-  'https://www.icloud.com/shortcuts/2b9993fc915b40aeabbdcb31d52b190f';
+  'https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a';
 
 export const WALLET_COLORS = [
   '#E07A5F',
@@ -1699,7 +1754,7 @@ export const CACHE_KEY = 'tapx_local_cache_v4';
 export const THEME_KEY = 'tapx_theme_pref';
 export const SOUND_KEY = 'tapx_sound_pref';
 export const PRIVACY_KEY = 'tapx_privacy_pref';
-export const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
+export const SEEDED_KEY_PREFIX = 'tapx_seeded_user_';
 export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
 export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
 
@@ -2638,46 +2693,6 @@ export function playCopy() {
     });
   } catch {}
 }
-</file>
-
-<file path="vite.config.js">
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import { VitePWA } from 'vite-plugin-pwa';
-
-export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: false,
-      includeAssets: ['favicon.svg', 'logo.png', 'manifest.json'],
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/privacy\.html/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'tapx-google-fonts',
-              expiration: {
-                maxEntries: 16,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      }
-    })
-  ]
-});
 </file>
 
 <file path="src/components/Modals.jsx">
@@ -3632,6 +3647,49 @@ export function EditTransactionModal({
 }
 </file>
 
+<file path="vite.config.js">
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: false,
+      includeAssets: ['favicon.svg', 'logo.png', 'manifest.json'],
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/privacy\.html/],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tapx-google-fonts',
+              expiration: {
+                maxEntries: 16,
+                maxAgeSeconds: 60 * 60 * 24 * 365
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      }
+    })
+  ]
+});
+</file>
+
 <file path="src/components/Tabs.jsx">
 import React, { useState } from 'react';
 import { WALLET_COLORS } from '../constants';
@@ -4112,7 +4170,7 @@ export function KeypadTab({
         )}
       </div>
 
-      {/* Fluid Thumb-Zone Numpad (fills reclaimed screen height cleanly) */}
+      {/* Fluid Thumb-Zone Numpad */}
       <div className="flex-1 min-h-0 flex flex-col justify-end gap-2">
         <div className="flex-1 min-h-[196px] max-h-[296px] grid grid-cols-3 grid-rows-4 gap-2">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
@@ -4225,12 +4283,22 @@ export function AccountsTab({
           {wallets.map((w, idx) => {
             const isFiltered = activityWalletFilter === w.id;
             const cardAccent = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
+            const toggleWalletFilter = () => {
+              playQuickChip();
+              setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id));
+            };
             return (
               <div
                 key={w.id}
-                onClick={() => {
-                  playQuickChip();
-                  setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id));
+                role="button"
+                tabIndex={0}
+                aria-pressed={isFiltered}
+                onClick={toggleWalletFilter}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleWalletFilter();
+                  }
                 }}
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
@@ -4905,10 +4973,11 @@ export function InsightsTab({
                       const { category: c, cleanNote } = resolveTxCategory(tx);
                       const accent = getCategoryAccentColor(c, idx);
                       return (
-                        <div
+                        <button
                           key={tx.id}
+                          type="button"
                           onClick={() => openEditTransaction(tx)}
-                          className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
+                          className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-left cursor-pointer key-press ${ui.cardSubtle}`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span
@@ -4929,7 +4998,7 @@ export function InsightsTab({
                           <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
                             -{fmtAmt(tx.amount)}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -5032,7 +5101,7 @@ export function InsightsTab({
                         </p>
                         {activeDonutCat.budget > 0 && (
                           <p className="text-[#F4B942]">
-                            Limit: {fmtAmt(activeDonutCat.budget)} ({activeDonutCat.budgetPct}%)
+                            Month Limit: {fmtAmt(activeDonutCat.budget)} ({activeDonutCat.budgetPct}%)
                           </p>
                         )}
                       </div>
@@ -5083,12 +5152,14 @@ export function InsightsTab({
                 </div>
               </div>
 
-              {/* Category Budget Guardrails */}
+              {/* Category Budget Guardrails (always current month) */}
               {analyticsData.budgetedCategories.length > 0 && (
                 <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-                  <div className="flex items-center justify-between">
-                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Budget Guardrails</h4>
-                    <span className={`text-[11px] font-cartoon font-bold tabular-nums ${ui.textSand}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>
+                      Budget Guardrails · This Month
+                    </h4>
+                    <span className={`text-[11px] font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
                       {fmtAmt(analyticsData.totalBudgetSpent)} / {fmtAmt(analyticsData.totalBudgetLimit)}
                     </span>
                   </div>
@@ -5825,6 +5896,25 @@ export function SettingsTab({
   font-variant-numeric: tabular-nums;
 }
 
+/* Soft Top Ambient Glow for Login & Hero Screens */
+.tapx-ambient-dark {
+  background: radial-gradient(
+    ellipse 85% 65% at 50% 0%,
+    rgba(216, 203, 179, 0.14) 0%,
+    rgba(244, 185, 66, 0.05) 45%,
+    rgba(30, 30, 28, 0) 100%
+  );
+}
+
+.tapx-ambient-light {
+  background: radial-gradient(
+    ellipse 85% 65% at 50% 0%,
+    rgba(244, 185, 66, 0.2) 0%,
+    rgba(216, 203, 179, 0.14) 45%,
+    rgba(239, 231, 218, 0) 100%
+  );
+}
+
 /* Subtle Hero & Wallet Surface Sheen */
 .hero-sheen-dark {
   background-image: linear-gradient(
@@ -5856,7 +5946,7 @@ export function SettingsTab({
   transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Clean Crisp Cartoon Dock Track (no muddy outer blur halo) */
+/* Clean Crisp Cartoon Dock Track */
 .cartoon-dock-dark {
   background: #282825;
   border: 2px solid #111110;
@@ -6087,6 +6177,45 @@ function extractAmount(payload) {
   }
 
   return 0;
+}
+
+// Extract the intended amount token from a shorthand query like "2 coffees 150 upi" or "+500 cash"
+function extractShorthandAmount(rawQuery) {
+  const tokens = String(rawQuery || '').trim().split(/\s+/).filter(Boolean);
+  const candidates = [];
+
+  tokens.forEach((token, idx) => {
+    const m = token.match(/^([+-]?[₹$€£]?)(\d+(?:\.\d+)?)$/);
+    if (m) {
+      const value = Number(m[2]);
+      if (!isNaN(value) && value > 0) {
+        candidates.push({
+          rawToken: token,
+          value,
+          hasPrefix: Boolean(m[1]),
+          index: idx
+        });
+      }
+    }
+  });
+
+  if (candidates.length === 0) {
+    const fallbackMatch = String(rawQuery || '').match(/(\d+(?:\.\d+)?)/);
+    if (!fallbackMatch) return null;
+    const val = Number(fallbackMatch[1]);
+    return val > 0 ? { rawToken: fallbackMatch[0], value: val } : null;
+  }
+
+  // Prefer tokens with an explicit sign or currency symbol (e.g. +500, ₹150)
+  const prefixed = candidates.find((c) => c.hasPrefix);
+  if (prefixed) return prefixed;
+
+  // If the first token is a tiny quantity (e.g. "2 coffees 150"), pick the largest standalone number
+  if (candidates.length > 1) {
+    return [...candidates].sort((a, b) => b.value - a.value)[0];
+  }
+
+  return candidates[0];
 }
 
 // Normalize user/Shortcut type input ('Expense', 'Spent', 'Income', 'Earned', '+', '-')
@@ -6378,9 +6507,16 @@ export default async function handler(req, res) {
       return res.status(400).send('⚠️ Enter a valid amount greater than 0');
     }
 
-    const { data: meta } = await supabase.rpc('shortcut_get_meta', {
+    const { data: meta, error: metaError } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
+
+    if (metaError) {
+      return res.status(500).send(`⚠️ ${metaError.message}`);
+    }
+    if (meta?.error) {
+      return res.status(401).send(`⚠️ ${meta.error}`);
+    }
 
     const dbWallets =
       Array.isArray(meta?.wallets) && meta.wallets.length > 0
@@ -6445,24 +6581,31 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
     const rawQuery = String(payload.q).trim();
-    const amountMatch = rawQuery.match(/(\d+(\.\d+)?)/);
+    const amountPick = extractShorthandAmount(rawQuery);
 
-    if (!amountMatch) {
+    if (!amountPick) {
       return res.status(400).send('⚠️ Enter an amount (e.g. 150 cash food or +500 cash)');
     }
 
-    const numericAmount = Number(amountMatch[1]);
+    const numericAmount = amountPick.value;
     const resolvedType = normalizeTxType(rawTypeArg, rawQuery);
 
     let remainingText = rawQuery
-      .replace(amountMatch[0], '')
+      .replace(new RegExp(`(^|\\s)${escapeRegex(amountPick.rawToken)}(?=\\s|$)`), '$1')
       .replace(/^[+-]\s*/, '')
       .replace(/\b(spent|spend|expense|earned|earn|income)\b/gi, '')
       .trim();
 
-    const { data: meta } = await supabase.rpc('shortcut_get_meta', {
+    const { data: meta, error: metaError } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
+
+    if (metaError) {
+      return res.status(500).send(`⚠️ ${metaError.message}`);
+    }
+    if (meta?.error) {
+      return res.status(401).send(`⚠️ ${meta.error}`);
+    }
 
     const dbWallets =
       Array.isArray(meta?.wallets) && meta.wallets.length > 0
@@ -6482,28 +6625,40 @@ export default async function handler(req, res) {
     if (foundWallet) {
       matchedWallet = foundWallet;
       remainingText = remainingText
-        .replace(new RegExp(escapeRegex(String(foundWallet).trim()), 'ig'), '')
+        .replace(new RegExp(`\\b${escapeRegex(String(foundWallet).trim())}\\b`, 'ig'), '')
         .trim();
     } else {
       matchedWallet = dbWallets[0];
     }
 
     const sortedCats = [...dbCategories].sort((a, b) => String(b).length - String(a).length);
+    let matchedByFullCat = false;
     const foundCategory = sortedCats.find((c) => {
       const fullCat = cleanForCompare(c);
       const firstWord = fullCat.split(/[\s&/]+/)[0];
-      return (
-        remainingText.toLowerCase().includes(fullCat) ||
-        (firstWord.length >= 3 && remainingText.toLowerCase().includes(firstWord))
-      );
+      if (remainingText.toLowerCase().includes(fullCat)) {
+        matchedByFullCat = true;
+        return true;
+      }
+      if (firstWord.length >= 3 && new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'i').test(remainingText)) {
+        matchedByFullCat = false;
+        return true;
+      }
+      return false;
     });
+
     if (foundCategory) {
       matchedCategory = foundCategory;
-      const firstWord = cleanForCompare(foundCategory).split(/[\s&/]+/)[0];
-      remainingText = remainingText
-        .replace(new RegExp(escapeRegex(String(foundCategory).trim()), 'ig'), '')
-        .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'ig'), '')
-        .trim();
+      if (matchedByFullCat) {
+        remainingText = remainingText
+          .replace(new RegExp(escapeRegex(String(foundCategory).trim()), 'ig'), '')
+          .trim();
+      } else {
+        const firstWord = cleanForCompare(foundCategory).split(/[\s&/]+/)[0];
+        remainingText = remainingText
+          .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'i'), '')
+          .trim();
+      }
     } else {
       matchedCategory =
         resolvedType === 'income'
@@ -6552,6 +6707,9 @@ export default async function handler(req, res) {
     if (error) {
       return res.status(500).json({ error: error.message });
     }
+    if (data?.error) {
+      return res.status(401).json({ error: data.error });
+    }
 
     const walletsList =
       Array.isArray(data?.wallets) && data.wallets.length > 0
@@ -6597,13 +6755,13 @@ export default async function handler(req, res) {
 <html lang="en" style="background-color: #1e1e1c;">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="TAPX" />
     <meta name="theme-color" content="#1e1e1c" id="theme-color-meta" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" id="ios-touch-icon" href="/favicon.svg" />
+    <link rel="apple-touch-icon" id="ios-touch-icon" href="/logo.png" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -6613,7 +6771,7 @@ export default async function handler(req, res) {
     />
     <title>TAPX</title>
     <script>
-      // 1. Synchronously set root background & theme-color before first paint so iOS status bar is never white
+      // Synchronously set root background & theme-color before first paint so iOS status bar is never white
       (function () {
         try {
           var savedTheme = localStorage.getItem('tapx_theme_pref') || 'dark';
@@ -6625,83 +6783,6 @@ export default async function handler(req, res) {
           document.documentElement.style.backgroundColor = bgHex;
           var meta = document.getElementById('theme-color-meta');
           if (meta) meta.setAttribute('content', bgHex);
-        } catch (e) {}
-      })();
-
-      // 2. Synchronously generate a 512x512 Cartoony Charcoal & Sand PNG for iOS Home Screen
-      (function () {
-        try {
-          var c = document.createElement('canvas');
-          c.width = 512;
-          c.height = 512;
-          var ctx = c.getContext('2d');
-
-          function roundRectPath(x, y, w, h, r) {
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.arcTo(x + w, y, x + w, y + h, r);
-            ctx.arcTo(x + w, y + h, x, y + h, r);
-            ctx.arcTo(x, y + h, x, y, r);
-            ctx.arcTo(x, y, x + w, y, r);
-            ctx.closePath();
-          }
-
-          // Warm Charcoal App Icon Background (#1e1e1c)
-          ctx.fillStyle = '#1e1e1c';
-          ctx.fillRect(0, 0, 512, 512);
-
-          ctx.save();
-          ctx.translate(-4, 8);
-
-          // Hard Cartoon Drop Shadow Behind Wallet
-          ctx.fillStyle = '#111110';
-          roundRectPath(106, 224, 316, 224, 46);
-          ctx.fill();
-
-          // Rising Chunky Cartoon Bars (Coral, Mint, Gold) with Dark Outlines
-          var bars = [
-            { x: 168, y: 146, w: 56, h: 120, color: '#F26B5B' },
-            { x: 240, y: 108, w: 56, h: 158, color: '#52B788' },
-            { x: 312, y: 68, w: 56, h: 198, color: '#F4B942' }
-          ];
-          bars.forEach(function (b) {
-            ctx.fillStyle = b.color;
-            roundRectPath(b.x, b.y, b.w, b.h, 14);
-            ctx.fill();
-            ctx.lineWidth = 8;
-            ctx.strokeStyle = '#111110';
-            ctx.stroke();
-          });
-
-          // Main Wallet Body in Warm Sand (#D8CBB3)
-          ctx.fillStyle = '#D8CBB3';
-          roundRectPath(100, 216, 316, 218, 44);
-          ctx.fill();
-          ctx.lineWidth = 10;
-          ctx.strokeStyle = '#111110';
-          ctx.stroke();
-
-          // Wallet Clasp in Charcoal (#2a2a27) with Gold Button Dot
-          ctx.fillStyle = '#2a2a27';
-          roundRectPath(324, 298, 102, 64, 32);
-          ctx.fill();
-          ctx.lineWidth = 9;
-          ctx.strokeStyle = '#111110';
-          ctx.stroke();
-
-          ctx.fillStyle = '#F4B942';
-          ctx.beginPath();
-          ctx.arc(358, 330, 13, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.lineWidth = 6;
-          ctx.strokeStyle = '#111110';
-          ctx.stroke();
-
-          ctx.restore();
-
-          var pngDataUrl = c.toDataURL('image/png');
-          var iconLink = document.getElementById('ios-touch-icon');
-          if (iconLink) iconLink.setAttribute('href', pngDataUrl);
         } catch (e) {}
       })();
     </script>
@@ -6755,11 +6836,14 @@ import {
   CACHE_KEY,
   THEME_KEY,
   SOUND_KEY,
+  PRIVACY_KEY,
+  SEEDED_KEY_PREFIX,
   SAVED_ACCOUNTS_KEY,
   OFFLINE_QUEUE_KEY,
   getUiTheme
 } from './constants';
 import {
+  roundMoney,
   getInitialSyncSession,
   hasOAuthParamsInUrl,
   parseShortcutCategoryTag,
@@ -6798,6 +6882,10 @@ import {
   SettingsTab
 } from './components/Tabs';
 
+const FOCUS_REFETCH_COOLDOWN_MS = 15000;
+const TX_PAGE_SIZE = 500;
+const TX_MAX_ROWS = 5000;
+
 function getTodayDateString() {
   return new Date().toLocaleDateString('en-CA');
 }
@@ -6821,6 +6909,20 @@ function buildIsoForLocalDate(dateStr, referenceIso = null) {
     0
   );
   return combined.toISOString();
+}
+
+// Apply a relative balance delta against the latest DB balance to avoid overwriting concurrent Back Tap updates
+async function applyWalletBalanceDelta(walletId, delta) {
+  if (!walletId || !delta) return;
+  const { data: currentRow, error } = await supabase
+    .from('wallets')
+    .select('balance')
+    .eq('id', walletId)
+    .maybeSingle();
+
+  if (error || !currentRow) return;
+  const nextBal = roundMoney(Number(currentRow.balance || 0) + delta);
+  await supabase.from('wallets').update({ balance: nextBal }).eq('id', walletId);
 }
 
 class ErrorBoundary extends React.Component {
@@ -6896,13 +6998,27 @@ function TapxMainApp() {
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
   const flushingQueueRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
+  const lastKnownTodayRef = useRef(getTodayDateString());
 
   const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
-  const [privacyMode, setPrivacyMode] = useState(true);
+  const [privacyMode, setPrivacyMode] = useState(() => {
+    try {
+      return localStorage.getItem(PRIVACY_KEY) !== 'off';
+    } catch {
+      return true;
+    }
+  });
 
   const handleTogglePrivacy = useCallback(() => {
     playQuickChip();
-    setPrivacyMode((prev) => !prev);
+    setPrivacyMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(PRIVACY_KEY, next ? 'on' : 'off');
+      } catch {}
+      return next;
+    });
   }, []);
 
   const [soundEnabled, setSoundEnabledState] = useState(() => {
@@ -7137,6 +7253,8 @@ function TapxMainApp() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [copiedField, setCopiedField] = useState('');
 
+  const walletById = useMemo(() => new Map(wallets.map((w) => [w.id, w])), [wallets]);
+
   useEffect(() => {
     if (wallets.length > 1 && selectedWalletId === toWalletId) {
       const fallback = wallets.find((w) => w.id !== selectedWalletId);
@@ -7227,6 +7345,14 @@ function TapxMainApp() {
       for (const item of currentQueue) {
         try {
           if (item.action === 'insert_tx') {
+            // Read current DB balances before inserting so we can detect if a DB trigger handles them
+            const preFromRes = item.fromWalletId
+              ? await supabase.from('wallets').select('balance').eq('id', item.fromWalletId).maybeSingle()
+              : null;
+            const preToRes = item.toWalletId
+              ? await supabase.from('wallets').select('balance').eq('id', item.toWalletId).maybeSingle()
+              : null;
+
             const { data: insertedRow, error } = await supabase
               .from('transactions')
               .insert([item.payload])
@@ -7235,17 +7361,51 @@ function TapxMainApp() {
 
             if (error) throw error;
 
-            if (item.fromWalletId && item.expectedFromBalance !== undefined) {
-              await supabase
+            const amt = Number(item.payload?.amount) || 0;
+            const fromDelta =
+              item.fromDelta !== undefined
+                ? item.fromDelta
+                : item.payload?.type === 'income'
+                ? amt
+                : -amt;
+            const toDelta =
+              item.toDelta !== undefined
+                ? item.toDelta
+                : item.payload?.type === 'transfer'
+                ? amt
+                : 0;
+
+            if (item.fromWalletId && fromDelta) {
+              const postFromRes = await supabase
                 .from('wallets')
-                .update({ balance: item.expectedFromBalance })
-                .eq('id', item.fromWalletId);
+                .select('balance')
+                .eq('id', item.fromWalletId)
+                .maybeSingle();
+              const preBal = Number(preFromRes?.data?.balance ?? 0);
+              const postBal = Number(postFromRes?.data?.balance ?? preBal);
+              // Only apply delta if no DB trigger already moved the balance
+              if (postFromRes?.data && Math.abs(postBal - preBal) < 0.001) {
+                await supabase
+                  .from('wallets')
+                  .update({ balance: roundMoney(postBal + fromDelta) })
+                  .eq('id', item.fromWalletId);
+              }
             }
-            if (item.toWalletId && item.expectedToBalance !== undefined && item.expectedToBalance !== null) {
-              await supabase
+
+            if (item.toWalletId && toDelta) {
+              const postToRes = await supabase
                 .from('wallets')
-                .update({ balance: item.expectedToBalance })
-                .eq('id', item.toWalletId);
+                .select('balance')
+                .eq('id', item.toWalletId)
+                .maybeSingle();
+              const preBal = Number(preToRes?.data?.balance ?? 0);
+              const postBal = Number(postToRes?.data?.balance ?? preBal);
+              if (postToRes?.data && Math.abs(postBal - preBal) < 0.001) {
+                await supabase
+                  .from('wallets')
+                  .update({ balance: roundMoney(postBal + toDelta) })
+                  .eq('id', item.toWalletId);
+              }
             }
 
             if (insertedRow) {
@@ -7272,12 +7432,18 @@ function TapxMainApp() {
   );
 
   const fetchUserData = useCallback(
-    async (userId) => {
+    async (userId, { force = false } = {}) => {
       if (!userId) return;
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setIsOnline(false);
         return;
       }
+
+      const nowMs = Date.now();
+      if (!force && nowMs - lastFetchAtRef.current < FOCUS_REFETCH_COOLDOWN_MS) {
+        return;
+      }
+      lastFetchAtRef.current = nowMs;
 
       setIsSyncingBg(true);
       setDbError('');
@@ -7310,29 +7476,47 @@ function TapxMainApp() {
           });
         }
 
-        const [walletsRes, categoriesRes, txRes] = await Promise.all([
+        const [walletsRes, categoriesRes] = await Promise.all([
           supabase.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-          supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-          supabase
-            .from('transactions')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(500)
+          supabase.from('categories').select('*').eq('user_id', userId).order('created_at', { ascending: true })
         ]);
 
         if (walletsRes.error) throw walletsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
-        if (txRes.error) throw txRes.error;
+
+        // Paginate transactions past Supabase's 500/1000 row page boundary
+        let fetchedTx = [];
+        for (let offset = 0; offset < TX_MAX_ROWS; offset += TX_PAGE_SIZE) {
+          const txRes = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + TX_PAGE_SIZE - 1);
+
+          if (txRes.error) throw txRes.error;
+          const batch = Array.isArray(txRes.data) ? txRes.data : [];
+          fetchedTx = fetchedTx.concat(batch);
+          if (batch.length < TX_PAGE_SIZE) break;
+        }
 
         let fetchedWallets = Array.isArray(walletsRes.data) ? walletsRes.data : [];
         let fetchedCategories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
-        let fetchedTx = Array.isArray(txRes.data) ? txRes.data : [];
+
+        // Seed starter wallets & categories only once for brand-new accounts (never resurrect deleted categories)
+        const seededStorageKey = `${SEEDED_KEY_PREFIX}${userId}`;
+        const alreadySeeded = (() => {
+          try {
+            return localStorage.getItem(seededStorageKey) === '1';
+          } catch {
+            return false;
+          }
+        })();
 
         if (!seedingRef.current) {
           seedingRef.current = true;
 
-          if (fetchedWallets.length === 0 && fetchedTx.length === 0) {
+          if (!alreadySeeded && fetchedWallets.length === 0 && fetchedTx.length === 0) {
             const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({ ...w, user_id: userId }));
             const { data: seededWallets } = await supabase.from('wallets').insert(starterWallets).select();
             if (Array.isArray(seededWallets) && seededWallets.length > 0) {
@@ -7340,18 +7524,18 @@ function TapxMainApp() {
             }
           }
 
-          if (fetchedCategories.length < 7) {
-            const existingNames = new Set(fetchedCategories.map((c) => c.name.toLowerCase()));
-            const missingDefaults = DEFAULT_CATEGORIES_TEMPLATE.filter(
-              (item) => !existingNames.has(item.name.toLowerCase())
-            ).map((item) => ({ ...item, user_id: userId }));
-
-            if (missingDefaults.length > 0) {
-              const { data: seededCats } = await supabase.from('categories').insert(missingDefaults).select();
-              if (Array.isArray(seededCats)) {
-                fetchedCategories = [...fetchedCategories, ...seededCats];
-              }
+          if (!alreadySeeded && fetchedCategories.length === 0 && fetchedTx.length === 0) {
+            const starterCats = DEFAULT_CATEGORIES_TEMPLATE.map((item) => ({ ...item, user_id: userId }));
+            const { data: seededCats } = await supabase.from('categories').insert(starterCats).select();
+            if (Array.isArray(seededCats) && seededCats.length > 0) {
+              fetchedCategories = seededCats;
             }
+          }
+
+          if (fetchedWallets.length > 0 || fetchedCategories.length > 0 || fetchedTx.length > 0) {
+            try {
+              localStorage.setItem(seededStorageKey, '1');
+            } catch {}
           }
         }
 
@@ -7423,7 +7607,7 @@ function TapxMainApp() {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      if (session?.user?.id) fetchUserData(session.user.id);
+      if (session?.user?.id) fetchUserData(session.user.id, { force: true });
     };
     const handleOffline = () => setIsOnline(false);
 
@@ -7486,13 +7670,22 @@ function TapxMainApp() {
   }, []);
 
   useEffect(() => {
-    if (session?.user?.id) fetchUserData(session.user.id);
+    if (session?.user?.id) fetchUserData(session.user.id, { force: true });
   }, [session?.user?.id, fetchUserData]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
     const handleVisibilityOrFocus = () => {
-      if (document.visibilityState === 'visible') fetchUserData(session.user.id);
+      if (document.visibilityState === 'visible') {
+        // Auto-advance entryDate if the calendar day rolled over while the PWA was backgrounded
+        const currentToday = getTodayDateString();
+        if (currentToday !== lastKnownTodayRef.current) {
+          const prevToday = lastKnownTodayRef.current;
+          lastKnownTodayRef.current = currentToday;
+          setEntryDate((prev) => (prev === prevToday ? currentToday : prev));
+        }
+        fetchUserData(session.user.id);
+      }
     };
     window.addEventListener('focus', handleVisibilityOrFocus);
     document.addEventListener('visibilitychange', handleVisibilityOrFocus);
@@ -7580,7 +7773,7 @@ function TapxMainApp() {
     triggerAmountPulse();
     setAmountStr((prev) => {
       const current = parseFloat(prev) || 0;
-      const next = Math.max(0, Number((current + delta).toFixed(2)));
+      const next = Math.max(0, roundMoney(current + delta));
       return String(next);
     });
   };
@@ -7634,7 +7827,7 @@ function TapxMainApp() {
       document.activeElement.blur();
     }
 
-    const numericAmount = parseFloat(amountStr);
+    const numericAmount = roundMoney(parseFloat(amountStr));
     if (!numericAmount || numericAmount <= 0) {
       playError();
       showToast('Pop in an amount above 0!');
@@ -7659,17 +7852,16 @@ function TapxMainApp() {
     const destId = currentType === 'transfer' ? toWalletId : null;
     const catId = currentType === 'transfer' ? null : selectedCategoryId || null;
 
-    const fromWalletObj = wallets.find((w) => w.id === fromId);
-    const toWalletObj = destId ? wallets.find((w) => w.id === destId) : null;
+    const fromWalletObj = walletById.get(fromId);
+    const toWalletObj = destId ? walletById.get(destId) : null;
 
-    const expectedFromBalance =
-      currentType === 'income'
-        ? Number(fromWalletObj?.balance || 0) + numericAmount
-        : Number(fromWalletObj?.balance || 0) - numericAmount;
+    const fromDelta = currentType === 'income' ? numericAmount : -numericAmount;
+    const toDelta = currentType === 'transfer' && destId ? numericAmount : 0;
 
-    const expectedToBalance =
+    const optimisticFromBalance = roundMoney(Number(fromWalletObj?.balance || 0) + fromDelta);
+    const optimisticToBalance =
       currentType === 'transfer' && toWalletObj
-        ? Number(toWalletObj.balance || 0) + numericAmount
+        ? roundMoney(Number(toWalletObj.balance || 0) + toDelta)
         : null;
 
     const createdAtIso = buildIsoForLocalDate(entryDate);
@@ -7696,9 +7888,9 @@ function TapxMainApp() {
     );
     setWallets((prev) =>
       prev.map((w) => {
-        if (w.id === fromId) return { ...w, balance: expectedFromBalance };
-        if (currentType === 'transfer' && w.id === destId && expectedToBalance !== null) {
-          return { ...w, balance: expectedToBalance };
+        if (w.id === fromId) return { ...w, balance: optimisticFromBalance };
+        if (currentType === 'transfer' && w.id === destId && optimisticToBalance !== null) {
+          return { ...w, balance: optimisticToBalance };
         }
         return w;
       })
@@ -7716,9 +7908,9 @@ function TapxMainApp() {
         action: 'insert_tx',
         payload: insertPayload,
         fromWalletId: fromId,
-        expectedFromBalance,
+        fromDelta,
         toWalletId: destId,
-        expectedToBalance
+        toDelta
       };
       setOfflineQueue((prev) => [...prev, queueEntry]);
       setTransactions((prev) => prev.map((tx) => (tx.id === tempId ? { ...tx, pendingSync: true } : tx)));
@@ -7735,6 +7927,14 @@ function TapxMainApp() {
     showToast(
       `${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged${daySuffix}!`
     );
+
+    // Snapshot DB balance right before insert to detect whether a DB trigger already updates wallets.balance
+    const [preFromRes, preToRes] = await Promise.all([
+      supabase.from('wallets').select('balance').eq('id', fromId).maybeSingle(),
+      currentType === 'transfer' && destId
+        ? supabase.from('wallets').select('balance').eq('id', destId).maybeSingle()
+        : Promise.resolve(null)
+    ]);
 
     const { data: insertedRow, error } = await supabase
       .from('transactions')
@@ -7753,19 +7953,29 @@ function TapxMainApp() {
       .eq('id', fromId)
       .maybeSingle();
 
-    if (checkFromWallet && Number(checkFromWallet.balance) !== expectedFromBalance) {
-      await supabase.from('wallets').update({ balance: expectedFromBalance }).eq('id', fromId);
+    if (checkFromWallet) {
+      const preBal = Number(preFromRes?.data?.balance ?? 0);
+      const postBal = Number(checkFromWallet.balance ?? preBal);
+      if (Math.abs(postBal - preBal) < 0.001) {
+        const nextDbBal = roundMoney(postBal + fromDelta);
+        await supabase.from('wallets').update({ balance: nextDbBal }).eq('id', fromId);
+      }
     }
 
-    if (currentType === 'transfer' && destId && expectedToBalance !== null) {
+    if (currentType === 'transfer' && destId && toDelta) {
       const { data: checkToWallet } = await supabase
         .from('wallets')
         .select('balance')
         .eq('id', destId)
         .maybeSingle();
 
-      if (checkToWallet && Number(checkToWallet.balance) !== expectedToBalance) {
-        await supabase.from('wallets').update({ balance: expectedToBalance }).eq('id', destId);
+      if (checkToWallet) {
+        const preBal = Number(preToRes?.data?.balance ?? 0);
+        const postBal = Number(checkToWallet.balance ?? preBal);
+        if (Math.abs(postBal - preBal) < 0.001) {
+          const nextDbBal = roundMoney(postBal + toDelta);
+          await supabase.from('wallets').update({ balance: nextDbBal }).eq('id', destId);
+        }
       }
     }
 
@@ -7784,30 +7994,19 @@ function TapxMainApp() {
 
     playDelete();
 
-    const amt = Number(targetTx.amount) || 0;
-    const fromWallet = wallets.find((w) => w.id === targetTx.wallet_id);
-    const toWallet = targetTx.to_wallet_id ? wallets.find((w) => w.id === targetTx.to_wallet_id) : null;
-
-    const origFromBal = fromWallet ? Number(fromWallet.balance || 0) : null;
-    const origToBal = toWallet ? Number(toWallet.balance || 0) : null;
-
-    const restoredFromBalance = fromWallet
-      ? targetTx.type === 'income'
-        ? origFromBal - amt
-        : origFromBal + amt
-      : null;
-
-    const restoredToBalance = targetTx.type === 'transfer' && toWallet ? origToBal - amt : null;
+    const amt = roundMoney(Number(targetTx.amount) || 0);
+    const fromRestoreDelta = targetTx.type === 'income' ? -amt : amt;
+    const toRestoreDelta = targetTx.type === 'transfer' && targetTx.to_wallet_id ? -amt : 0;
 
     setTransactions((prev) => prev.filter((t) => t.id !== id));
     setOfflineQueue((prev) => prev.filter((item) => item.tempId !== id));
     setWallets((prev) =>
       prev.map((w) => {
-        if (w.id === targetTx.wallet_id && restoredFromBalance !== null) {
-          return { ...w, balance: restoredFromBalance };
+        if (w.id === targetTx.wallet_id) {
+          return { ...w, balance: roundMoney(Number(w.balance || 0) + fromRestoreDelta) };
         }
-        if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && restoredToBalance !== null) {
-          return { ...w, balance: restoredToBalance };
+        if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && toRestoreDelta) {
+          return { ...w, balance: roundMoney(Number(w.balance || 0) + toRestoreDelta) };
         }
         return w;
       })
@@ -7816,14 +8015,14 @@ function TapxMainApp() {
     if (editingTx?.id === id) setEditingTx(null);
 
     if (!String(id).startsWith('temp-')) {
-      await supabase.from('transactions').delete().eq('id', id);
-
-      if (targetTx.wallet_id && restoredFromBalance !== null) {
-        await supabase.from('wallets').update({ balance: restoredFromBalance }).eq('id', targetTx.wallet_id);
-      }
-
-      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && restoredToBalance !== null) {
-        await supabase.from('wallets').update({ balance: restoredToBalance }).eq('id', targetTx.to_wallet_id);
+      const { error: deleteErr } = await supabase.from('transactions').delete().eq('id', id);
+      if (!deleteErr) {
+        if (targetTx.wallet_id) {
+          await applyWalletBalanceDelta(targetTx.wallet_id, fromRestoreDelta);
+        }
+        if (targetTx.type === 'transfer' && targetTx.to_wallet_id && toRestoreDelta) {
+          await applyWalletBalanceDelta(targetTx.to_wallet_id, toRestoreDelta);
+        }
       }
     }
 
@@ -7831,34 +8030,70 @@ function TapxMainApp() {
       playUndo();
       setToast(null);
       const { id: _oldId, pendingSync: _ps, ...reinsertPayload } = targetTx;
-      const { data: restoredRow } = await supabase
+      const undoFromDelta = -fromRestoreDelta;
+      const undoToDelta = -toRestoreDelta;
+
+      setWallets((prev) =>
+        prev.map((w) => {
+          if (w.id === targetTx.wallet_id) {
+            return { ...w, balance: roundMoney(Number(w.balance || 0) + undoFromDelta) };
+          }
+          if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && undoToDelta) {
+            return { ...w, balance: roundMoney(Number(w.balance || 0) + undoToDelta) };
+          }
+          return w;
+        })
+      );
+
+      const isCurrentlyOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+      if (isCurrentlyOffline) {
+        const tempUndoId = `temp-${Date.now()}`;
+        const queuedTx = { id: tempUndoId, ...reinsertPayload, pendingSync: true };
+        setTransactions((prev) =>
+          [queuedTx, ...prev].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )
+        );
+        setOfflineQueue((prev) => [
+          ...prev,
+          {
+            tempId: tempUndoId,
+            action: 'insert_tx',
+            payload: reinsertPayload,
+            fromWalletId: targetTx.wallet_id,
+            fromDelta: undoFromDelta,
+            toWalletId: targetTx.to_wallet_id || null,
+            toDelta: undoToDelta
+          }
+        ]);
+        showToast('Entry restored offline!');
+        return;
+      }
+
+      const { data: restoredRow, error: restoreErr } = await supabase
         .from('transactions')
         .insert([reinsertPayload])
         .select()
         .maybeSingle();
 
-      if (targetTx.wallet_id && origFromBal !== null) {
-        await supabase.from('wallets').update({ balance: origFromBal }).eq('id', targetTx.wallet_id);
-      }
-      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && origToBal !== null) {
-        await supabase.from('wallets').update({ balance: origToBal }).eq('id', targetTx.to_wallet_id);
+      if (restoreErr || !restoredRow) {
+        playError();
+        showToast('Could not restore entry');
+        fetchUserData(session.user.id, { force: true });
+        return;
       }
 
-      if (restoredRow) {
-        setTransactions((prev) =>
-          [restoredRow, ...prev].sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )
-        );
+      if (targetTx.wallet_id) {
+        await applyWalletBalanceDelta(targetTx.wallet_id, undoFromDelta);
       }
-      setWallets((prev) =>
-        prev.map((w) => {
-          if (w.id === targetTx.wallet_id && origFromBal !== null) return { ...w, balance: origFromBal };
-          if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && origToBal !== null) {
-            return { ...w, balance: origToBal };
-          }
-          return w;
-        })
+      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && undoToDelta) {
+        await applyWalletBalanceDelta(targetTx.to_wallet_id, undoToDelta);
+      }
+
+      setTransactions((prev) =>
+        [restoredRow, ...prev].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
       );
       showToast('Entry restored!');
     });
@@ -7888,7 +8123,7 @@ function TapxMainApp() {
   const handleSaveEditedTransaction = async (e) => {
     e.preventDefault();
     if (!editingTx) return;
-    const newAmt = parseFloat(editTxAmount);
+    const newAmt = roundMoney(parseFloat(editTxAmount));
     if (!newAmt || newAmt <= 0) {
       playError();
       showToast('Enter a valid amount');
@@ -7896,7 +8131,7 @@ function TapxMainApp() {
     }
 
     const oldTx = editingTx;
-    const oldAmt = Number(oldTx.amount) || 0;
+    const oldAmt = roundMoney(Number(oldTx.amount) || 0);
     const cleanNote = editTxNote.trim();
     const nextWalletId = editTxWalletId || oldTx.wallet_id;
     const nextToWalletId = oldTx.type === 'transfer' ? editTxToWalletId : null;
@@ -7918,7 +8153,7 @@ function TapxMainApp() {
     const balanceDeltas = {};
     const addDelta = (wId, delta) => {
       if (!wId) return;
-      balanceDeltas[wId] = (balanceDeltas[wId] || 0) + delta;
+      balanceDeltas[wId] = roundMoney((balanceDeltas[wId] || 0) + delta);
     };
 
     if (oldTx.type === 'income') addDelta(oldTx.wallet_id, -oldAmt);
@@ -7935,13 +8170,10 @@ function TapxMainApp() {
       addDelta(nextToWalletId, newAmt);
     }
 
-    const updatedWalletsMap = {};
     setWallets((prev) =>
       prev.map((w) => {
         if (balanceDeltas[w.id]) {
-          const nextBal = Number(w.balance || 0) + balanceDeltas[w.id];
-          updatedWalletsMap[w.id] = nextBal;
-          return { ...w, balance: nextBal };
+          return { ...w, balance: roundMoney(Number(w.balance || 0) + balanceDeltas[w.id]) };
         }
         return w;
       })
@@ -7965,6 +8197,34 @@ function TapxMainApp() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     );
 
+    // Keep queued offline items in sync if the user edits a pending transaction before reconnection
+    if (String(oldTx.id).startsWith('temp-')) {
+      const nextFromDelta = oldTx.type === 'income' ? newAmt : -newAmt;
+      const nextToDelta = oldTx.type === 'transfer' ? newAmt : 0;
+      setOfflineQueue((prev) =>
+        prev.map((item) =>
+          item.tempId === oldTx.id
+            ? {
+                ...item,
+                payload: {
+                  ...item.payload,
+                  amount: newAmt,
+                  note: cleanNote,
+                  wallet_id: nextWalletId,
+                  to_wallet_id: nextToWalletId,
+                  category_id: nextCategoryId,
+                  created_at: nextCreatedAt
+                },
+                fromWalletId: nextWalletId,
+                fromDelta: nextFromDelta,
+                toWalletId: nextToWalletId,
+                toDelta: nextToDelta
+              }
+            : item
+        )
+      );
+    }
+
     setEditingTx(null);
     playSuccess('save');
     showToast('Transaction updated!');
@@ -7982,8 +8242,10 @@ function TapxMainApp() {
         })
         .eq('id', oldTx.id);
 
-      for (const [wId, nextBal] of Object.entries(updatedWalletsMap)) {
-        await supabase.from('wallets').update({ balance: nextBal }).eq('id', wId);
+      for (const [wId, delta] of Object.entries(balanceDeltas)) {
+        if (delta) {
+          await applyWalletBalanceDelta(wId, delta);
+        }
       }
     }
   };
@@ -8004,7 +8266,7 @@ function TapxMainApp() {
     if (!newWalletName.trim()) return;
 
     const nameVal = newWalletName.trim();
-    const balVal = parseFloat(newWalletBalance) || 0;
+    const balVal = roundMoney(parseFloat(newWalletBalance) || 0);
     const typeVal = newWalletType;
     const colorVal = newWalletColor;
     const iconVal = newWalletIcon || '💳';
@@ -8031,7 +8293,7 @@ function TapxMainApp() {
       if (error) {
         playError();
         showToast(error.message);
-        fetchUserData(session.user.id);
+        fetchUserData(session.user.id, { force: true });
       }
       return;
     }
@@ -8074,9 +8336,23 @@ function TapxMainApp() {
     }
     playDelete();
     setConfirmDeleteId(null);
-    setWallets((prev) => prev.filter((w) => w.id !== id));
+
+    const remainingWallets = wallets.filter((w) => w.id !== id);
+    setWallets(remainingWallets);
+    // Match PostgreSQL ON DELETE CASCADE locally so no orphaned transactions remain
+    setTransactions((prev) => prev.filter((t) => t.wallet_id !== id && t.to_wallet_id !== id));
+    setOfflineQueue((prev) => prev.filter((item) => item.fromWalletId !== id && item.toWalletId !== id));
+
+    if (selectedWalletId === id) {
+      setSelectedWalletId(remainingWallets[0]?.id || '');
+    }
+    if (toWalletId === id) {
+      const nextFallback = remainingWallets.find((w) => w.id !== selectedWalletId) || remainingWallets[0];
+      setToWalletId(nextFallback?.id || '');
+    }
     if (activityWalletFilter === id) setActivityWalletFilter('all');
     if (editingWalletId === id) resetWalletModal();
+
     showToast('Account removed');
     await supabase.from('wallets').delete().eq('id', id);
   };
@@ -8098,7 +8374,7 @@ function TapxMainApp() {
     const nameVal = newCatName.trim();
     const typeVal = newCatType;
     const iconVal = newCatIcon || '🍔';
-    const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? parseFloat(newCatBudget) : null;
+    const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? roundMoney(parseFloat(newCatBudget)) : null;
     const targetEditId = editingCatId;
 
     resetCategoryModal();
@@ -8122,7 +8398,7 @@ function TapxMainApp() {
       if (error) {
         playError();
         showToast(error.message);
-        fetchUserData(session.user.id);
+        fetchUserData(session.user.id, { force: true });
       }
       return;
     }
@@ -8166,8 +8442,16 @@ function TapxMainApp() {
     }
     playDelete();
     setConfirmDeleteId(null);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+
+    const remainingCats = categories.filter((c) => c.id !== id);
+    setCategories(remainingCats);
+    if (selectedCategoryId === id) {
+      const targetType = entryType === 'income' ? 'income' : 'expense';
+      const fallbackCat = remainingCats.find((c) => c.type === targetType) || remainingCats[0];
+      setSelectedCategoryId(fallbackCat?.id || '');
+    }
     if (editingCatId === id) resetCategoryModal();
+
     showToast('Category deleted');
     await supabase.from('categories').delete().eq('id', id);
   };
@@ -8183,33 +8467,42 @@ function TapxMainApp() {
     await supabase.from('user_settings').update({ shortcut_token: randomHex }).eq('user_id', session.user.id);
   };
 
-  const copyToClipboard = (text, label) => {
-    navigator.clipboard.writeText(text || '');
-    playCopy();
-    setCopiedField(label);
-    showToast('Copied to clipboard!');
-    setTimeout(() => setCopiedField(''), 2000);
+  const copyToClipboard = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text || '');
+      playCopy();
+      setCopiedField(label);
+      showToast('Copied to clipboard!');
+      setTimeout(() => setCopiedField(''), 2000);
+    } catch {
+      playError();
+      showToast('Could not copy · Please copy manually');
+    }
   };
 
   const personalApiUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`;
 
-  const handleOneTapShortcut = () => {
-    navigator.clipboard.writeText(personalApiUrl);
-    playCopy();
-    showToast('Personal URL copied · Opening Shortcuts');
+  const handleOneTapShortcut = async () => {
+    try {
+      await navigator.clipboard.writeText(personalApiUrl);
+      playCopy();
+      showToast('Personal URL copied · Opening Shortcuts');
+    } catch {
+      showToast('Opening Shortcuts · Copy URL above if needed');
+    }
     setTimeout(() => {
       window.location.href = SHARED_ICLOUD_SHORTCUT_URL;
     }, 450);
   };
 
   const totalNetWorth = useMemo(
-    () => wallets.reduce((acc, w) => acc + (Number(w?.balance) || 0), 0),
+    () => roundMoney(wallets.reduce((acc, w) => acc + (Number(w?.balance) || 0), 0)),
     [wallets]
   );
 
   const selectedWalletObj = useMemo(
-    () => wallets.find((w) => w.id === selectedWalletId) || wallets[0] || null,
-    [wallets, selectedWalletId]
+    () => walletById.get(selectedWalletId) || wallets[0] || null,
+    [walletById, wallets, selectedWalletId]
   );
 
   const filteredCategories = useMemo(
@@ -8282,8 +8575,8 @@ function TapxMainApp() {
         }
         if (activityTypeFilter !== 'all' && tx.type !== activityTypeFilter) return false;
         if (!q) return true;
-        const w = wallets.find((item) => item.id === tx.wallet_id);
-        const toW = wallets.find((item) => item.id === tx.to_wallet_id);
+        const w = walletById.get(tx.wallet_id);
+        const toW = walletById.get(tx.to_wallet_id);
         const { category: c, cleanNote } = resolveTxCategory(tx);
         const haystack = [cleanNote, w?.name, toW?.name, c?.name, String(tx.amount || '')]
           .filter(Boolean)
@@ -8292,7 +8585,7 @@ function TapxMainApp() {
         return haystack.includes(q);
       })
       .slice(0, 80);
-  }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, wallets, resolveTxCategory]);
+  }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, walletById, resolveTxCategory]);
 
   const groupedTransactions = useMemo(() => {
     const groups = [];
@@ -8308,8 +8601,8 @@ function TapxMainApp() {
       const group = groupMap.get(label);
       group.items.push(tx);
       const amt = Number(tx.amount) || 0;
-      if (tx.type === 'expense') group.netSpend -= amt;
-      else if (tx.type === 'income') group.netSpend += amt;
+      if (tx.type === 'expense') group.netSpend = roundMoney(group.netSpend - amt);
+      else if (tx.type === 'income') group.netSpend = roundMoney(group.netSpend + amt);
     });
 
     return groups;
@@ -8329,7 +8622,7 @@ function TapxMainApp() {
         d.getMonth() === now.getMonth() &&
         d.getFullYear() === now.getFullYear()
       ) {
-        map[catId] = (map[catId] || 0) + (Number(tx.amount) || 0);
+        map[catId] = roundMoney((map[catId] || 0) + (Number(tx.amount) || 0));
       }
     });
     return map;
@@ -8385,8 +8678,8 @@ function TapxMainApp() {
       const timeStr = !isNaN(d.getTime())
         ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
         : '';
-      const w = wallets.find((item) => item.id === tx.wallet_id);
-      const toW = wallets.find((item) => item.id === tx.to_wallet_id);
+      const w = walletById.get(tx.wallet_id);
+      const toW = walletById.get(tx.to_wallet_id);
       const { category: c, cleanNote } = resolveTxCategory(tx);
 
       csvLines.push(
@@ -8424,7 +8717,7 @@ function TapxMainApp() {
 
     playCopy();
     showToast(`Exported ${sourceRows.length} entries to CSV!`);
-  }, [analyticsData.filteredTx, transactions, wallets, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
+  }, [analyticsData.filteredTx, transactions, walletById, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
 
   const currencySymbol = settings?.currency || '₹';
   const formattedDisplayAmount = useMemo(() => formatDisplayAmount(amountStr), [amountStr]);
@@ -8460,7 +8753,7 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)'
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 22px)'
       }}
     >
       {/* Chunky Cartoon Toast Pill */}
@@ -8491,7 +8784,7 @@ function TapxMainApp() {
           <span className="truncate">{dbError}</span>
           <button
             type="button"
-            onClick={() => fetchUserData(session.user.id)}
+            onClick={() => fetchUserData(session.user.id, { force: true })}
             className="ml-2 underline font-extrabold shrink-0"
           >
             Retry
@@ -8734,7 +9027,7 @@ function TapxMainApp() {
             session={session}
             onSync={() => {
               playSuccess('save');
-              fetchUserData(session.user.id);
+              fetchUserData(session.user.id, { force: true });
               showToast('Synced!');
             }}
             handleLogout={handleLogout}

@@ -1,5 +1,9 @@
 import { WALLET_COLORS, CHART_COLORS } from './constants';
 
+export function roundMoney(val) {
+  return Math.round((Number(val) || 0) * 100) / 100;
+}
+
 export function getInitialSyncSession(cachedData) {
   try {
     for (let i = 0; i < localStorage.length; i++) {
@@ -140,8 +144,12 @@ export function formatTimeOnly(isoString) {
 }
 
 export function escapeCsvCell(val) {
-  const str = String(val ?? '').replace(/"/g, '""');
-  return `"${str}"`;
+  let str = String(val ?? '');
+  // Neutralize spreadsheet formula injection characters
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  return `"${str.replace(/"/g, '""')}"`;
 }
 
 function startOfDay(d) {
@@ -219,6 +227,33 @@ export function resolvePeriodWindow(analyticsRange, customStartStr, customEndStr
   return { start: null, end: todayEnd, label: 'All Time', daysCount: null };
 }
 
+function resolvePreviousPeriodWindow(analyticsRange, windowObj, now) {
+  if (!windowObj.start) return null;
+
+  if (analyticsRange === 'month') {
+    const prevMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const prevMonthIdx = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const daysInPrevMonth = new Date(prevMonthYear, prevMonthIdx + 1, 0).getDate();
+    const matchedDay = Math.min(now.getDate(), daysInPrevMonth);
+    return {
+      start: new Date(prevMonthYear, prevMonthIdx, 1, 0, 0, 0, 0),
+      end: new Date(prevMonthYear, prevMonthIdx, matchedDay, 23, 59, 59, 999)
+    };
+  }
+
+  if (analyticsRange === 'last_month') {
+    return {
+      start: new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0),
+      end: new Date(now.getFullYear(), now.getMonth() - 1, 0, 23, 59, 59, 999)
+    };
+  }
+
+  const durationMs = windowObj.end.getTime() - windowObj.start.getTime();
+  const prevEnd = new Date(windowObj.start.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - durationMs);
+  return { start: prevStart, end: prevEnd };
+}
+
 export function computeAnalytics({
   transactions,
   categories,
@@ -232,12 +267,30 @@ export function computeAnalytics({
   const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const windowObj = resolvePeriodWindow(analyticsRange, customStartDate, customEndDate);
 
+  const categoryById = new Map(categories.map((c) => [c.id, c]));
+  const walletById = new Map(wallets.map((w) => [w.id, w]));
+
   const filteredTx = transactions.filter((tx) => {
     if (!tx?.created_at) return false;
     const d = new Date(tx.created_at);
     if (isNaN(d.getTime())) return false;
     if (!windowObj.start) return true;
     return d >= windowObj.start && d <= windowObj.end;
+  });
+
+  // Always compute current-month spend per category so monthly budget guardrails stay accurate
+  const currentMonthCatTotals = {};
+  transactions.forEach((tx) => {
+    if (!tx?.created_at || tx.type !== 'expense') return;
+    const d = new Date(tx.created_at);
+    if (isNaN(d.getTime())) return;
+    if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+      const { category: c } = resolveTxCategory(tx);
+      const catKey = c?.id || tx.category_id;
+      if (catKey) {
+        currentMonthCatTotals[catKey] = (currentMonthCatTotals[catKey] || 0) + (Number(tx.amount) || 0);
+      }
+    }
   });
 
   let effectiveDays = windowObj.daysCount;
@@ -268,24 +321,21 @@ export function computeAnalytics({
   let prevPeriodIncome = null;
   let expenseDeltaPct = null;
 
-  if (windowObj.start) {
-    const durationMs = windowObj.end.getTime() - windowObj.start.getTime();
-    const prevEnd = new Date(windowObj.start.getTime() - 1);
-    const prevStart = new Date(prevEnd.getTime() - durationMs);
-
+  const prevWindow = resolvePreviousPeriodWindow(analyticsRange, windowObj, now);
+  if (prevWindow) {
     let pExp = 0;
     let pInc = 0;
     transactions.forEach((tx) => {
       if (!tx?.created_at) return;
       const d = new Date(tx.created_at);
-      if (d >= prevStart && d <= prevEnd) {
+      if (d >= prevWindow.start && d <= prevWindow.end) {
         const amt = Number(tx.amount) || 0;
         if (tx.type === 'expense') pExp += amt;
         else if (tx.type === 'income') pInc += amt;
       }
     });
-    prevPeriodExpense = pExp;
-    prevPeriodIncome = pInc;
+    prevPeriodExpense = roundMoney(pExp);
+    prevPeriodIncome = roundMoney(pInc);
     if (pExp > 0) {
       const currExp = filteredTx.reduce(
         (acc, t) => (t.type === 'expense' ? acc + (Number(t.amount) || 0) : acc),
@@ -382,6 +432,9 @@ export function computeAnalytics({
     }
   });
 
+  totalExpense = roundMoney(totalExpense);
+  totalIncome = roundMoney(totalIncome);
+
   const dailyAvgExpense = totalExpense / Math.max(1, effectiveDays);
   const projectedMonthSpend = Math.round(dailyAvgExpense * daysInCurrentMonth);
   const savingsRate =
@@ -389,21 +442,24 @@ export function computeAnalytics({
 
   const sortedAmounts = [...expenseAmounts].sort((a, b) => a - b);
   const avgTicket = expenseCount > 0 ? Math.round(totalExpense / expenseCount) : 0;
-  const medianTicket =
-    sortedAmounts.length > 0
-      ? Math.round(sortedAmounts[Math.floor(sortedAmounts.length / 2)])
-      : 0;
+  let medianTicket = 0;
+  if (sortedAmounts.length > 0) {
+    const mid = Math.floor(sortedAmounts.length / 2);
+    medianTicket =
+      sortedAmounts.length % 2 === 1
+        ? Math.round(sortedAmounts[mid])
+        : Math.round((sortedAmounts[mid - 1] + sortedAmounts[mid]) / 2);
+  }
 
   const activeSpendDays = activeSpendDaysSet.size;
   const noSpendDays = Math.max(0, effectiveDays - activeSpendDays);
   const noSpendPct = Math.round((noSpendDays / Math.max(1, effectiveDays)) * 100);
 
   const trendBars = [];
-  const barCount = effectiveDays <= 14 ? Math.max(7, effectiveDays) : 7;
   const endAnchor = windowObj.end || endOfDay(now);
   const startAnchor =
-    windowObj.start ||
-    new Date(startOfDay(endAnchor).getTime() - (barCount - 1) * 86400000);
+    periodStartDate ||
+    new Date(startOfDay(endAnchor).getTime() - (Math.max(7, effectiveDays) - 1) * 86400000);
 
   if (effectiveDays <= 14) {
     const daysToRender = Math.min(14, Math.max(7, effectiveDays));
@@ -431,20 +487,28 @@ export function computeAnalytics({
         label,
         fullDateLabel,
         isToday: dayStr === now.toDateString(),
-        amount: daySum
+        amount: roundMoney(daySum)
       });
     }
   } else {
-    const totalMs = Math.max(86400000 * 7, endAnchor.getTime() - startAnchor.getTime());
-    const bucketMs = totalMs / 7;
+    // Divide into 7 non-overlapping whole-calendar-day buckets
+    const startDayDate = startOfDay(startAnchor);
+    const totalDays = Math.max(7, effectiveDays);
     for (let i = 0; i < 7; i++) {
-      const bStart = new Date(startAnchor.getTime() + i * bucketMs);
-      const bEnd = new Date(startAnchor.getTime() + (i + 1) * bucketMs - 1);
+      const startOffset = Math.floor((i * totalDays) / 7);
+      const endOffset = Math.max(startOffset, Math.floor(((i + 1) * totalDays) / 7) - 1);
+
+      const bStart = new Date(startDayDate);
+      bStart.setDate(bStart.getDate() + startOffset);
+      const bEndDay = new Date(startDayDate);
+      bEndDay.setDate(bEndDay.getDate() + endOffset);
+      const bEnd = endOfDay(bEndDay);
+
       const label = bStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-      const fullDateLabel = `${bStart.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short'
-      })} – ${bEnd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+      const fullDateLabel =
+        bStart.toDateString() === bEndDay.toDateString()
+          ? label
+          : `${label} – ${bEndDay.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
 
       const bucketSum = filteredTx.reduce((sum, tx) => {
         if (!tx?.created_at || tx.type !== 'expense') return sum;
@@ -458,7 +522,7 @@ export function computeAnalytics({
         label,
         fullDateLabel,
         isToday: i === 6,
-        amount: bucketSum
+        amount: roundMoney(bucketSum)
       });
     }
   }
@@ -470,7 +534,7 @@ export function computeAnalytics({
   const dowBreakdown = dowOrder.map((dayNum) => ({
     dayNum,
     label: dowLabels[dayNum],
-    amount: dowTotals[dayNum] || 0,
+    amount: roundMoney(dowTotals[dayNum] || 0),
     count: dowCounts[dayNum] || 0,
     pctOfMax: Math.round(((dowTotals[dayNum] || 0) / maxDowSpend) * 100),
     sharePct: totalExpense > 0 ? Math.round(((dowTotals[dayNum] || 0) / totalExpense) * 100) : 0
@@ -479,18 +543,20 @@ export function computeAnalytics({
 
   const timeOfDayBreakdown = Object.values(timeOfDayMap).map((slot) => ({
     ...slot,
+    amount: roundMoney(slot.amount),
     pct: totalExpense > 0 ? Math.round((slot.amount / totalExpense) * 100) : 0
   }));
   const peakTimeSlot = [...timeOfDayBreakdown].sort((a, b) => b.amount - a.amount)[0] || null;
 
   const categoryBreakdown = Object.keys(categoryTotals)
     .map((catId, index) => {
-      const catObj = categories.find((c) => c.id === catId);
-      const amount = categoryTotals[catId];
+      const catObj = categoryById.get(catId);
+      const amount = roundMoney(categoryTotals[catId]);
       const count = categoryCounts[catId] || 0;
       const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
       const exactShare = totalExpense > 0 ? amount / totalExpense : 0;
       const budget = Number(catObj?.monthly_budget) || 0;
+      const currentMonthSpent = roundMoney(currentMonthCatTotals[catId] || 0);
       return {
         id: catId,
         name: catObj?.name || 'Other',
@@ -501,16 +567,17 @@ export function computeAnalytics({
         pct,
         exactShare,
         budget,
-        budgetPct: budget > 0 ? Math.round((amount / budget) * 100) : null,
+        budgetPct: budget > 0 ? Math.round((currentMonthSpent / budget) * 100) : null,
         color: getCategoryAccentColor(catObj, index)
       };
     })
     .sort((a, b) => b.amount - a.amount);
 
+  // Budget Guardrails always evaluate against current-month spend
   const budgetedCategories = categories
     .filter((c) => c.type === 'expense' && Number(c.monthly_budget) > 0)
     .map((c, idx) => {
-      const spent = categoryTotals[c.id] || 0;
+      const spent = roundMoney(currentMonthCatTotals[c.id] || 0);
       const limit = Number(c.monthly_budget);
       const pct = Math.round((spent / limit) * 100);
       return {
@@ -519,21 +586,21 @@ export function computeAnalytics({
         icon: c.icon || '💸',
         spent,
         limit,
-        remaining: Math.max(0, limit - spent),
-        overBy: Math.max(0, spent - limit),
+        remaining: Math.max(0, roundMoney(limit - spent)),
+        overBy: Math.max(0, roundMoney(spent - limit)),
         pct,
         color: getCategoryAccentColor(c, idx)
       };
     })
     .sort((a, b) => b.pct - a.pct);
 
-  const totalBudgetLimit = budgetedCategories.reduce((s, c) => s + c.limit, 0);
-  const totalBudgetSpent = budgetedCategories.reduce((s, c) => s + c.spent, 0);
+  const totalBudgetLimit = roundMoney(budgetedCategories.reduce((s, c) => s + c.limit, 0));
+  const totalBudgetSpent = roundMoney(budgetedCategories.reduce((s, c) => s + c.spent, 0));
 
   const walletBreakdown = Object.keys(walletTotals)
     .map((wId, idx) => {
-      const wObj = wallets.find((w) => w.id === wId);
-      const amount = walletTotals[wId];
+      const wObj = walletById.get(wId);
+      const amount = roundMoney(walletTotals[wId]);
       const pct = totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0;
       return {
         id: wId,
@@ -589,7 +656,7 @@ export function computeAnalytics({
     filteredTx,
     totalExpense,
     totalIncome,
-    netFlow: totalIncome - totalExpense,
+    netFlow: roundMoney(totalIncome - totalExpense),
     prevPeriodExpense,
     prevPeriodIncome,
     expenseDeltaPct,

@@ -1,5 +1,5 @@
 export const SHARED_ICLOUD_SHORTCUT_URL =
-  'https://www.icloud.com/shortcuts/2b9993fc915b40aeabbdcb31d52b190f';
+  'https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a';
 
 export const WALLET_COLORS = [
   '#E07A5F',
@@ -54,7 +54,7 @@ export const CACHE_KEY = 'tapx_local_cache_v4';
 export const THEME_KEY = 'tapx_theme_pref';
 export const SOUND_KEY = 'tapx_sound_pref';
 export const PRIVACY_KEY = 'tapx_privacy_pref';
-export const BUDGET_CLEANUP_KEY = 'tapx_default_budgets_removed_v1';
+export const SEEDED_KEY_PREFIX = 'tapx_seeded_user_';
 export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
 export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
 

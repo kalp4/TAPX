@@ -477,7 +477,7 @@ export function KeypadTab({
         )}
       </div>
 
-      {/* Fluid Thumb-Zone Numpad (fills reclaimed screen height cleanly) */}
+      {/* Fluid Thumb-Zone Numpad */}
       <div className="flex-1 min-h-0 flex flex-col justify-end gap-2">
         <div className="flex-1 min-h-[196px] max-h-[296px] grid grid-cols-3 grid-rows-4 gap-2">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
@@ -590,12 +590,22 @@ export function AccountsTab({
           {wallets.map((w, idx) => {
             const isFiltered = activityWalletFilter === w.id;
             const cardAccent = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
+            const toggleWalletFilter = () => {
+              playQuickChip();
+              setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id));
+            };
             return (
               <div
                 key={w.id}
-                onClick={() => {
-                  playQuickChip();
-                  setActivityWalletFilter((prev) => (prev === w.id ? 'all' : w.id));
+                role="button"
+                tabIndex={0}
+                aria-pressed={isFiltered}
+                onClick={toggleWalletFilter}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleWalletFilter();
+                  }
                 }}
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
@@ -1270,10 +1280,11 @@ export function InsightsTab({
                       const { category: c, cleanNote } = resolveTxCategory(tx);
                       const accent = getCategoryAccentColor(c, idx);
                       return (
-                        <div
+                        <button
                           key={tx.id}
+                          type="button"
                           onClick={() => openEditTransaction(tx)}
-                          className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardSubtle}`}
+                          className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-left cursor-pointer key-press ${ui.cardSubtle}`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span
@@ -1294,7 +1305,7 @@ export function InsightsTab({
                           <span className={`text-xs font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
                             -{fmtAmt(tx.amount)}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -1397,7 +1408,7 @@ export function InsightsTab({
                         </p>
                         {activeDonutCat.budget > 0 && (
                           <p className="text-[#F4B942]">
-                            Limit: {fmtAmt(activeDonutCat.budget)} ({activeDonutCat.budgetPct}%)
+                            Month Limit: {fmtAmt(activeDonutCat.budget)} ({activeDonutCat.budgetPct}%)
                           </p>
                         )}
                       </div>
@@ -1448,12 +1459,14 @@ export function InsightsTab({
                 </div>
               </div>
 
-              {/* Category Budget Guardrails */}
+              {/* Category Budget Guardrails (always current month) */}
               {analyticsData.budgetedCategories.length > 0 && (
                 <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
-                  <div className="flex items-center justify-between">
-                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Budget Guardrails</h4>
-                    <span className={`text-[11px] font-cartoon font-bold tabular-nums ${ui.textSand}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>
+                      Budget Guardrails · This Month
+                    </h4>
+                    <span className={`text-[11px] font-cartoon font-bold tabular-nums shrink-0 ${ui.textSand}`}>
                       {fmtAmt(analyticsData.totalBudgetSpent)} / {fmtAmt(analyticsData.totalBudgetLimit)}
                     </span>
                   </div>

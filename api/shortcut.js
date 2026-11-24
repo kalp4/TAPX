@@ -116,6 +116,45 @@ function extractAmount(payload) {
   return 0;
 }
 
+// Extract the intended amount token from a shorthand query like "2 coffees 150 upi" or "+500 cash"
+function extractShorthandAmount(rawQuery) {
+  const tokens = String(rawQuery || '').trim().split(/\s+/).filter(Boolean);
+  const candidates = [];
+
+  tokens.forEach((token, idx) => {
+    const m = token.match(/^([+-]?[₹$€£]?)(\d+(?:\.\d+)?)$/);
+    if (m) {
+      const value = Number(m[2]);
+      if (!isNaN(value) && value > 0) {
+        candidates.push({
+          rawToken: token,
+          value,
+          hasPrefix: Boolean(m[1]),
+          index: idx
+        });
+      }
+    }
+  });
+
+  if (candidates.length === 0) {
+    const fallbackMatch = String(rawQuery || '').match(/(\d+(?:\.\d+)?)/);
+    if (!fallbackMatch) return null;
+    const val = Number(fallbackMatch[1]);
+    return val > 0 ? { rawToken: fallbackMatch[0], value: val } : null;
+  }
+
+  // Prefer tokens with an explicit sign or currency symbol (e.g. +500, ₹150)
+  const prefixed = candidates.find((c) => c.hasPrefix);
+  if (prefixed) return prefixed;
+
+  // If the first token is a tiny quantity (e.g. "2 coffees 150"), pick the largest standalone number
+  if (candidates.length > 1) {
+    return [...candidates].sort((a, b) => b.value - a.value)[0];
+  }
+
+  return candidates[0];
+}
+
 // Normalize user/Shortcut type input ('Expense', 'Spent', 'Income', 'Earned', '+', '-')
 function normalizeTxType(rawType, rawQueryText = '') {
   const unwrapped = unwrapShortcutValue(rawType);
@@ -405,9 +444,16 @@ export default async function handler(req, res) {
       return res.status(400).send('⚠️ Enter a valid amount greater than 0');
     }
 
-    const { data: meta } = await supabase.rpc('shortcut_get_meta', {
+    const { data: meta, error: metaError } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
+
+    if (metaError) {
+      return res.status(500).send(`⚠️ ${metaError.message}`);
+    }
+    if (meta?.error) {
+      return res.status(401).send(`⚠️ ${meta.error}`);
+    }
 
     const dbWallets =
       Array.isArray(meta?.wallets) && meta.wallets.length > 0
@@ -472,24 +518,31 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
     const rawQuery = String(payload.q).trim();
-    const amountMatch = rawQuery.match(/(\d+(\.\d+)?)/);
+    const amountPick = extractShorthandAmount(rawQuery);
 
-    if (!amountMatch) {
+    if (!amountPick) {
       return res.status(400).send('⚠️ Enter an amount (e.g. 150 cash food or +500 cash)');
     }
 
-    const numericAmount = Number(amountMatch[1]);
+    const numericAmount = amountPick.value;
     const resolvedType = normalizeTxType(rawTypeArg, rawQuery);
 
     let remainingText = rawQuery
-      .replace(amountMatch[0], '')
+      .replace(new RegExp(`(^|\\s)${escapeRegex(amountPick.rawToken)}(?=\\s|$)`), '$1')
       .replace(/^[+-]\s*/, '')
       .replace(/\b(spent|spend|expense|earned|earn|income)\b/gi, '')
       .trim();
 
-    const { data: meta } = await supabase.rpc('shortcut_get_meta', {
+    const { data: meta, error: metaError } = await supabase.rpc('shortcut_get_meta', {
       p_token: cleanToken
     });
+
+    if (metaError) {
+      return res.status(500).send(`⚠️ ${metaError.message}`);
+    }
+    if (meta?.error) {
+      return res.status(401).send(`⚠️ ${meta.error}`);
+    }
 
     const dbWallets =
       Array.isArray(meta?.wallets) && meta.wallets.length > 0
@@ -509,28 +562,40 @@ export default async function handler(req, res) {
     if (foundWallet) {
       matchedWallet = foundWallet;
       remainingText = remainingText
-        .replace(new RegExp(escapeRegex(String(foundWallet).trim()), 'ig'), '')
+        .replace(new RegExp(`\\b${escapeRegex(String(foundWallet).trim())}\\b`, 'ig'), '')
         .trim();
     } else {
       matchedWallet = dbWallets[0];
     }
 
     const sortedCats = [...dbCategories].sort((a, b) => String(b).length - String(a).length);
+    let matchedByFullCat = false;
     const foundCategory = sortedCats.find((c) => {
       const fullCat = cleanForCompare(c);
       const firstWord = fullCat.split(/[\s&/]+/)[0];
-      return (
-        remainingText.toLowerCase().includes(fullCat) ||
-        (firstWord.length >= 3 && remainingText.toLowerCase().includes(firstWord))
-      );
+      if (remainingText.toLowerCase().includes(fullCat)) {
+        matchedByFullCat = true;
+        return true;
+      }
+      if (firstWord.length >= 3 && new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'i').test(remainingText)) {
+        matchedByFullCat = false;
+        return true;
+      }
+      return false;
     });
+
     if (foundCategory) {
       matchedCategory = foundCategory;
-      const firstWord = cleanForCompare(foundCategory).split(/[\s&/]+/)[0];
-      remainingText = remainingText
-        .replace(new RegExp(escapeRegex(String(foundCategory).trim()), 'ig'), '')
-        .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'ig'), '')
-        .trim();
+      if (matchedByFullCat) {
+        remainingText = remainingText
+          .replace(new RegExp(escapeRegex(String(foundCategory).trim()), 'ig'), '')
+          .trim();
+      } else {
+        const firstWord = cleanForCompare(foundCategory).split(/[\s&/]+/)[0];
+        remainingText = remainingText
+          .replace(new RegExp(`\\b${escapeRegex(firstWord)}\\b`, 'i'), '')
+          .trim();
+      }
     } else {
       matchedCategory =
         resolvedType === 'income'
@@ -578,6 +643,9 @@ export default async function handler(req, res) {
 
     if (error) {
       return res.status(500).json({ error: error.message });
+    }
+    if (data?.error) {
+      return res.status(401).json({ error: data.error });
     }
 
     const walletsList =
