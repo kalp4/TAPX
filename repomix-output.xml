@@ -72,6 +72,92 @@ vite.config.js
 <files>
 This section contains the contents of the repository's files.
 
+<file path="public/google40e4585462743276.html">
+google-site-verification: google40e4585462743276.html
+</file>
+
+<file path="src/main.jsx">
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+</file>
+
+<file path="src/supabaseClient.js">
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+</file>
+
+<file path=".gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+</file>
+
+<file path=".oxlintrc.json">
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
+</file>
+
+<file path="vercel.json">
+{
+  "crons": [
+    {
+      "path": "/api/keepalive",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+</file>
+
 <file path="api/keepalive.js">
 import { createClient } from '@supabase/supabase-js';
 
@@ -100,8 +186,514 @@ export default async function handler(req, res) {
 }
 </file>
 
-<file path="public/google40e4585462743276.html">
-google-site-verification: google40e4585462743276.html
+<file path="public/privacy.html">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1e1e1c" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Privacy Policy — TAPX</title>
+    <style>
+      :root {
+        --bg: #1e1e1c;
+        --surface: #282825;
+        --surface-elevated: #32302b;
+        --outline: #111110;
+        --sand: #D8CBB3;
+        --cream: #F5EFE6;
+        --text-primary: #F5EFE6;
+        --text-secondary: #B8AA93;
+        --text-muted: #877D6E;
+        --coral: #F26B5B;
+        --mint: #52B788;
+        --gold: #F4B942;
+        --sky: #5C9EAD;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        background-color: var(--bg);
+        color: var(--text-primary);
+        font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.65;
+      }
+
+      h1,
+      h2,
+      .brand-name,
+      .badge,
+      .back-link,
+      .contact-label {
+        font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Plus Jakarta Sans', system-ui, sans-serif;
+      }
+
+      .container {
+        max-width: 740px;
+        margin: 0 auto;
+        padding: 44px 20px 80px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 36px;
+        padding-bottom: 20px;
+        border-bottom: 2px dashed #363632;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+      }
+
+      .brand-logo-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: var(--surface);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .brand-name {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--cream);
+      }
+
+      .back-link {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e1e1c;
+        text-decoration: none;
+        padding: 9px 16px;
+        border-radius: 9999px;
+        background: var(--sand);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      }
+
+      .back-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 0 var(--outline);
+        text-decoration: none;
+      }
+
+      .back-link:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 var(--outline);
+      }
+
+      .hero {
+        margin-bottom: 28px;
+      }
+
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #1e1e1c;
+        background: var(--gold);
+        border: 2px solid var(--outline);
+        box-shadow: 0 2px 0 var(--outline);
+        padding: 4px 12px;
+        border-radius: 9999px;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.18;
+        margin-bottom: 8px;
+        color: var(--cream);
+      }
+
+      .meta {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .summary-card {
+        background: var(--sand);
+        color: #1e1e1c;
+        border: 2.5px solid var(--outline);
+        box-shadow: 0 5px 0 var(--outline);
+        border-radius: 24px;
+        padding: 20px 22px;
+        margin-bottom: 28px;
+      }
+
+      .summary-card p {
+        font-size: 14px;
+        font-weight: 600;
+        color: #282825;
+      }
+
+      .summary-card strong {
+        color: #111110;
+        font-weight: 800;
+      }
+
+      .summary-card a {
+        color: #111110;
+        text-decoration: underline;
+        font-weight: 700;
+      }
+
+      section {
+        background: var(--surface);
+        border: 2px solid var(--outline);
+        box-shadow: 0 4px 0 var(--outline);
+        border-radius: 24px;
+        padding: 24px 24px;
+        margin-bottom: 18px;
+      }
+
+      h2 {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--sand);
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        padding-left: 18px;
+        margin-top: 8px;
+        margin-bottom: 12px;
+      }
+
+      ul:last-child {
+        margin-bottom: 0;
+      }
+
+      li {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      li:last-child {
+        margin-bottom: 0;
+      }
+
+      strong {
+        color: var(--cream);
+        font-weight: 700;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12.5px;
+        background: #181816;
+        color: var(--gold);
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid var(--outline);
+      }
+
+      a {
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .contact-item {
+        background: var(--surface-elevated);
+        border: 2px solid var(--outline);
+        box-shadow: 0 3px 0 var(--outline);
+        border-radius: 16px;
+        padding: 12px 14px;
+      }
+
+      .contact-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+      }
+
+      .contact-value {
+        font-size: 13px;
+        color: var(--cream);
+        font-weight: 600;
+      }
+
+      footer {
+        margin-top: 36px;
+        padding-top: 20px;
+        border-top: 2px dashed #363632;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 28px 16px 56px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+        section {
+          padding: 20px 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <a href="/" class="brand">
+          <div class="brand-logo-box">
+            <svg viewBox="70 50 375 415" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <rect x="108" y="224" width="316" height="220" rx="44" fill="#111110" />
+              <rect x="164" y="144" width="56" height="116" rx="14" fill="#F26B5B" stroke="#111110" stroke-width="10" />
+              <rect x="236" y="106" width="56" height="154" rx="14" fill="#52B788" stroke="#111110" stroke-width="10" />
+              <rect x="308" y="68" width="56" height="192" rx="14" fill="#F4B942" stroke="#111110" stroke-width="10" />
+              <rect x="96" y="212" width="316" height="216" rx="44" fill="#D8CBB3" stroke="#111110" stroke-width="11" />
+              <rect x="324" y="290" width="102" height="64" rx="32" fill="#282825" stroke="#111110" stroke-width="10" />
+              <circle cx="358" cy="322" r="13" fill="#F4B942" stroke="#111110" stroke-width="7" />
+            </svg>
+          </div>
+          <span class="brand-name">TAPX</span>
+        </a>
+        <a href="/" class="back-link">Open App &rarr;</a>
+      </header>
+
+      <div class="hero">
+        <span class="badge">Privacy &amp; Data Protection</span>
+        <h1>Privacy Policy</h1>
+        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 18, 2026</p>
+      </div>
+
+      <div class="summary-card">
+        <p>
+          <strong>TAPX</strong> (<a href="https://xtap.vercel.app">https://xtap.vercel.app</a>) is a personal
+          multi-wallet expense tracking web application developed and operated by <strong>Kalp Patel</strong>.
+          Your financial records belong strictly to you—we never sell, rent, advertise against, or share your
+          personal or financial information with third parties.
+        </p>
+      </div>
+
+      <section>
+        <h2>1. Information We Collect</h2>
+        <p>
+          TAPX collects only the minimum information necessary to authenticate your account, synchronize your
+          balances across devices, and power quick transaction logging:
+        </p>
+        <ul>
+          <li>
+            <strong>Google Account Information:</strong> When you sign in with Google OAuth, we receive your
+            basic profile information (display name, email address, and unique Google User ID) via standard
+            <code>openid</code>, <code>userinfo.email</code>, and <code>userinfo.profile</code> scopes. TAPX
+            does <strong>not</strong> request access to your Gmail messages, Google Drive, Contacts, Calendar,
+            or external bank accounts.
+          </li>
+          <li>
+            <strong>User-Entered Financial Records:</strong> Wallets/accounts, initial and current balances,
+            custom expense or income categories, custom icons, optional monthly spending limits, currency
+            preferences, transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
+          </li>
+          <li>
+            <strong>Automation &amp; Local Storage Data:</strong> A unique, revocable Shortcut Security Token
+            generated for your account to authenticate iPhone Back Tap / Apple Shortcuts requests, along with
+            local browser storage (<code>localStorage</code>) on your device to provide instant offline-ready
+            loading and theme preferences.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>2. How We Use Your Information</h2>
+        <p>We process the information described above exclusively for the following purposes:</p>
+        <ul>
+          <li>Authenticating your session and isolating your workspace from other users.</li>
+          <li>Calculating wallet balances, inter-wallet transfers, category totals, and spending insights.</li>
+          <li>
+            Validating and recording quick expense or income entries submitted through your personal Apple
+            Shortcuts webhook URL.
+          </li>
+          <li>Maintaining application uptime, security, and database integrity.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. Google API Services User Data Policy</h2>
+        <p>
+          TAPX's use and transfer to any other app of information received from Google APIs strictly adheres
+          to the
+          <a
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Google API Services User Data Policy
+          </a>, including the Limited Use requirements.
+        </p>
+        <p>
+          Specifically, Google user data obtained through sign-in is used solely to provide and maintain
+          user-facing authentication within TAPX and is never transferred to third-party data brokers, used
+          for targeted advertising, or used to train artificial intelligence or machine learning models.
+        </p>
+      </section>
+
+      <section>
+        <h2>4. Infrastructure &amp; Service Providers</h2>
+        <p>
+          TAPX relies on trusted cloud infrastructure providers to host the application and store your records
+          securely:
+        </p>
+        <ul>
+          <li>
+            <strong>Supabase:</strong> Provides user authentication and managed PostgreSQL database hosting.
+            All tables enforce PostgreSQL Row-Level Security (RLS) so that only your authenticated account
+            can read or modify your records.
+          </li>
+          <li>
+            <strong>Vercel:</strong> Hosts the TAPX web interface and executes serverless API endpoints
+            (such as <code>/api/shortcut</code>) over encrypted HTTPS connections.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Data Security</h2>
+        <p>
+          All network communication between your device, Vercel, and Supabase is encrypted in transit using
+          HTTPS/TLS. Access to your data is protected by Google OAuth 2.0 session tokens and database-level
+          Row-Level Security policies. If you ever suspect your Apple Shortcuts token has been exposed, you
+          can immediately invalidate it and generate a new token inside <strong>Settings &rarr; Back Tap Setup</strong>.
+        </p>
+      </section>
+
+      <section>
+        <h2>6. Data Retention &amp; Your Deletion Rights</h2>
+        <p>
+          Your financial data is retained only while your TAPX account remains active. You maintain direct
+          control over your information at all times:
+        </p>
+        <ul>
+          <li>
+            <strong>In-App Controls:</strong> You can edit or permanently delete individual transactions,
+            wallets, and categories directly inside TAPX at any time. Signing out automatically clears local
+            cached data from your browser.
+          </li>
+          <li>
+            <strong>Full Account Deletion:</strong> You may request permanent deletion of your TAPX account
+            and all associated database records at any time by emailing
+            <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a> from your registered
+            email address. Deletion requests are completed within 7 days.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. Children's Privacy</h2>
+        <p>
+          TAPX is not directed to children under the age of 13 (or the minimum age of digital consent in your
+          jurisdiction), and we do not knowingly collect personal information from children.
+        </p>
+      </section>
+
+      <section>
+        <h2>8. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy periodically to reflect improvements to TAPX or changes in legal
+          requirements. Any updates will be published on this page with an updated effective date.
+        </p>
+      </section>
+
+      <section>
+        <h2>9. Contact Information</h2>
+        <p>
+          If you have any questions about this Privacy Policy, data security, or account deletion, please
+          contact the developer:
+        </p>
+        <div class="contact-grid">
+          <div class="contact-item">
+            <span class="contact-label">Developer</span>
+            <span class="contact-value">Kalp Patel</span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Contact Email</span>
+            <span class="contact-value">
+              <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a>
+            </span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-label">Application URL</span>
+            <span class="contact-value">
+              <a href="https://xtap.vercel.app">https://xtap.vercel.app</a>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>&copy; 2026 TAPX. All rights reserved.</span>
+        <span>Built by Kalp Patel &middot; Ahmedabad, India</span>
+      </footer>
+    </div>
+  </body>
+</html>
 </file>
 
 <file path="src/analytics.js">
@@ -798,822 +1390,6 @@ export function computeAnalytics({
 }
 </file>
 
-<file path="src/main.jsx">
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './index.css';
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-</file>
-
-<file path="src/supabaseClient.js">
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-</file>
-
-<file path=".gitignore">
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.env
-</file>
-
-<file path=".oxlintrc.json">
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "oxc"],
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-</file>
-
-<file path="vercel.json">
-{
-  "crons": [
-    {
-      "path": "/api/keepalive",
-      "schedule": "0 8 * * *"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
-</file>
-
-<file path="public/privacy.html">
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1e1e1c" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <title>Privacy Policy — TAPX</title>
-    <style>
-      :root {
-        --bg: #1e1e1c;
-        --surface: #282825;
-        --surface-elevated: #32302b;
-        --outline: #111110;
-        --sand: #D8CBB3;
-        --cream: #F5EFE6;
-        --text-primary: #F5EFE6;
-        --text-secondary: #B8AA93;
-        --text-muted: #877D6E;
-        --coral: #F26B5B;
-        --mint: #52B788;
-        --gold: #F4B942;
-        --sky: #5C9EAD;
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      html,
-      body {
-        background-color: var(--bg);
-        color: var(--text-primary);
-        font-family: 'Plus Jakarta Sans', ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        line-height: 1.65;
-      }
-
-      h1,
-      h2,
-      .brand-name,
-      .badge,
-      .back-link,
-      .contact-label {
-        font-family: 'Fredoka', ui-rounded, 'SF Pro Rounded', 'Plus Jakarta Sans', system-ui, sans-serif;
-      }
-
-      .container {
-        max-width: 740px;
-        margin: 0 auto;
-        padding: 44px 20px 80px;
-      }
-
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 36px;
-        padding-bottom: 20px;
-        border-bottom: 2px dashed #363632;
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        color: var(--text-primary);
-      }
-
-      .brand-logo-box {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: var(--surface);
-        border: 2px solid var(--outline);
-        box-shadow: 0 3px 0 var(--outline);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .brand-name {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: var(--cream);
-      }
-
-      .back-link {
-        font-size: 13px;
-        font-weight: 700;
-        color: #1e1e1c;
-        text-decoration: none;
-        padding: 9px 16px;
-        border-radius: 9999px;
-        background: var(--sand);
-        border: 2px solid var(--outline);
-        box-shadow: 0 3px 0 var(--outline);
-        transition: transform 0.1s ease, box-shadow 0.1s ease;
-      }
-
-      .back-link:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 0 var(--outline);
-        text-decoration: none;
-      }
-
-      .back-link:active {
-        transform: translateY(2px);
-        box-shadow: 0 1px 0 var(--outline);
-      }
-
-      .hero {
-        margin-bottom: 28px;
-      }
-
-      .badge {
-        display: inline-block;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: #1e1e1c;
-        background: var(--gold);
-        border: 2px solid var(--outline);
-        box-shadow: 0 2px 0 var(--outline);
-        padding: 4px 12px;
-        border-radius: 9999px;
-        margin-bottom: 14px;
-      }
-
-      h1 {
-        font-size: 34px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.18;
-        margin-bottom: 8px;
-        color: var(--cream);
-      }
-
-      .meta {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-muted);
-      }
-
-      .summary-card {
-        background: var(--sand);
-        color: #1e1e1c;
-        border: 2.5px solid var(--outline);
-        box-shadow: 0 5px 0 var(--outline);
-        border-radius: 24px;
-        padding: 20px 22px;
-        margin-bottom: 28px;
-      }
-
-      .summary-card p {
-        font-size: 14px;
-        font-weight: 600;
-        color: #282825;
-      }
-
-      .summary-card strong {
-        color: #111110;
-        font-weight: 800;
-      }
-
-      .summary-card a {
-        color: #111110;
-        text-decoration: underline;
-        font-weight: 700;
-      }
-
-      section {
-        background: var(--surface);
-        border: 2px solid var(--outline);
-        box-shadow: 0 4px 0 var(--outline);
-        border-radius: 24px;
-        padding: 24px 24px;
-        margin-bottom: 18px;
-      }
-
-      h2 {
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: var(--sand);
-        margin-bottom: 10px;
-      }
-
-      p {
-        font-size: 14px;
-        color: var(--text-secondary);
-        margin-bottom: 12px;
-      }
-
-      p:last-child {
-        margin-bottom: 0;
-      }
-
-      ul {
-        padding-left: 18px;
-        margin-top: 8px;
-        margin-bottom: 12px;
-      }
-
-      ul:last-child {
-        margin-bottom: 0;
-      }
-
-      li {
-        font-size: 14px;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-      }
-
-      li:last-child {
-        margin-bottom: 0;
-      }
-
-      strong {
-        color: var(--cream);
-        font-weight: 700;
-      }
-
-      code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 12.5px;
-        background: #181816;
-        color: var(--gold);
-        padding: 2px 6px;
-        border-radius: 6px;
-        border: 1px solid var(--outline);
-      }
-
-      a {
-        color: var(--gold);
-        font-weight: 600;
-        text-decoration: none;
-      }
-
-      a:hover {
-        text-decoration: underline;
-      }
-
-      .contact-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 12px;
-        margin-top: 14px;
-      }
-
-      .contact-item {
-        background: var(--surface-elevated);
-        border: 2px solid var(--outline);
-        box-shadow: 0 3px 0 var(--outline);
-        border-radius: 16px;
-        padding: 12px 14px;
-      }
-
-      .contact-label {
-        display: block;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--text-muted);
-        margin-bottom: 2px;
-      }
-
-      .contact-value {
-        font-size: 13px;
-        color: var(--cream);
-        font-weight: 600;
-      }
-
-      footer {
-        margin-top: 36px;
-        padding-top: 20px;
-        border-top: 2px dashed #363632;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-muted);
-      }
-
-      @media (max-width: 600px) {
-        .container {
-          padding: 28px 16px 56px;
-        }
-        h1 {
-          font-size: 28px;
-        }
-        section {
-          padding: 20px 18px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <header class="topbar">
-        <a href="/" class="brand">
-          <div class="brand-logo-box">
-            <svg viewBox="70 50 375 415" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
-              <rect x="108" y="224" width="316" height="220" rx="44" fill="#111110" />
-              <rect x="164" y="144" width="56" height="116" rx="14" fill="#F26B5B" stroke="#111110" stroke-width="10" />
-              <rect x="236" y="106" width="56" height="154" rx="14" fill="#52B788" stroke="#111110" stroke-width="10" />
-              <rect x="308" y="68" width="56" height="192" rx="14" fill="#F4B942" stroke="#111110" stroke-width="10" />
-              <rect x="96" y="212" width="316" height="216" rx="44" fill="#D8CBB3" stroke="#111110" stroke-width="11" />
-              <rect x="324" y="290" width="102" height="64" rx="32" fill="#282825" stroke="#111110" stroke-width="10" />
-              <circle cx="358" cy="322" r="13" fill="#F4B942" stroke="#111110" stroke-width="7" />
-            </svg>
-          </div>
-          <span class="brand-name">TAPX</span>
-        </a>
-        <a href="/" class="back-link">Open App &rarr;</a>
-      </header>
-
-      <div class="hero">
-        <span class="badge">Privacy &amp; Data Protection</span>
-        <h1>Privacy Policy</h1>
-        <p class="meta">Effective Date: November 15, 2026 &middot; Last Updated: November 18, 2026</p>
-      </div>
-
-      <div class="summary-card">
-        <p>
-          <strong>TAPX</strong> (<a href="https://xtap.vercel.app">https://xtap.vercel.app</a>) is a personal
-          multi-wallet expense tracking web application developed and operated by <strong>Kalp Patel</strong>.
-          Your financial records belong strictly to you—we never sell, rent, advertise against, or share your
-          personal or financial information with third parties.
-        </p>
-      </div>
-
-      <section>
-        <h2>1. Information We Collect</h2>
-        <p>
-          TAPX collects only the minimum information necessary to authenticate your account, synchronize your
-          balances across devices, and power quick transaction logging:
-        </p>
-        <ul>
-          <li>
-            <strong>Google Account Information:</strong> When you sign in with Google OAuth, we receive your
-            basic profile information (display name, email address, and unique Google User ID) via standard
-            <code>openid</code>, <code>userinfo.email</code>, and <code>userinfo.profile</code> scopes. TAPX
-            does <strong>not</strong> request access to your Gmail messages, Google Drive, Contacts, Calendar,
-            or external bank accounts.
-          </li>
-          <li>
-            <strong>User-Entered Financial Records:</strong> Wallets/accounts, initial and current balances,
-            custom expense or income categories, custom icons, optional monthly spending limits, currency
-            preferences, transaction amounts, notes, and timestamps that you voluntarily enter into TAPX.
-          </li>
-          <li>
-            <strong>Automation &amp; Local Storage Data:</strong> A unique, revocable Shortcut Security Token
-            generated for your account to authenticate iPhone Back Tap / Apple Shortcuts requests, along with
-            local browser storage (<code>localStorage</code>) on your device to provide instant offline-ready
-            loading and theme preferences.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>2. How We Use Your Information</h2>
-        <p>We process the information described above exclusively for the following purposes:</p>
-        <ul>
-          <li>Authenticating your session and isolating your workspace from other users.</li>
-          <li>Calculating wallet balances, inter-wallet transfers, category totals, and spending insights.</li>
-          <li>
-            Validating and recording quick expense or income entries submitted through your personal Apple
-            Shortcuts webhook URL.
-          </li>
-          <li>Maintaining application uptime, security, and database integrity.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>3. Google API Services User Data Policy</h2>
-        <p>
-          TAPX's use and transfer to any other app of information received from Google APIs strictly adheres
-          to the
-          <a
-            href="https://developers.google.com/terms/api-services-user-data-policy"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Google API Services User Data Policy
-          </a>, including the Limited Use requirements.
-        </p>
-        <p>
-          Specifically, Google user data obtained through sign-in is used solely to provide and maintain
-          user-facing authentication within TAPX and is never transferred to third-party data brokers, used
-          for targeted advertising, or used to train artificial intelligence or machine learning models.
-        </p>
-      </section>
-
-      <section>
-        <h2>4. Infrastructure &amp; Service Providers</h2>
-        <p>
-          TAPX relies on trusted cloud infrastructure providers to host the application and store your records
-          securely:
-        </p>
-        <ul>
-          <li>
-            <strong>Supabase:</strong> Provides user authentication and managed PostgreSQL database hosting.
-            All tables enforce PostgreSQL Row-Level Security (RLS) so that only your authenticated account
-            can read or modify your records.
-          </li>
-          <li>
-            <strong>Vercel:</strong> Hosts the TAPX web interface and executes serverless API endpoints
-            (such as <code>/api/shortcut</code>) over encrypted HTTPS connections.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>5. Data Security</h2>
-        <p>
-          All network communication between your device, Vercel, and Supabase is encrypted in transit using
-          HTTPS/TLS. Access to your data is protected by Google OAuth 2.0 session tokens and database-level
-          Row-Level Security policies. If you ever suspect your Apple Shortcuts token has been exposed, you
-          can immediately invalidate it and generate a new token inside <strong>Settings &rarr; Back Tap Setup</strong>.
-        </p>
-      </section>
-
-      <section>
-        <h2>6. Data Retention &amp; Your Deletion Rights</h2>
-        <p>
-          Your financial data is retained only while your TAPX account remains active. You maintain direct
-          control over your information at all times:
-        </p>
-        <ul>
-          <li>
-            <strong>In-App Controls:</strong> You can edit or permanently delete individual transactions,
-            wallets, and categories directly inside TAPX at any time. Signing out automatically clears local
-            cached data from your browser.
-          </li>
-          <li>
-            <strong>Full Account Deletion:</strong> You may request permanent deletion of your TAPX account
-            and all associated database records at any time by emailing
-            <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a> from your registered
-            email address. Deletion requests are completed within 7 days.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>7. Children's Privacy</h2>
-        <p>
-          TAPX is not directed to children under the age of 13 (or the minimum age of digital consent in your
-          jurisdiction), and we do not knowingly collect personal information from children.
-        </p>
-      </section>
-
-      <section>
-        <h2>8. Changes to This Policy</h2>
-        <p>
-          We may update this Privacy Policy periodically to reflect improvements to TAPX or changes in legal
-          requirements. Any updates will be published on this page with an updated effective date.
-        </p>
-      </section>
-
-      <section>
-        <h2>9. Contact Information</h2>
-        <p>
-          If you have any questions about this Privacy Policy, data security, or account deletion, please
-          contact the developer:
-        </p>
-        <div class="contact-grid">
-          <div class="contact-item">
-            <span class="contact-label">Developer</span>
-            <span class="contact-value">Kalp Patel</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-label">Contact Email</span>
-            <span class="contact-value">
-              <a href="mailto:kalppatel132008@gmail.com">kalppatel132008@gmail.com</a>
-            </span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-label">Application URL</span>
-            <span class="contact-value">
-              <a href="https://xtap.vercel.app">https://xtap.vercel.app</a>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <footer>
-        <span>&copy; 2026 TAPX. All rights reserved.</span>
-        <span>Built by Kalp Patel &middot; Ahmedabad, India</span>
-      </footer>
-    </div>
-  </body>
-</html>
-</file>
-
-<file path="public/manifest.json">
-{
-  "name": "TAPX",
-  "short_name": "TAPX",
-  "start_url": "/?quickAdd=true",
-  "display": "standalone",
-  "background_color": "#1e1e1c",
-  "theme_color": "#1e1e1c",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
-  ]
-}
-</file>
-
-<file path="README.md">
-# TAPX
-
-A multi-wallet personal expense tracker and Progressive Web App (PWA) with a serverless webhook API for iOS Back Tap Shortcuts.
-
-**Production:** [xtap.vercel.app](https://xtap.vercel.app) · **Privacy Policy:** [xtap.vercel.app/privacy.html](https://xtap.vercel.app/privacy.html)
-
-## Overview
-
-Logging small daily transactions often fails because opening an app, waiting for authentication, and navigating forms introduces too much friction.
-
-TAPX solves this in two ways:
-1. **Headless Ingestion (`/api/shortcut`):** A stateless Vercel Serverless Function that lets iOS Shortcuts (triggered via iPhone Back Tap) fetch live account metadata and commit transactions directly to PostgreSQL from the Lock Screen.
-2. **Optimistic Offline-Ready PWA:** A React 19 web client that hydrates synchronously from `localStorage` (`tapx_local_cache_v4`), applies optimistic balance updates, queues offline entries (`tapx_offline_queue_v1`), and reconciles with Supabase in the background.
-
-## Key Features
-
-- **Tactile Keypad & Multi-Wallet Tracking:** Fast expense, income, and inter-wallet transfer entry with quick-add chips (`+₹50`, `+₹100`, `+₹500`, `+₹1k`) and instant balance previews.
-- **iPhone Back Tap Integration:** One-tap iCloud Shortcut setup with revocable per-user security tokens and fuzzy wallet/category matching.
-- **Organized Insights & CSV Export:** Period presets (`7D`, `This Month`, `Last Month`, `30D`, `90D`, `All`, `Custom`), interactive SVG category donut, spending trend chart, day-of-week heatmap, time-of-day & ticket-size habits, current-month budget guardrails, and UTF-8 BOM CSV export.
-- **Custom Accounts & 110+ Icon Library:** Searchable emoji picker with custom keyboard emoji input, custom sticker colors, and optional monthly category limits.
-- **Zero-Dependency Sound & Haptics Engine:** Synthesized Web Audio API keypad pops, chimes, and cross-platform haptics (Vibration API + iOS 17.4+ Taptic switch fallback) with a persistent mute toggle.
-- **Charcoal & Warm Sand Theme:** Auto (system), Light, and Dark modes with fixed viewport locking and persistent privacy balance masking.
-
-## Architecture
-
-- **Frontend (`src/`):** React 19, Vite 6, and Tailwind CSS. Modularized into UI components, analytics computation, theme/icon constants, and Web Audio synthesis.
-- **Serverless API (`api/`):** Node.js handlers deployed on Vercel:
-  - `api/shortcut.js`: Normalizes JSON, URL-encoded form data, or shorthand query strings from Apple Shortcuts, resolves fuzzy wallet/category matches, and invokes database RPCs.
-  - `api/keepalive.js`: Triggered daily at `08:00 UTC` via Vercel Cron (`vercel.json`) to run a lightweight RPC ping and prevent Supabase project hibernation (supports optional `CRON_SECRET` Bearer auth).
-- **Database & Auth:** Supabase (PostgreSQL + Google OAuth 2.0). All tables enforce Row-Level Security (RLS) scoped to `auth.uid() = user_id`.
-
-## Repository Structure
-
-```text
-tapx/
-├── api/
-│   ├── keepalive.js            # Daily cron handler to prevent database pausing
-│   └── shortcut.js             # Webhook endpoint for Apple Shortcuts
-├── public/
-│   ├── favicon.svg             # Vector application icon
-│   ├── logo.png                # 512x512 PWA icon
-│   ├── manifest.json           # Web App Manifest
-│   └── privacy.html            # Static privacy policy for OAuth verification
-├── src/
-│   ├── components/
-│   │   ├── Modals.jsx          # Logo, NavIcon, IconLibraryPicker, LoginScreen & bottom-sheet modals
-│   │   └── Tabs.jsx            # Keypad, Accounts, Insights, and Settings views
-│   ├── analytics.js            # Session hydration, date windows, and spending analytics engine
-│   ├── App.jsx                 # Core application state, sync queue, and ErrorBoundary
-│   ├── constants.js            # Theme tokens, defaults, storage keys, and 110+ icon catalog
-│   ├── index.css               # Viewport lock and scroll container rules
-│   ├── main.jsx                # Application entry point
-│   ├── sounds.js               # Web Audio API sound synthesizer and haptics
-│   └── supabaseClient.js       # Supabase client singleton
-├── .oxlintrc.json              # Oxlint ruleset
-├── index.html                  # App shell and pre-paint theme script
-├── package.json                # Dependencies and build scripts
-├── vercel.json                 # Cron definitions and SPA/API routing rewrites
-└── vite.config.js              # Vite bundler configuration
-```
-
-## Webhook API Reference
-
-All requests to `/api/shortcut` authenticate via the `x-shortcut-token` HTTP header or the `token` query parameter.
-
-### 1. Retrieve Account Metadata
-```http
-GET /api/shortcut?token=<SHORTCUT_TOKEN>
-```
-Returns active wallets and categories in both lowercase and TitleCase keys to populate dynamic selection menus across iOS versions.
-
-**Response (`200 OK`, `application/json`):**
-```json
-{
-  "types": ["Expense", "Income"],
-  "wallets": ["UPI", "Cash"],
-  "categories": ["Food & Drinks", "Groceries", "Transport", "Shopping"],
-  "Expense": ["Food & Drinks", "Groceries", "Transport", "Shopping"],
-  "Income": ["Income & Allowance"]
-}
-```
-
-### 2. Record Structured Transaction
-```http
-POST /api/shortcut
-Content-Type: application/json
-x-shortcut-token: <SHORTCUT_TOKEN>
-```
-Accepts JSON, `application/x-www-form-urlencoded`, or query parameters. Fuzzy-matches wallet and category names (stripping emojis and whitespace) before falling back to the primary wallet/category.
-
-**Request Body:**
-```json
-{
-  "amount": 150,
-  "wallet": "UPI",
-  "category": "Food & Drinks",
-  "type": "expense",
-  "note": "Lunch"
-}
-```
-
-**Response (`200 OK`, `text/plain`):**
-```text
-✅ -₹150 • Food & Drinks
-💳 UPI: ₹2,850.00
-```
-
-### 3. Record Shorthand Query
-```http
-GET /api/shortcut?token=<SHORTCUT_TOKEN>&q=<ENCODED_STRING>
-```
-Parses a single freeform string for amount, direction (`+` or keywords like `income`/`earned`), wallet name, category prefix, and note remainder.
-
-- **Expense:** `/api/shortcut?token=TOKEN&q=150%20upi%20food%20coffee`
-- **Income:** `/api/shortcut?token=TOKEN&q=%2B500%20cash%20allowance`
-
-## Database Schema
-
-Configure a Supabase project with the following tables and RPC functions:
-
-### Tables
-
-- **`user_settings`**
-  - `user_id` (`uuid`, Primary Key, references `auth.users`)
-  - `currency` (`text`, default `'₹'`)
-  - `shortcut_token` (`text`, unique)
-- **`wallets`**
-  - `id` (`uuid`, Primary Key, default `gen_random_uuid()`)
-  - `user_id` (`uuid`, references `auth.users`)
-  - `name` (`text`), `type` (`text`), `balance` (`numeric`, default `0`), `color` (`text`), `icon` (`text`)
-  - `created_at` (`timestamptz`, default `now()`)
-- **`categories`**
-  - `id` (`uuid`, Primary Key, default `gen_random_uuid()`)
-  - `user_id` (`uuid`, references `auth.users`)
-  - `name` (`text`), `type` (`text`: `'expense'` | `'income'`), `icon` (`text`), `color` (`text`)
-  - `monthly_budget` (`numeric`, nullable)
-  - `created_at` (`timestamptz`, default `now()`)
-- **`transactions`**
-  - `id` (`uuid`, Primary Key, default `gen_random_uuid()`)
-  - `user_id` (`uuid`, references `auth.users`)
-  - `wallet_id` (`uuid`, references `wallets.id` on delete cascade)
-  - `to_wallet_id` (`uuid`, nullable, references `wallets.id` on delete set null)
-  - `category_id` (`uuid`, nullable, references `categories.id` on delete set null)
-  - `type` (`text`: `'expense'` | `'income'` | `'transfer'`)
-  - `amount` (`numeric`), `note` (`text`), `source` (`text`: `'app'` | `'shortcut'`)
-  - `created_at` (`timestamptz`, default `now()`)
-
-### Required PostgreSQL RPC Functions
-
-- `shortcut_get_meta(p_token text)`: Validates `p_token` against `user_settings.shortcut_token` and returns JSON with `wallets` and `categories`.
-- `shortcut_quick_log(p_token text, p_amount numeric, p_wallet_name text, p_category_name text, p_type text, p_note text)`: Validates `p_token`, resolves wallet/category IDs, inserts the transaction with `source = 'shortcut'`, updates `wallets.balance`, and returns `amount`, `wallet_name`, `category_name`, `type`, `currency`, and `new_balance`.
-- `keep_alive_ping()`: Returns a lightweight status payload (`SELECT 1`) for the daily cron job.
-
-## Local Development
-
-### Prerequisites
-- Node.js >= 18.x
-- Supabase project with Google OAuth enabled
-
-### Setup
-
-1. Clone the repository and install dependencies:
-   ```bash
-   git clone [https://github.com/kalp4/TAPX](https://github.com/kalp4/TAPX)
-   cd TAPX
-   npm install
-   ```
-
-2. Create a `.env` file in the root directory:
-   ```env
-   VITE_SUPABASE_URL=[https://your-project-ref.supabase.co](https://your-project-ref.supabase.co)
-   VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-   ```
-   *Both variables must also be configured in your Vercel project settings so the serverless functions in `api/` can initialize Supabase. Optionally add `CRON_SECRET` in Vercel to lock down `/api/keepalive` to Vercel Cron requests.*
-
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Build and preview for production:
-   ```bash
-   npm run build
-   npm run preview
-   ```
-
-## iOS Shortcut Configuration
-
-1. Sign in to TAPX and open **Settings → Shortcut Setup**.
-2. Tap **Copy Personal URL & Install Shortcut** (or open the [shared iCloud Shortcut template](https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a)).
-3. Paste your personal URL when prompted and tap **Add Shortcut**.
-4. Bind it to hardware gestures in iOS **Settings → Accessibility → Touch → Back Tap → Double Tap** and choose **TAPX**.
-
-## Author
-**Kalp Patel**
-</file>
-
 <file path="public/favicon.svg">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <!-- Warm Charcoal Squircle Background (#1e1e1c) -->
@@ -1697,333 +1473,28 @@ Configure a Supabase project with the following tables and RPC functions:
 </svg>
 </file>
 
-<file path="src/constants.js">
-export const SHARED_ICLOUD_SHORTCUT_URL =
-  'https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a';
-
-export const WALLET_COLORS = [
-  '#E07A5F',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E56B6F',
-  '#D8CBB3',
-  '#F26B5B',
-  '#4EA8DE',
-  '#80ED99',
-  '#F7A072',
-  '#B5838D'
-];
-
-export const CHART_COLORS = [
-  '#F26B5B',
-  '#52B788',
-  '#F4B942',
-  '#5C9EAD',
-  '#9B7EDE',
-  '#E07A5F',
-  '#E56B6F',
-  '#D8CBB3'
-];
-
-export const DEFAULT_WALLETS_TEMPLATE = [
-  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
-  { name: 'Cash', type: 'Cash', balance: 0, color: '#52B788', icon: '💵' }
-];
-
-export const DEFAULT_CATEGORIES_TEMPLATE = [
-  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#F26B5B', monthly_budget: null },
-  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#52B788', monthly_budget: null },
-  { name: 'Transport', type: 'expense', icon: '⛽', color: '#F4B942', monthly_budget: null },
-  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#9B7EDE', monthly_budget: null },
-  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#E56B6F', monthly_budget: null },
-  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#5C9EAD', monthly_budget: null },
-  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#E07A5F', monthly_budget: null },
-  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#52B788', monthly_budget: null }
-];
-
-export const NAV_TABS = [
-  { id: 'pad', label: 'Keypad' },
-  { id: 'wallets', label: 'Accounts' },
-  { id: 'analytics', label: 'Insights' },
-  { id: 'settings', label: 'Settings' }
-];
-
-export const CACHE_KEY = 'tapx_local_cache_v4';
-export const THEME_KEY = 'tapx_theme_pref';
-export const SOUND_KEY = 'tapx_sound_pref';
-export const PRIVACY_KEY = 'tapx_privacy_pref';
-export const SEEDED_KEY_PREFIX = 'tapx_seeded_user_';
-export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
-export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
-
-export const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
-
-export const ICON_CATALOG = [
-  // Money, Banking & Wallets
-  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
-  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
-  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
-  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
-  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
-  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
-  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
-  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
-  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
-  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
-  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
-  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
-  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
-  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
-  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
-  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
-  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
-  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
-  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
-  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
-
-  // Food & Drinks
-  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
-  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
-  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
-  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
-  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
-  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
-  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowl chinese' },
-  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
-  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
-  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
-  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
-  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
-  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
-  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
-  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
-  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
-  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
-  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
-  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
-  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
-  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
-  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
-  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
-  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
-
-  // Transport & Travel
-  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
-  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
-  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
-  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
-  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
-  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
-  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
-  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
-  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
-  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
-  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
-  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
-  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
-  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
-  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
-  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
-  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
-  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
-
-  // Shopping, Style & Personal
-  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
-  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
-  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
-  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
-  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
-  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
-  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
-  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
-  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
-  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
-  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
-  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
-  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
-  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
-
-  // Entertainment, Gaming & Fun
-  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
-  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
-  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
-  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
-  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
-  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
-  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
-  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
-  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
-  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
-  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
-  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
-  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
-  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
-
-  // Health, Sports & Fitness
-  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
-  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
-  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
-  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
-  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
-  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
-  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
-  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
-  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
-  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
-  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
-  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
-
-  // Tech, Bills, Study & Home
-  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
-  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
-  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
-  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
-  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
-  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
-  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
-  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
-  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
-  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
-  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
-  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
-  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
-  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
-  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
-  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
-  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
-  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
-];
-
-export function getUiTheme(isDark) {
-  if (isDark) {
-    return {
-      bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
-      ambientGlow: 'tapx-ambient-dark',
-      sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6] shadow-[0_8px_0_#111110]',
-      sheetHandle: 'bg-[#D8CBB3]/35',
-      // Hero surfaces: chunky tactile outline + subtle top sheen
-      heroCard:
-        'bg-[#282825] hero-sheen-dark border-2 border-[#D8CBB3]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_5px_0_#111110]',
-      heroCardWarning:
-        'bg-[#282825] hero-sheen-dark border-2 border-[#F26B5B]/75 shadow-[inset_0_1px_0_rgba(242,107,91,0.18),0_5px_0_#111110]',
-      walletCardHero: 'wallet-sheen border-2 border-[#111110] shadow-[0_4px_0_#111110]',
-      // Secondary containers: softer borders & lighter elevation
-      card: 'bg-[#262623] border border-[#3A3934] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_2px_0_#141412]',
-      cardElevated:
-        'bg-[#30302c] border-[1.5px] border-[#4A473E] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      cardSubtle: 'bg-[#20201D] border border-[#32322D]',
-      listRow: 'bg-[#262623] border border-[#34342F] hover:bg-[#2C2C28]',
-      notePill: 'bg-[#1B1B19]/85 border border-[#363530] focus-within:border-[#D8CBB3]/55',
-      input:
-        'bg-[#181816] border-[1.5px] border-[#383732] focus-within:border-[#D8CBB3]/65 focus:border-[#D8CBB3]/65 text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.35)]',
-      pillIdle:
-        'bg-[#282825] border border-[#3D3C36] text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_0_#141412] active:shadow-none',
-      pillActive:
-        'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_3px_0_#111110] active:shadow-none',
-      pillSelectedBorder: 'border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.3),0_3px_0_#111110]',
-      chipSoft: 'bg-[#2D2C28] border border-[#45433B] text-[#D8CBB3] hover:bg-[#35342F]',
-      numpadKey:
-        'bg-[#2A2A27] border-[1.5px] border-[#111110] text-[#F5EFE6] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_3px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#32322E]',
-      numpadKeySpecial:
-        'bg-[#33312C] border-[1.5px] border-[#111110] text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      segmentedBg:
-        'bg-[#161614] border border-[#32322D] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
-      segmentedThumb: 'bg-[#D8CBB3] border-[1.5px] border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.4),0_2px_0_#111110]',
-      segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
-      outline: 'border-[#111110]',
-      outlineSubtle: 'border-[#3A3934]',
-      badgeBorder: 'border-[#111110]',
-      iconBadge: 'border border-[#111110] shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_2px_0_#111110]',
-      trackBg: 'bg-[#161614] border border-[#34342F]',
-      trackActiveBg: 'bg-[#181816] border-[1.5px] border-[#D8CBB3]/70',
-      dashBorder: 'border-[#D8CBB3]/35',
-      toastBg: 'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
-      dangerBtn:
-        'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] active:shadow-none',
-      dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#F26B5B] border border-[#F26B5B]/40',
-      warningBanner: 'bg-[#F26B5B]/15 border border-[#F26B5B]/45 text-[#F26B5B]',
-      textPrimary: 'text-[#F5EFE6]',
-      textSand: 'text-[#D8CBB3]',
-      textSecondary: 'text-[#B8AA93]',
-      textMuted: 'text-[#968C7C]',
-      islandBar: 'cartoon-dock-dark',
-      islandLens: 'cartoon-pill-lens-dark',
-      islandTextActive: 'text-[#1e1e1c]',
-      islandTextIdle: 'text-[#B8AA93]',
-      primaryBtnExpense:
-        'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.48),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      primaryBtnIncome:
-        'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.38),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      primaryBtnTransfer:
-        'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      divider: 'border-[#363632]',
-      stickyHeader: 'bg-[#1e1e1c]'
-    };
-  }
-
-  return {
-    bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
-    ambientGlow: 'tapx-ambient-light',
-    sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_8px_0_rgba(30,30,28,0.22)]',
-    sheetHandle: 'bg-[#1e1e1c]/20',
-    heroCard:
-      'bg-[#FAF6EE] hero-sheen-light border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#1e1e1c]',
-    heroCardWarning:
-      'bg-[#FAF6EE] hero-sheen-light border-2 border-[#D94F3D] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#D94F3D]',
-    walletCardHero: 'wallet-sheen border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
-    card: 'bg-[#FAF6EE] border border-[#1e1e1c]/18 shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.1)]',
-    cardElevated:
-      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/35 shadow-[0_3px_0_rgba(30,30,28,0.16)] active:shadow-[0_1px_0_rgba(30,30,28,0.16)]',
-    cardSubtle: 'bg-[#E8E0D0]/75 border border-[#1e1e1c]/12',
-    listRow: 'bg-[#FAF6EE] border border-[#1e1e1c]/14 hover:bg-[#FFFFFF]',
-    notePill: 'bg-[#EFE7DA]/85 border border-[#1e1e1c]/15 focus-within:border-[#1e1e1c]/50',
-    input:
-      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/25 focus-within:border-[#1e1e1c] focus:border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
-    pillIdle:
-      'bg-[#FAF6EE] border border-[#1e1e1c]/22 text-[#1e1e1c] shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.12)] active:shadow-none',
-    pillActive:
-      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#6B655B] active:shadow-none',
-    pillSelectedBorder: 'border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c]',
-    chipSoft: 'bg-[#FAF6EE] border border-[#1e1e1c]/20 text-[#1e1e1c] hover:bg-[#FFFFFF]',
-    numpadKey:
-      'bg-[#FAF6EE] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[inset_0_1.5px_0_#ffffff,0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c] hover:bg-[#FFFFFF]',
-    numpadKeySpecial:
-      'bg-[#E4DBCA] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.6),0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    segmentedBg:
-      'bg-[#E2D9C6] border border-[#1e1e1c]/18 shadow-[inset_0_1px_2px_rgba(30,30,28,0.1)]',
-    segmentedThumb: 'bg-[#1e1e1c] border-[1.5px] border-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.22)]',
-    segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
-    outline: 'border-[#1e1e1c]',
-    outlineSubtle: 'border-[#1e1e1c]/20',
-    badgeBorder: 'border-[#1e1e1c]/70',
-    iconBadge: 'border border-[#1e1e1c]/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_0_rgba(30,30,28,0.2)]',
-    trackBg: 'bg-[#E2D9C6] border border-[#1e1e1c]/20',
-    trackActiveBg: 'bg-[#EFE7DA] border-[1.5px] border-[#1e1e1c]',
-    dashBorder: 'border-[#1e1e1c]/30',
-    toastBg: 'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#6B655B]',
-    dangerBtn:
-      'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
-    dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#B83224] border border-[#D94F3D]/40',
-    warningBanner: 'bg-[#F26B5B]/15 border border-[#D94F3D]/45 text-[#B83224]',
-    textPrimary: 'text-[#1e1e1c]',
-    textSand: 'text-[#1e1e1c]',
-    textSecondary: 'text-[#524E46]',
-    textMuted: 'text-[#6E675C]',
-    islandBar: 'cartoon-dock-light',
-    islandLens: 'cartoon-pill-lens-light',
-    islandTextActive: 'text-[#D8CBB3]',
-    islandTextIdle: 'text-[#524E46]',
-    primaryBtnExpense:
-      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.16),0_4px_0_#6B655B] active:shadow-[0_1px_0_#6B655B]',
-    primaryBtnIncome:
-      'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    primaryBtnTransfer:
-      'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.5),0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
-    divider: 'border-[#1e1e1c]/18',
-    stickyHeader: 'bg-[#EFE7DA]'
-  };
+<file path="public/manifest.json">
+{
+  "name": "TAPX",
+  "short_name": "TAPX",
+  "start_url": "/?quickAdd=true",
+  "display": "standalone",
+  "background_color": "#1e1e1c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
 </file>
 
@@ -2693,6 +2164,204 @@ export function playCopy() {
     });
   } catch {}
 }
+</file>
+
+<file path="README.md">
+# TAPX
+
+A multi-wallet personal expense tracker and Progressive Web App (PWA) with a serverless webhook API for iOS Back Tap Shortcuts.
+
+**Production:** [xtap.vercel.app](https://xtap.vercel.app) · **Privacy Policy:** [xtap.vercel.app/privacy.html](https://xtap.vercel.app/privacy.html)
+
+## Overview
+
+Logging small daily transactions often fails because opening an app, waiting for authentication, and navigating forms introduces too much friction.
+
+TAPX solves this in two ways:
+1. **Headless Ingestion (`/api/shortcut`):** A stateless Vercel Serverless Function that lets iOS Shortcuts (triggered via iPhone Back Tap) fetch live account metadata and commit transactions directly to PostgreSQL from the Lock Screen.
+2. **Optimistic Offline-Ready PWA:** A React 19 web client that hydrates synchronously from `localStorage` (`tapx_local_cache_v4`), applies optimistic balance updates, queues offline entries (`tapx_offline_queue_v1`), and reconciles with Supabase in the background.
+
+## Key Features
+
+- **Tactile Keypad & Multi-Wallet Tracking:** Fast expense, income, and inter-wallet transfer entry with quick-add chips (`+₹50`, `+₹100`, `+₹500`, `+₹1k`) and instant balance previews.
+- **iPhone Back Tap Integration:** One-tap iCloud Shortcut setup with revocable per-user security tokens and fuzzy wallet/category matching.
+- **Organized Insights & CSV Export:** Period presets (`7D`, `This Month`, `Last Month`, `30D`, `90D`, `All`, `Custom`), interactive SVG category donut, spending trend chart, day-of-week heatmap, time-of-day & ticket-size habits, current-month budget guardrails, and UTF-8 BOM CSV export.
+- **Custom Accounts & 110+ Icon Library:** Searchable emoji picker with custom keyboard emoji input, custom sticker colors, and optional monthly category limits.
+- **Zero-Dependency Sound & Haptics Engine:** Synthesized Web Audio API keypad pops, chimes, and cross-platform haptics (Vibration API + iOS 17.4+ Taptic switch fallback) with a persistent mute toggle.
+- **Charcoal & Warm Sand Theme:** Auto (system), Light, and Dark modes with fixed viewport locking and persistent privacy balance masking.
+
+## Architecture
+
+- **Frontend (`src/`):** React 19, Vite 6, and Tailwind CSS. Modularized into UI components, analytics computation, theme/icon constants, and Web Audio synthesis.
+- **Serverless API (`api/`):** Node.js handlers deployed on Vercel:
+  - `api/shortcut.js`: Normalizes JSON, URL-encoded form data, or shorthand query strings from Apple Shortcuts, resolves fuzzy wallet/category matches, and invokes database RPCs.
+  - `api/keepalive.js`: Triggered daily at `08:00 UTC` via Vercel Cron (`vercel.json`) to run a lightweight RPC ping and prevent Supabase project hibernation (supports optional `CRON_SECRET` Bearer auth).
+- **Database & Auth:** Supabase (PostgreSQL + Google OAuth 2.0). All tables enforce Row-Level Security (RLS) scoped to `auth.uid() = user_id`.
+
+## Repository Structure
+
+```text
+tapx/
+├── api/
+│   ├── keepalive.js            # Daily cron handler to prevent database pausing
+│   └── shortcut.js             # Webhook endpoint for Apple Shortcuts
+├── public/
+│   ├── favicon.svg             # Vector application icon
+│   ├── logo.png                # 512x512 PWA icon
+│   ├── manifest.json           # Web App Manifest
+│   └── privacy.html            # Static privacy policy for OAuth verification
+├── src/
+│   ├── components/
+│   │   ├── Modals.jsx          # Logo, NavIcon, IconLibraryPicker, LoginScreen & bottom-sheet modals
+│   │   └── Tabs.jsx            # Keypad, Accounts, Insights, and Settings views
+│   ├── analytics.js            # Session hydration, date windows, and spending analytics engine
+│   ├── App.jsx                 # Core application state, sync queue, and ErrorBoundary
+│   ├── constants.js            # Theme tokens, defaults, storage keys, and 110+ icon catalog
+│   ├── index.css               # Viewport lock and scroll container rules
+│   ├── main.jsx                # Application entry point
+│   ├── sounds.js               # Web Audio API sound synthesizer and haptics
+│   └── supabaseClient.js       # Supabase client singleton
+├── .oxlintrc.json              # Oxlint ruleset
+├── index.html                  # App shell and pre-paint theme script
+├── package.json                # Dependencies and build scripts
+├── vercel.json                 # Cron definitions and SPA/API routing rewrites
+└── vite.config.js              # Vite bundler configuration
+```
+
+## Webhook API Reference
+
+All requests to `/api/shortcut` authenticate via the `x-shortcut-token` HTTP header or the `token` query parameter.
+
+### 1. Retrieve Account Metadata
+```http
+GET /api/shortcut?token=<SHORTCUT_TOKEN>
+```
+Returns active wallets and categories in both lowercase and TitleCase keys to populate dynamic selection menus across iOS versions.
+
+**Response (`200 OK`, `application/json`):**
+```json
+{
+  "types": ["Expense", "Income"],
+  "wallets": ["UPI", "Cash"],
+  "categories": ["Food & Drinks", "Groceries", "Transport", "Shopping"],
+  "Expense": ["Food & Drinks", "Groceries", "Transport", "Shopping"],
+  "Income": ["Income & Allowance"]
+}
+```
+
+### 2. Record Structured Transaction
+```http
+POST /api/shortcut
+Content-Type: application/json
+x-shortcut-token: <SHORTCUT_TOKEN>
+```
+Accepts JSON, `application/x-www-form-urlencoded`, or query parameters. Fuzzy-matches wallet and category names (stripping emojis and whitespace) before falling back to the primary wallet/category.
+
+**Request Body:**
+```json
+{
+  "amount": 150,
+  "wallet": "UPI",
+  "category": "Food & Drinks",
+  "type": "expense",
+  "note": "Lunch"
+}
+```
+
+**Response (`200 OK`, `text/plain`):**
+```text
+✅ -₹150 • Food & Drinks
+💳 UPI: ₹2,850.00
+```
+
+### 3. Record Shorthand Query
+```http
+GET /api/shortcut?token=<SHORTCUT_TOKEN>&q=<ENCODED_STRING>
+```
+Parses a single freeform string for amount, direction (`+` or keywords like `income`/`earned`), wallet name, category prefix, and note remainder.
+
+- **Expense:** `/api/shortcut?token=TOKEN&q=150%20upi%20food%20coffee`
+- **Income:** `/api/shortcut?token=TOKEN&q=%2B500%20cash%20allowance`
+
+## Database Schema
+
+Configure a Supabase project with the following tables and RPC functions:
+
+### Tables
+
+- **`user_settings`**
+  - `user_id` (`uuid`, Primary Key, references `auth.users`)
+  - `currency` (`text`, default `'₹'`)
+  - `shortcut_token` (`text`, unique)
+- **`wallets`**
+  - `id` (`uuid`, Primary Key, default `gen_random_uuid()`)
+  - `user_id` (`uuid`, references `auth.users`)
+  - `name` (`text`), `type` (`text`), `balance` (`numeric`, default `0`), `color` (`text`), `icon` (`text`)
+  - `created_at` (`timestamptz`, default `now()`)
+- **`categories`**
+  - `id` (`uuid`, Primary Key, default `gen_random_uuid()`)
+  - `user_id` (`uuid`, references `auth.users`)
+  - `name` (`text`), `type` (`text`: `'expense'` | `'income'`), `icon` (`text`), `color` (`text`)
+  - `monthly_budget` (`numeric`, nullable)
+  - `created_at` (`timestamptz`, default `now()`)
+- **`transactions`**
+  - `id` (`uuid`, Primary Key, default `gen_random_uuid()`)
+  - `user_id` (`uuid`, references `auth.users`)
+  - `wallet_id` (`uuid`, references `wallets.id` on delete cascade)
+  - `to_wallet_id` (`uuid`, nullable, references `wallets.id` on delete set null)
+  - `category_id` (`uuid`, nullable, references `categories.id` on delete set null)
+  - `type` (`text`: `'expense'` | `'income'` | `'transfer'`)
+  - `amount` (`numeric`), `note` (`text`), `source` (`text`: `'app'` | `'shortcut'`)
+  - `created_at` (`timestamptz`, default `now()`)
+
+### Required PostgreSQL RPC Functions
+
+- `shortcut_get_meta(p_token text)`: Validates `p_token` against `user_settings.shortcut_token` and returns JSON with `wallets` and `categories`.
+- `shortcut_quick_log(p_token text, p_amount numeric, p_wallet_name text, p_category_name text, p_type text, p_note text)`: Validates `p_token`, resolves wallet/category IDs, inserts the transaction with `source = 'shortcut'`, updates `wallets.balance`, and returns `amount`, `wallet_name`, `category_name`, `type`, `currency`, and `new_balance`.
+- `keep_alive_ping()`: Returns a lightweight status payload (`SELECT 1`) for the daily cron job.
+
+## Local Development
+
+### Prerequisites
+- Node.js >= 18.x
+- Supabase project with Google OAuth enabled
+
+### Setup
+
+1. Clone the repository and install dependencies:
+   ```bash
+   git clone [https://github.com/kalp4/TAPX](https://github.com/kalp4/TAPX)
+   cd TAPX
+   npm install
+   ```
+
+2. Create a `.env` file in the root directory:
+   ```env
+   VITE_SUPABASE_URL=[https://your-project-ref.supabase.co](https://your-project-ref.supabase.co)
+   VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+   ```
+   *Both variables must also be configured in your Vercel project settings so the serverless functions in `api/` can initialize Supabase. Optionally add `CRON_SECRET` in Vercel to lock down `/api/keepalive` to Vercel Cron requests.*
+
+3. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Build and preview for production:
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+## iOS Shortcut Configuration
+
+1. Sign in to TAPX and open **Settings → Shortcut Setup**.
+2. Tap **Copy Personal URL & Install Shortcut** (or open the [shared iCloud Shortcut template](https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a)).
+3. Paste your personal URL when prompted and tap **Add Shortcut**.
+4. Bind it to hardware gestures in iOS **Settings → Accessibility → Touch → Back Tap → Double Tap** and choose **TAPX**.
+
+## Author
+**Kalp Patel**
 </file>
 
 <file path="src/components/Modals.jsx">
@@ -3618,6 +3287,336 @@ export function EditTransactionModal({
       )}
     </BottomSheet>
   );
+}
+</file>
+
+<file path="src/constants.js">
+export const SHARED_ICLOUD_SHORTCUT_URL =
+  'https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a';
+
+export const WALLET_COLORS = [
+  '#E07A5F',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E56B6F',
+  '#D8CBB3',
+  '#F26B5B',
+  '#4EA8DE',
+  '#80ED99',
+  '#F7A072',
+  '#B5838D'
+];
+
+export const CHART_COLORS = [
+  '#F26B5B',
+  '#52B788',
+  '#F4B942',
+  '#5C9EAD',
+  '#9B7EDE',
+  '#E07A5F',
+  '#E56B6F',
+  '#D8CBB3'
+];
+
+export const DEFAULT_WALLETS_TEMPLATE = [
+  { name: 'UPI', type: 'UPI / Wallet', balance: 0, color: '#5C9EAD', icon: '⚡' },
+  { name: 'Cash', type: 'Cash', balance: 0, color: '#52B788', icon: '💵' }
+];
+
+export const DEFAULT_CATEGORIES_TEMPLATE = [
+  { name: 'Food & Drinks', type: 'expense', icon: '🍔', color: '#F26B5B', monthly_budget: null },
+  { name: 'Groceries', type: 'expense', icon: '🛒', color: '#52B788', monthly_budget: null },
+  { name: 'Transport', type: 'expense', icon: '⛽', color: '#F4B942', monthly_budget: null },
+  { name: 'Shopping', type: 'expense', icon: '🛍️', color: '#9B7EDE', monthly_budget: null },
+  { name: 'Entertainment', type: 'expense', icon: '🎬', color: '#E56B6F', monthly_budget: null },
+  { name: 'Bills & Recharge', type: 'expense', icon: '⚡', color: '#5C9EAD', monthly_budget: null },
+  { name: 'Health & Fitness', type: 'expense', icon: '💊', color: '#E07A5F', monthly_budget: null },
+  { name: 'Income & Allowance', type: 'income', icon: '💰', color: '#52B788', monthly_budget: null }
+];
+
+export const NAV_TABS = [
+  { id: 'pad', label: 'Keypad' },
+  { id: 'wallets', label: 'Accounts' },
+  { id: 'analytics', label: 'Insights' },
+  { id: 'settings', label: 'Settings' }
+];
+
+export const CACHE_KEY = 'tapx_local_cache_v4';
+export const THEME_KEY = 'tapx_theme_pref';
+export const SOUND_KEY = 'tapx_sound_pref';
+export const PRIVACY_KEY = 'tapx_privacy_pref';
+export const SEEDED_KEY_PREFIX = 'tapx_seeded_user_';
+export const SAVED_ACCOUNTS_KEY = 'tapx_saved_accounts_v1';
+export const OFFLINE_QUEUE_KEY = 'tapx_offline_queue_v1';
+
+export const ICON_GROUPS = ['All', 'Money', 'Food', 'Travel', 'Shop', 'Fun', 'Health', 'Life'];
+
+export const ICON_CATALOG = [
+  // Money, Banking & Wallets
+  { icon: '💳', group: 'Money', tags: 'card credit debit bank visa mastercard' },
+  { icon: '💵', group: 'Money', tags: 'cash dollar bill notes paper money' },
+  { icon: '🏦', group: 'Money', tags: 'bank account savings vault' },
+  { icon: '⚡', group: 'Money', tags: 'upi instant lightning fast zap electricity' },
+  { icon: '🪙', group: 'Money', tags: 'coin change gold token crypto' },
+  { icon: '📱', group: 'Money', tags: 'phone mobile wallet gpay phonepe paytm fampay' },
+  { icon: '💎', group: 'Money', tags: 'diamond wealth luxury investment gem' },
+  { icon: '💰', group: 'Money', tags: 'money bag salary income allowance bonus' },
+  { icon: '👛', group: 'Money', tags: 'purse wallet pouch pocket' },
+  { icon: '🏧', group: 'Money', tags: 'atm withdraw deposit cash machine' },
+  { icon: '💸', group: 'Money', tags: 'flying money expense spend transfer' },
+  { icon: '📈', group: 'Money', tags: 'stocks chart invest trading mutual fund' },
+  { icon: '📊', group: 'Money', tags: 'analytics portfolio budget graph' },
+  { icon: '🧾', group: 'Money', tags: 'receipt bill invoice tax' },
+  { icon: '🐖', group: 'Money', tags: 'piggy bank save savings' },
+  { icon: '🧧', group: 'Money', tags: 'gift envelope shagun bonus' },
+  { icon: '💹', group: 'Money', tags: 'forex currency market profit' },
+  { icon: '🔐', group: 'Money', tags: 'safe lock emergency fund fd' },
+  { icon: '🪪', group: 'Money', tags: 'id card membership pan aadhar' },
+  { icon: '🤝', group: 'Money', tags: 'split lend borrow deal' },
+
+  // Food & Drinks
+  { icon: '🍔', group: 'Food', tags: 'burger fast food dining restaurant snack' },
+  { icon: '🍕', group: 'Food', tags: 'pizza slice cheese party' },
+  { icon: '☕', group: 'Food', tags: 'coffee tea cafe chai latte starbucks' },
+  { icon: '🛒', group: 'Food', tags: 'groceries supermarket cart blinkit zepto instamart' },
+  { icon: '🍟', group: 'Food', tags: 'fries snacks mcdonalds' },
+  { icon: '🌮', group: 'Food', tags: 'taco mexican street food' },
+  { icon: '🍜', group: 'Food', tags: 'noodles ramen maggi bowl chinese' },
+  { icon: '🍱', group: 'Food', tags: 'bento lunch tiffin meal mess' },
+  { icon: '🍛', group: 'Food', tags: 'curry rice thali indian dinner' },
+  { icon: '🥗', group: 'Food', tags: 'salad healthy diet bowl' },
+  { icon: '🥪', group: 'Food', tags: 'sandwich sub breakfast' },
+  { icon: '🥐', group: 'Food', tags: 'croissant bakery puff bread' },
+  { icon: '🍦', group: 'Food', tags: 'ice cream dessert sweet' },
+  { icon: '🍩', group: 'Food', tags: 'donut pastry sweet cake' },
+  { icon: '🎂', group: 'Food', tags: 'cake birthday bakery celebration' },
+  { icon: '🍫', group: 'Food', tags: 'chocolate candy sweet' },
+  { icon: '🧋', group: 'Food', tags: 'boba bubble tea cold coffee shake' },
+  { icon: '🥤', group: 'Food', tags: 'soda juice soft drink cola' },
+  { icon: '🍺', group: 'Food', tags: 'beer drinks pub bar' },
+  { icon: '🍷', group: 'Food', tags: 'wine dine party club' },
+  { icon: '🍎', group: 'Food', tags: 'fruits apple vegetables fresh' },
+  { icon: '🥛', group: 'Food', tags: 'milk dairy morning' },
+  { icon: '🍗', group: 'Food', tags: 'chicken meat protein dinner' },
+  { icon: '🍳', group: 'Food', tags: 'eggs breakfast cooking' },
+
+  // Transport & Travel
+  { icon: '⛽', group: 'Travel', tags: 'fuel petrol diesel gas station' },
+  { icon: '🚕', group: 'Travel', tags: 'cab taxi uber ola auto' },
+  { icon: '🛺', group: 'Travel', tags: 'rickshaw auto rapido local' },
+  { icon: '🚗', group: 'Travel', tags: 'car drive parking toll' },
+  { icon: '🛵', group: 'Travel', tags: 'scooter bike two wheeler activa' },
+  { icon: '🏍️', group: 'Travel', tags: 'motorcycle bike ride' },
+  { icon: '🚌', group: 'Travel', tags: 'bus brts transit ticket' },
+  { icon: '🚇', group: 'Travel', tags: 'metro train subway commute' },
+  { icon: '🚆', group: 'Travel', tags: 'train railway irctc ticket' },
+  { icon: '✈️', group: 'Travel', tags: 'flight airplane airport trip vacation' },
+  { icon: '🏨', group: 'Travel', tags: 'hotel stay resort airbnb booking' },
+  { icon: '🏖️', group: 'Travel', tags: 'beach holiday vacation trip' },
+  { icon: '⛰️', group: 'Travel', tags: 'mountains trek camping trip' },
+  { icon: '🧳', group: 'Travel', tags: 'luggage tour travel bag' },
+  { icon: '🚲', group: 'Travel', tags: 'bicycle cycle ride' },
+  { icon: '🅿️', group: 'Travel', tags: 'parking toll fastag' },
+  { icon: '🛠️', group: 'Travel', tags: 'repair service mechanic garage' },
+  { icon: '🗺️', group: 'Travel', tags: 'map tour guide explore' },
+
+  // Shopping, Style & Personal
+  { icon: '🛍️', group: 'Shop', tags: 'shopping bags mall retail amazon flipkart' },
+  { icon: '👕', group: 'Shop', tags: 'clothes shirt fashion apparel' },
+  { icon: '👟', group: 'Shop', tags: 'shoes sneakers footwear kicks' },
+  { icon: '🧥', group: 'Shop', tags: 'jacket hoodie winter wear' },
+  { icon: '🕶️', group: 'Shop', tags: 'sunglasses accessories style' },
+  { icon: '⌚', group: 'Shop', tags: 'watch smartgadget luxury' },
+  { icon: '🎒', group: 'Shop', tags: 'backpack bag college gear' },
+  { icon: '💄', group: 'Shop', tags: 'cosmetics skincare beauty grooming' },
+  { icon: '💈', group: 'Shop', tags: 'haircut barber salon grooming' },
+  { icon: '🎁', group: 'Shop', tags: 'gift present birthday surprise' },
+  { icon: '📦', group: 'Shop', tags: 'package parcel delivery courier' },
+  { icon: '🏷️', group: 'Shop', tags: 'sale discount deal offer' },
+  { icon: '💍', group: 'Shop', tags: 'jewelry ring gold silver' },
+  { icon: '🧴', group: 'Shop', tags: 'personal care toiletries lotion' },
+
+  // Entertainment, Gaming & Fun
+  { icon: '🎬', group: 'Fun', tags: 'movies cinema theatre pvr netflix' },
+  { icon: '🎮', group: 'Fun', tags: 'gaming playstation steam xbox valorant' },
+  { icon: '🎧', group: 'Fun', tags: 'music spotify apple music audio concert' },
+  { icon: '🎟️', group: 'Fun', tags: 'tickets event show bookmyshow standup' },
+  { icon: '🍿', group: 'Fun', tags: 'popcorn theatre snacks movie' },
+  { icon: '🎲', group: 'Fun', tags: 'board games party hangout club' },
+  { icon: '🎳', group: 'Fun', tags: 'bowling arcade turf outing' },
+  { icon: '🎸', group: 'Fun', tags: 'instrument guitar music gig' },
+  { icon: '🎨', group: 'Fun', tags: 'art craft hobby painting design' },
+  { icon: '📷', group: 'Fun', tags: 'camera photography lens film' },
+  { icon: '🎉', group: 'Fun', tags: 'party celebration festival club' },
+  { icon: '🕹️', group: 'Fun', tags: 'arcade retro game' },
+  { icon: '📺', group: 'Fun', tags: 'tv streaming ott youtube premium' },
+  { icon: '🎪', group: 'Fun', tags: 'festival fair carnival event' },
+
+  // Health, Sports & Fitness
+  { icon: '💊', group: 'Health', tags: 'medicine pharmacy doctor pills medical' },
+  { icon: '🏋️', group: 'Health', tags: 'gym workout fitness weights protein' },
+  { icon: '🏥', group: 'Health', tags: 'hospital clinic checkup dentist' },
+  { icon: '🩺', group: 'Health', tags: 'doctor consultation health lab' },
+  { icon: '🏏', group: 'Health', tags: 'cricket turf box sports match' },
+  { icon: '⚽', group: 'Health', tags: 'football soccer turf sports' },
+  { icon: '🏸', group: 'Health', tags: 'badminton court racket pickleball' },
+  { icon: '🏊', group: 'Health', tags: 'swimming pool club sport' },
+  { icon: '🧘', group: 'Health', tags: 'yoga meditation wellness spa' },
+  { icon: '🦷', group: 'Health', tags: 'dentist dental care' },
+  { icon: '👓', group: 'Health', tags: 'glasses optical lens eye' },
+  { icon: '🩹', group: 'Health', tags: 'first aid bandage pharmacy' },
+
+  // Tech, Bills, Study & Home
+  { icon: '📚', group: 'Life', tags: 'books education study college school tuition' },
+  { icon: '💻', group: 'Life', tags: 'laptop macbook computer coding software' },
+  { icon: '🏠', group: 'Life', tags: 'home rent house hostel pg room' },
+  { icon: '🌐', group: 'Life', tags: 'internet wifi broadband data recharge' },
+  { icon: '💡', group: 'Life', tags: 'electricity utility power bill light' },
+  { icon: '🔋', group: 'Life', tags: 'recharge battery powerbank' },
+  { icon: '☁️', group: 'Life', tags: 'cloud storage icloud google one subscription' },
+  { icon: '🤖', group: 'Life', tags: 'ai chatgpt claude cursor api subscription' },
+  { icon: '🎓', group: 'Life', tags: 'college exam fee university coaching' },
+  { icon: '✏️', group: 'Life', tags: 'stationery pen notebook printout' },
+  { icon: '🐾', group: 'Life', tags: 'pet dog cat food vet' },
+  { icon: '🪴', group: 'Life', tags: 'plants garden home decor' },
+  { icon: '🧺', group: 'Life', tags: 'laundry cleaning wash dryclean' },
+  { icon: '🛋️', group: 'Life', tags: 'furniture room decor appliance' },
+  { icon: '🔑', group: 'Life', tags: 'key deposit rent lock' },
+  { icon: '❤️', group: 'Life', tags: 'charity donate family love' },
+  { icon: '⭐', group: 'Life', tags: 'star favorite special misc' },
+  { icon: '🔥', group: 'Life', tags: 'fire hot streak urgent' }
+];
+
+export function getUiTheme(isDark) {
+  if (isDark) {
+    return {
+      bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
+      ambientGlow: 'tapx-ambient-dark',
+      sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6] shadow-[0_8px_0_#111110]',
+      sheetHandle: 'bg-[#D8CBB3]/35',
+      // Hero surfaces: chunky tactile outline + subtle top sheen
+      heroCard:
+        'bg-[#282825] hero-sheen-dark border-2 border-[#D8CBB3]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_5px_0_#111110]',
+      heroCardWarning:
+        'bg-[#282825] hero-sheen-dark border-2 border-[#F26B5B]/75 shadow-[inset_0_1px_0_rgba(242,107,91,0.18),0_5px_0_#111110]',
+      walletCardHero: 'wallet-sheen border-2 border-[#111110] shadow-[0_4px_0_#111110]',
+      // Secondary containers: softer borders & lighter elevation
+      card: 'bg-[#262623] border border-[#3A3934] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_2px_0_#141412]',
+      cardElevated:
+        'bg-[#30302c] border-[1.5px] border-[#4A473E] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      cardSubtle: 'bg-[#20201D] border border-[#32322D]',
+      listRow: 'bg-[#262623] border border-[#34342F] hover:bg-[#2C2C28]',
+      notePill: 'bg-[#1B1B19]/85 border border-[#363530] focus-within:border-[#D8CBB3]/55',
+      input:
+        'bg-[#181816] border-[1.5px] border-[#383732] focus-within:border-[#D8CBB3]/65 focus:border-[#D8CBB3]/65 text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.35)]',
+      pillIdle:
+        'bg-[#282825] border border-[#3D3C36] text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_0_#141412] active:shadow-none',
+      pillActive:
+        'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_3px_0_#111110] active:shadow-none',
+      pillSelectedBorder: 'border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.3),0_3px_0_#111110]',
+      chipSoft: 'bg-[#2D2C28] border border-[#45433B] text-[#D8CBB3] hover:bg-[#35342F]',
+      numpadKey:
+        'bg-[#2A2A27] border-[1.5px] border-[#111110] text-[#F5EFE6] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_3px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#32322E]',
+      numpadKeySpecial:
+        'bg-[#33312C] border-[1.5px] border-[#111110] text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      segmentedBg:
+        'bg-[#161614] border border-[#32322D] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
+      segmentedThumb: 'bg-[#D8CBB3] border-[1.5px] border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.4),0_2px_0_#111110]',
+      segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
+      outline: 'border-[#111110]',
+      outlineSubtle: 'border-[#3A3934]',
+      badgeBorder: 'border-[#111110]',
+      iconBadge: 'border border-[#111110] shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_2px_0_#111110]',
+      trackBg: 'bg-[#161614] border border-[#34342F]',
+      trackActiveBg: 'bg-[#181816] border-[1.5px] border-[#D8CBB3]/70',
+      dashBorder: 'border-[#D8CBB3]/35',
+      toastBg: 'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
+      dangerBtn:
+        'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] active:shadow-none',
+      dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#F26B5B] border border-[#F26B5B]/40',
+      warningBanner: 'bg-[#F26B5B]/15 border border-[#F26B5B]/45 text-[#F26B5B]',
+      textPrimary: 'text-[#F5EFE6]',
+      textSand: 'text-[#D8CBB3]',
+      textSecondary: 'text-[#B8AA93]',
+      textMuted: 'text-[#968C7C]',
+      islandBar: 'cartoon-dock-dark',
+      islandLens: 'cartoon-pill-lens-dark',
+      islandTextActive: 'text-[#1e1e1c]',
+      islandTextIdle: 'text-[#B8AA93]',
+      primaryBtnExpense:
+        'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.48),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      primaryBtnIncome:
+        'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.38),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      primaryBtnTransfer:
+        'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      divider: 'border-[#363632]',
+      stickyHeader: 'bg-[#1e1e1c]'
+    };
+  }
+
+  return {
+    bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
+    ambientGlow: 'tapx-ambient-light',
+    sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_8px_0_rgba(30,30,28,0.22)]',
+    sheetHandle: 'bg-[#1e1e1c]/20',
+    heroCard:
+      'bg-[#FAF6EE] hero-sheen-light border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#1e1e1c]',
+    heroCardWarning:
+      'bg-[#FAF6EE] hero-sheen-light border-2 border-[#D94F3D] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#D94F3D]',
+    walletCardHero: 'wallet-sheen border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
+    card: 'bg-[#FAF6EE] border border-[#1e1e1c]/18 shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.1)]',
+    cardElevated:
+      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/35 shadow-[0_3px_0_rgba(30,30,28,0.16)] active:shadow-[0_1px_0_rgba(30,30,28,0.16)]',
+    cardSubtle: 'bg-[#E8E0D0]/75 border border-[#1e1e1c]/12',
+    listRow: 'bg-[#FAF6EE] border border-[#1e1e1c]/14 hover:bg-[#FFFFFF]',
+    notePill: 'bg-[#EFE7DA]/85 border border-[#1e1e1c]/15 focus-within:border-[#1e1e1c]/50',
+    input:
+      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/25 focus-within:border-[#1e1e1c] focus:border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
+    pillIdle:
+      'bg-[#FAF6EE] border border-[#1e1e1c]/22 text-[#1e1e1c] shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.12)] active:shadow-none',
+    pillActive:
+      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#6B655B] active:shadow-none',
+    pillSelectedBorder: 'border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c]',
+    chipSoft: 'bg-[#FAF6EE] border border-[#1e1e1c]/20 text-[#1e1e1c] hover:bg-[#FFFFFF]',
+    numpadKey:
+      'bg-[#FAF6EE] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[inset_0_1.5px_0_#ffffff,0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c] hover:bg-[#FFFFFF]',
+    numpadKeySpecial:
+      'bg-[#E4DBCA] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.6),0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    segmentedBg:
+      'bg-[#E2D9C6] border border-[#1e1e1c]/18 shadow-[inset_0_1px_2px_rgba(30,30,28,0.1)]',
+    segmentedThumb: 'bg-[#1e1e1c] border-[1.5px] border-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.22)]',
+    segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
+    outline: 'border-[#1e1e1c]',
+    outlineSubtle: 'border-[#1e1e1c]/20',
+    badgeBorder: 'border-[#1e1e1c]/70',
+    iconBadge: 'border border-[#1e1e1c]/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_0_rgba(30,30,28,0.2)]',
+    trackBg: 'bg-[#E2D9C6] border border-[#1e1e1c]/20',
+    trackActiveBg: 'bg-[#EFE7DA] border-[1.5px] border-[#1e1e1c]',
+    dashBorder: 'border-[#1e1e1c]/30',
+    toastBg: 'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#6B655B]',
+    dangerBtn:
+      'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
+    dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#B83224] border border-[#D94F3D]/40',
+    warningBanner: 'bg-[#F26B5B]/15 border border-[#D94F3D]/45 text-[#B83224]',
+    textPrimary: 'text-[#1e1e1c]',
+    textSand: 'text-[#1e1e1c]',
+    textSecondary: 'text-[#524E46]',
+    textMuted: 'text-[#6E675C]',
+    islandBar: 'cartoon-dock-light',
+    islandLens: 'cartoon-pill-lens-light',
+    islandTextActive: 'text-[#D8CBB3]',
+    islandTextIdle: 'text-[#524E46]',
+    primaryBtnExpense:
+      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.16),0_4px_0_#6B655B] active:shadow-[0_1px_0_#6B655B]',
+    primaryBtnIncome:
+      'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    primaryBtnTransfer:
+      'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.5),0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    divider: 'border-[#1e1e1c]/18',
+    stickyHeader: 'bg-[#EFE7DA]'
+  };
 }
 </file>
 
@@ -6752,7 +6751,7 @@ export default async function handler(req, res) {
 
 <file path="index.html">
 <!DOCTYPE html>
-<html lang="en" style="background-color: #1e1e1c;">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -6761,7 +6760,7 @@ export default async function handler(req, res) {
     <meta name="apple-mobile-web-app-title" content="TAPX" />
     <meta name="theme-color" content="#1e1e1c" id="theme-color-meta" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" id="ios-touch-icon" href="/logo.png" />
+    <link rel="apple-touch-icon" id="ios-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -6771,7 +6770,7 @@ export default async function handler(req, res) {
     />
     <title>TAPX</title>
     <script>
-      // Synchronously set root background & theme-color before first paint so iOS status bar is never white
+      // 1. Synchronously sync root background, color-scheme & theme-color before first paint
       (function () {
         try {
           var savedTheme = localStorage.getItem('tapx_theme_pref') || 'dark';
@@ -6780,9 +6779,94 @@ export default async function handler(req, res) {
             : true;
           var isDark = savedTheme === 'system' ? sysDark : savedTheme === 'dark';
           var bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
+
           document.documentElement.style.backgroundColor = bgHex;
-          var meta = document.getElementById('theme-color-meta');
-          if (meta) meta.setAttribute('content', bgHex);
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+
+          var oldMeta = document.getElementById('theme-color-meta');
+          if (oldMeta) oldMeta.remove();
+          var freshMeta = document.createElement('meta');
+          freshMeta.id = 'theme-color-meta';
+          freshMeta.name = 'theme-color';
+          freshMeta.content = bgHex;
+          document.head.appendChild(freshMeta);
+        } catch (e) {}
+      })();
+
+      // 2. Synchronously generate a 512x512 Cartoony Charcoal & Sand PNG for iOS Home Screen
+      (function () {
+        try {
+          var c = document.createElement('canvas');
+          c.width = 512;
+          c.height = 512;
+          var ctx = c.getContext('2d');
+
+          function roundRectPath(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+          }
+
+          // Warm Charcoal App Icon Background (#1e1e1c)
+          ctx.fillStyle = '#1e1e1c';
+          ctx.fillRect(0, 0, 512, 512);
+
+          ctx.save();
+          ctx.translate(-4, 8);
+
+          // Hard Cartoon Drop Shadow Behind Wallet
+          ctx.fillStyle = '#111110';
+          roundRectPath(106, 224, 316, 224, 46);
+          ctx.fill();
+
+          // Rising Chunky Cartoon Bars (Coral, Mint, Gold) with Dark Outlines
+          var bars = [
+            { x: 168, y: 146, w: 56, h: 120, color: '#F26B5B' },
+            { x: 240, y: 108, w: 56, h: 158, color: '#52B788' },
+            { x: 312, y: 68, w: 56, h: 198, color: '#F4B942' }
+          ];
+          bars.forEach(function (b) {
+            ctx.fillStyle = b.color;
+            roundRectPath(b.x, b.y, b.w, b.h, 14);
+            ctx.fill();
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = '#111110';
+            ctx.stroke();
+          });
+
+          // Main Wallet Body in Warm Sand (#D8CBB3)
+          ctx.fillStyle = '#D8CBB3';
+          roundRectPath(100, 216, 316, 218, 44);
+          ctx.fill();
+          ctx.lineWidth = 10;
+          ctx.strokeStyle = '#111110';
+          ctx.stroke();
+
+          // Wallet Clasp in Charcoal (#2a2a27) with Gold Button Dot
+          ctx.fillStyle = '#2a2a27';
+          roundRectPath(324, 298, 102, 64, 32);
+          ctx.fill();
+          ctx.lineWidth = 9;
+          ctx.strokeStyle = '#111110';
+          ctx.stroke();
+
+          ctx.fillStyle = '#F4B942';
+          ctx.beginPath();
+          ctx.arc(358, 330, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#111110';
+          ctx.stroke();
+
+          ctx.restore();
+
+          var pngDataUrl = c.toDataURL('image/png');
+          var iconLink = document.getElementById('ios-touch-icon');
+          if (iconLink) iconLink.setAttribute('href', pngDataUrl);
         } catch (e) {}
       })();
     </script>
@@ -6813,11 +6897,11 @@ export default async function handler(req, res) {
         overflow: hidden;
         overscroll-behavior: none;
         touch-action: manipulation;
-        background-color: #1e1e1c;
+        background-color: inherit;
       }
     </style>
   </head>
-  <body style="background-color: #1e1e1c;">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
@@ -7061,11 +7145,18 @@ function TapxMainApp() {
     } catch {}
     const bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
     document.documentElement.style.backgroundColor = bgHex;
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
     document.body.style.backgroundColor = bgHex;
     const rootEl = document.getElementById('root');
     if (rootEl) rootEl.style.backgroundColor = bgHex;
-    const meta = document.getElementById('theme-color-meta');
-    if (meta) meta.setAttribute('content', bgHex);
+
+    // Replace <meta name="theme-color"> node so iOS Safari / standalone PWA repaints the status bar
+    document.querySelectorAll('meta[name="theme-color"]').forEach((el) => el.remove());
+    const freshMeta = document.createElement('meta');
+    freshMeta.id = 'theme-color-meta';
+    freshMeta.name = 'theme-color';
+    freshMeta.content = bgHex;
+    document.head.appendChild(freshMeta);
   }, [themePref, isDark]);
 
   const ui = useMemo(() => getUiTheme(isDark), [isDark]);
