@@ -1714,7 +1714,7 @@ function TapxMainApp() {
     <div
       className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)'
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 22px)'
       }}
     >
       {/* Chunky Cartoon Toast Pill */}

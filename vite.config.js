@@ -12,6 +12,9 @@ export default defineConfig({
       manifest: false,
       includeAssets: ['favicon.svg', 'logo.png', 'manifest.json'],
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/privacy\.html/],
