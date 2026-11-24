@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="background-color: #1e1e1c;">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -18,7 +18,7 @@
     />
     <title>TAPX</title>
     <script>
-      // Synchronously set root background & theme-color before first paint so iOS status bar is never white
+      // Synchronously sync root background, color-scheme & theme-color before first paint
       (function () {
         try {
           var savedTheme = localStorage.getItem('tapx_theme_pref') || 'dark';
@@ -27,9 +27,17 @@
             : true;
           var isDark = savedTheme === 'system' ? sysDark : savedTheme === 'dark';
           var bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
+
           document.documentElement.style.backgroundColor = bgHex;
-          var meta = document.getElementById('theme-color-meta');
-          if (meta) meta.setAttribute('content', bgHex);
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+
+          var oldMeta = document.getElementById('theme-color-meta');
+          if (oldMeta) oldMeta.remove();
+          var freshMeta = document.createElement('meta');
+          freshMeta.id = 'theme-color-meta';
+          freshMeta.name = 'theme-color';
+          freshMeta.content = bgHex;
+          document.head.appendChild(freshMeta);
         } catch (e) {}
       })();
     </script>
@@ -60,11 +68,11 @@
         overflow: hidden;
         overscroll-behavior: none;
         touch-action: manipulation;
-        background-color: #1e1e1c;
+        background-color: inherit;
       }
     </style>
   </head>
-  <body style="background-color: #1e1e1c;">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

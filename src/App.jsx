@@ -234,11 +234,18 @@ function TapxMainApp() {
     } catch {}
     const bgHex = isDark ? '#1e1e1c' : '#EFE7DA';
     document.documentElement.style.backgroundColor = bgHex;
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
     document.body.style.backgroundColor = bgHex;
     const rootEl = document.getElementById('root');
     if (rootEl) rootEl.style.backgroundColor = bgHex;
-    const meta = document.getElementById('theme-color-meta');
-    if (meta) meta.setAttribute('content', bgHex);
+
+    // Replace <meta name="theme-color"> node so iOS Safari / standalone PWA repaints the status bar
+    document.querySelectorAll('meta[name="theme-color"]').forEach((el) => el.remove());
+    const freshMeta = document.createElement('meta');
+    freshMeta.id = 'theme-color-meta';
+    freshMeta.name = 'theme-color';
+    freshMeta.content = bgHex;
+    document.head.appendChild(freshMeta);
   }, [themePref, isDark]);
 
   const ui = useMemo(() => getUiTheme(isDark), [isDark]);
