@@ -99,7 +99,7 @@ export function NavIcon({ id, active }) {
   );
 }
 
-function BottomSheet({ ui, title, onClose, onSubmit, children }) {
+function BottomSheet({ ui, title, onClose, onSubmit, busy, children }) {
   const [entered, setEntered] = useState(false);
   const [closing, setClosing] = useState(false);
   const [dragY, setDragY] = useState(0);
@@ -117,13 +117,13 @@ function BottomSheet({ ui, title, onClose, onSubmit, children }) {
   }, []);
 
   const triggerClose = useCallback(() => {
-    if (closing) return;
+    if (closing || busy) return;
     setClosing(true);
     setEntered(false);
     closeTimerRef.current = setTimeout(() => {
       onClose();
     }, 210);
-  }, [closing, onClose]);
+  }, [busy, closing, onClose]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -177,7 +177,8 @@ function BottomSheet({ ui, title, onClose, onSubmit, children }) {
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={onSubmit}
-        className={`w-full max-w-md max-h-[88vh] overflow-y-auto custom-scroll rounded-3xl p-5 pt-2.5 space-y-3.5 ${ui.sheetBg}`}
+        aria-busy={busy}
+        className={`w-full max-w-md max-h-[88dvh] overflow-y-auto custom-scroll rounded-3xl p-5 pt-2.5 space-y-3.5 ${ui.sheetBg}`}
         style={{
           paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
           transform: sheetTransform,
@@ -210,7 +211,9 @@ function BottomSheet({ ui, title, onClose, onSubmit, children }) {
           <div className={`w-12 h-1.5 rounded-full ${ui.sheetHandle}`} />
         </div>
 
-        {typeof children === 'function' ? children(triggerClose) : children}
+        <fieldset disabled={busy || closing} className="min-w-0 space-y-3.5">
+          {typeof children === 'function' ? children(triggerClose) : children}
+        </fieldset>
       </form>
     </div>
   );
@@ -348,10 +351,10 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
   );
 }
 
-export function LoginScreen({ ui, savedAccounts, onGoogleLogin, onRemoveSavedAccount }) {
+export function LoginScreen({ ui, savedAccounts, loginError, onGoogleLogin, onRemoveSavedAccount }) {
   return (
     <div
-      className={`h-full w-full ${ui.bg} flex flex-col justify-between px-7 max-w-md mx-auto overflow-hidden select-none relative`}
+      className={`h-full w-full ${ui.bg} flex flex-col justify-between gap-3 px-7 max-w-md mx-auto custom-scroll select-none relative`}
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0px), 20px)',
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)'
@@ -361,7 +364,7 @@ export function LoginScreen({ ui, savedAccounts, onGoogleLogin, onRemoveSavedAcc
         aria-hidden="true"
         className={`pointer-events-none absolute inset-x-0 top-0 h-72 z-0 ${ui.ambientGlow}`}
       />
-      <div />
+      {loginError && <p role="alert" className={`relative z-10 p-3 rounded-2xl text-sm ${ui.warningBanner}`}>{loginError}</p>}
 
       <div className="relative z-10 flex flex-col items-center text-center space-y-3">
         <div className="p-3 rounded-[32px] bg-[#282825] border-2 border-[#111110] shadow-[0_6px_0_#111110] mb-1">
@@ -390,10 +393,9 @@ export function LoginScreen({ ui, savedAccounts, onGoogleLogin, onRemoveSavedAcc
               {savedAccounts.map((acc) => (
                 <div
                   key={acc.email}
-                  onClick={() => onGoogleLogin(acc.email)}
                   className={`w-full p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <button type="button" onClick={() => onGoogleLogin(acc.email)} className="flex flex-1 items-center gap-3 min-w-0 text-left">
                     {acc.avatar ? (
                       <img
                         src={acc.avatar}
@@ -412,7 +414,7 @@ export function LoginScreen({ ui, savedAccounts, onGoogleLogin, onRemoveSavedAcc
                       <p className={`text-xs font-bold truncate ${ui.textPrimary}`}>{acc.name}</p>
                       <p className={`text-[11px] truncate ${ui.textSecondary}`}>{acc.email}</p>
                     </div>
-                  </div>
+                  </button>
                   <button
                     type="button"
                     aria-label={`Remove ${acc.email} from saved accounts`}
@@ -483,6 +485,7 @@ export function WalletModal({
   newWalletIcon,
   setNewWalletIcon,
   confirmDeleteId,
+  busy,
   onSave,
   onDelete,
   onClose
@@ -492,6 +495,7 @@ export function WalletModal({
       ui={ui}
       title={editingWalletId ? 'Edit Account' : 'New Account'}
       onClose={onClose}
+      busy={busy}
       onSubmit={onSave}
     >
       {(triggerClose) => (
@@ -619,7 +623,7 @@ export function WalletModal({
               type="submit"
               className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
             >
-              {editingWalletId ? 'Save Changes' : 'Create Account'}
+              {busy ? 'Working…' : editingWalletId ? 'Save Changes' : 'Create Account'}
             </button>
           </div>
         </>
@@ -639,6 +643,7 @@ export function CategoryModal({
   setNewCatIcon,
   newCatBudget,
   setNewCatBudget,
+  busy,
   onSave,
   onClose
 }) {
@@ -647,6 +652,7 @@ export function CategoryModal({
       ui={ui}
       title={editingCatId ? 'Edit Category' : 'New Category'}
       onClose={onClose}
+      busy={busy}
       onSubmit={onSave}
     >
       {(triggerClose) => (
@@ -725,7 +731,7 @@ export function CategoryModal({
             type="submit"
             className={`w-full py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
           >
-            {editingCatId ? 'Update Category' : 'Save Category'}
+            {busy ? 'Saving…' : editingCatId ? 'Update Category' : 'Save Category'}
           </button>
         </>
       )}
@@ -751,6 +757,7 @@ export function EditTransactionModal({
   setEditTxNote,
   wallets,
   categories,
+  busy,
   onSave,
   onDelete,
   onClose
@@ -781,6 +788,7 @@ export function EditTransactionModal({
       ui={ui}
       title={`Edit ${editingTx.type}`}
       onClose={onClose}
+      busy={busy}
       onSubmit={onSave}
     >
       {(triggerClose) => (
@@ -834,7 +842,13 @@ export function EditTransactionModal({
               </label>
               <select
                 value={editTxWalletId}
-                onChange={(e) => setEditTxWalletId(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (editingTx.type === 'transfer' && next === editTxToWalletId) {
+                    setEditTxToWalletId(editTxWalletId);
+                  }
+                  setEditTxWalletId(next);
+                }}
                 className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
               >
                 {wallets.map((w) => (
@@ -874,6 +888,7 @@ export function EditTransactionModal({
                   onChange={(e) => setEditTxCategoryId(e.target.value)}
                   className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
                 >
+                  <option value="">Uncategorized</option>
                   {categories
                     .filter((c) => c.type === editingTx.type)
                     .map((c) => (
@@ -913,7 +928,7 @@ export function EditTransactionModal({
               type="submit"
               className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
             >
-              Save Changes
+              {busy ? 'Working…' : 'Save Changes'}
             </button>
           </div>
         </>

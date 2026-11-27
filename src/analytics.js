@@ -1,4 +1,4 @@
-import { WALLET_COLORS, CHART_COLORS } from './constants';
+import { WALLET_COLORS, CHART_COLORS } from './constants.js';
 
 export function roundMoney(val) {
   return Math.round((Number(val) || 0) * 100) / 100;
@@ -43,7 +43,8 @@ export function hasOAuthParamsInUrl() {
   return (
     search.includes('code=') ||
     hash.includes('access_token=') ||
-    hash.includes('error_description=')
+    hash.includes('error_description=') ||
+    new URLSearchParams(search).has('error')
   );
 }
 
@@ -456,13 +457,13 @@ export function computeAnalytics({
   const noSpendPct = Math.round((noSpendDays / Math.max(1, effectiveDays)) * 100);
 
   const trendBars = [];
-  const endAnchor = windowObj.end || endOfDay(now);
+  const endAnchor = periodEndDate;
   const startAnchor =
     periodStartDate ||
     new Date(startOfDay(endAnchor).getTime() - (Math.max(7, effectiveDays) - 1) * 86400000);
 
   if (effectiveDays <= 14) {
-    const daysToRender = Math.min(14, Math.max(7, effectiveDays));
+    const daysToRender = effectiveDays;
     for (let i = daysToRender - 1; i >= 0; i--) {
       const dayDate = new Date(startOfDay(endAnchor));
       dayDate.setDate(dayDate.getDate() - i);
@@ -521,7 +522,7 @@ export function computeAnalytics({
       trendBars.push({
         label,
         fullDateLabel,
-        isToday: i === 6,
+        isToday: now >= bStart && now <= bEnd,
         amount: roundMoney(bucketSum)
       });
     }

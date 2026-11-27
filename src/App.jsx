@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { supabase } from './supabaseClient';
+import { applyChanges, newEntryId, sendQueuedEntry, walletChanges, withPendingEntries, writeTransactionChange } from './ledger';
 import {
   SHARED_ICLOUD_SHORTCUT_URL,
   WALLET_COLORS,
@@ -59,8 +60,12 @@ const FOCUS_REFETCH_COOLDOWN_MS = 15000;
 const TX_PAGE_SIZE = 500;
 const TX_MAX_ROWS = 5000;
 
+function localDateString(date) {
+  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+}
+
 function getTodayDateString() {
-  return new Date().toLocaleDateString('en-CA');
+  return localDateString(new Date());
 }
 
 function buildIsoForLocalDate(dateStr, referenceIso = null) {
@@ -84,19 +89,6 @@ function buildIsoForLocalDate(dateStr, referenceIso = null) {
   return combined.toISOString();
 }
 
-// Apply a relative balance delta against the latest DB balance to avoid overwriting concurrent Back Tap updates
-async function applyWalletBalanceDelta(walletId, delta) {
-  if (!walletId || !delta) return;
-  const { data: currentRow, error } = await supabase
-    .from('wallets')
-    .select('balance')
-    .eq('id', walletId)
-    .maybeSingle();
-
-  if (error || !currentRow) return;
-  const nextBal = roundMoney(Number(currentRow.balance || 0) + delta);
-  await supabase.from('wallets').update({ balance: nextBal }).eq('id', walletId);
-}
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -137,44 +129,79 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-function TapxMainApp() {
-  const cachedData = useMemo(() => {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
+function readCachedData() {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY));
+  } catch {
+    return null;
+  }
+}
 
-  const initialSyncSession = useMemo(() => getInitialSyncSession(cachedData), [cachedData]);
+function clearCachedData() {
+  try {
+    localStorage.removeItem(CACHE_KEY);
+  } catch {}
+}
+
+function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, loginError, setLoginError }) {
+  const userId = session?.user?.id;
+  const cachedData = useMemo(() => {
+    const cache = readCachedData();
+    return userId && cache?.userId === userId ? cache : null;
+  }, [userId]);
 
   const [savedAccounts, setSavedAccounts] = useState(() => {
     try {
-      const raw = localStorage.getItem(SAVED_ACCOUNTS_KEY);
-      return raw ? JSON.parse(raw) : [];
+      const rows = JSON.parse(localStorage.getItem(SAVED_ACCOUNTS_KEY) || '[]');
+      return Array.isArray(rows) ? rows.filter((item) => typeof item?.email === 'string') : [];
     } catch {
       return [];
     }
   });
 
-  const [offlineQueue, setOfflineQueue] = useState(() => {
+  const readQueue = useCallback(() => {
+    const all = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+    return Array.isArray(all) ? all : [];
+  }, []);
+  const [offlineQueue, setQueueState] = useState(() => {
     try {
-      const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      return readQueue().filter((item) => item?.payload?.user_id === userId);
     } catch {
       return [];
     }
   });
+  const queueRef = useRef(offlineQueue);
+  const updateQueue = useCallback((update) => {
+    const all = readQueue();
+    const next = update(all.filter((item) => item?.payload?.user_id === userId));
+    // Persist before reporting success or sending an insert. Preserve other signed-in users' drafts.
+    const otherUsers = all.filter((item) => item?.payload?.user_id !== userId);
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify([...otherUsers, ...next]));
+    queueRef.current = next;
+    setQueueState(next);
+    return next;
+  }, [readQueue, userId]);
+  const activeEntryRef = useRef(null);
+  const syncRequestRef = useRef(null);
+  const dataVersionRef = useRef(0);
+  const mountedRef = useRef(true);
+  const mutationRef = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
-  const flushingQueueRef = useRef(false);
+  const flushingQueueRef = useRef(null);
   const lastFetchAtRef = useRef(0);
   const lastKnownTodayRef = useRef(getTodayDateString());
 
-  const [themePref, setThemePref] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
+  const [themePref, setThemePref] = useState(() => {
+    try {
+      return localStorage.getItem(THEME_KEY) || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
   const [privacyMode, setPrivacyMode] = useState(() => {
     try {
       return localStorage.getItem(PRIVACY_KEY) !== 'off';
@@ -250,9 +277,6 @@ function TapxMainApp() {
 
   const ui = useMemo(() => getUiTheme(isDark), [isDark]);
 
-  const [session, setSession] = useState(() => initialSyncSession);
-  const [isAuthChecking, setIsAuthChecking] = useState(() => !initialSyncSession);
-  const [isLoggingIn, setIsLoggingIn] = useState(() => hasOAuthParamsInUrl());
   const [isSyncingBg, setIsSyncingBg] = useState(false);
   const [dbError, setDbError] = useState('');
   const seedingRef = useRef(false);
@@ -272,14 +296,13 @@ function TapxMainApp() {
   const [customStartDate, setCustomStartDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
-    return d.toLocaleDateString('en-CA');
+    return localDateString(d);
   });
   const [customEndDate, setCustomEndDate] = useState(() => getTodayDateString());
   const [selectedBarIdx, setSelectedBarIdx] = useState(6);
   const [selectedDonutCatId, setSelectedDonutCatId] = useState(null);
   const [amountPulse, setAmountPulse] = useState(false);
   const pulseTimerRef = useRef(null);
-  const delHoldTimerRef = useRef(null);
   const noteInputRef = useRef(null);
 
   const triggerAmountPulse = useCallback(() => {
@@ -298,23 +321,16 @@ function TapxMainApp() {
     }, duration);
   }, []);
 
-  const handleSelectTab = useCallback(
-    (nextTabId) => {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      triggerLensMagnification(260);
-      setActiveTab((prevTab) => {
-        if (nextTabId === prevTab) return prevTab;
-        playTabSwitch();
-        const prevIdx = NAV_TABS.findIndex((t) => t.id === prevTab);
-        const nextIdx = NAV_TABS.findIndex((t) => t.id === nextTabId);
-        setTabDirection(nextIdx >= prevIdx ? 'right' : 'left');
-        return nextTabId;
-      });
-    },
-    [triggerLensMagnification]
-  );
+  const handleSelectTab = (nextTabId) => {
+    if (nextTabId === activeTab) return;
+    if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
+    triggerLensMagnification(260);
+    playTabSwitch();
+    const prevIdx = NAV_TABS.findIndex((t) => t.id === activeTab);
+    const nextIdx = NAV_TABS.findIndex((t) => t.id === nextTabId);
+    setTabDirection(nextIdx >= prevIdx ? 'right' : 'left');
+    setActiveTab(nextTabId);
+  };
 
   const getClampedIndexFromClientX = useCallback((clientX) => {
     if (!navBarRef.current) return 0;
@@ -361,15 +377,15 @@ function TapxMainApp() {
     if (!isPointerDownOnNavRef.current) return;
     isPointerDownOnNavRef.current = false;
 
-    if (isScrubbingRef.current) {
+    if (isScrubbingRef.current && e.type !== 'pointercancel') {
       const clampedIndex = getClampedIndexFromClientX(e.clientX);
       const nearestIdx = Math.round(clampedIndex);
       const targetTab = NAV_TABS[nearestIdx]?.id;
       if (targetTab) {
         handleSelectTab(targetTab);
       }
-      isScrubbingRef.current = false;
     }
+    isScrubbingRef.current = false;
 
     setScrubProgress(null);
     if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
@@ -384,9 +400,15 @@ function TapxMainApp() {
   const [settings, setSettings] = useState(
     cachedData?.settings || { currency: '₹', shortcut_token: '' }
   );
-  const [wallets, setWallets] = useState(cachedData?.wallets || []);
+  const [initialLedger] = useState(() => {
+    const cachedTx = cachedData?.transactions || [];
+    const cachedIds = new Set(cachedTx.map((tx) => tx.id));
+    return withPendingEntries(cachedData?.wallets || [], cachedTx,
+      offlineQueue.filter((item) => !cachedIds.has(item.tempId)));
+  });
+  const [wallets, setWallets] = useState(initialLedger.wallets);
   const [categories, setCategories] = useState(cachedData?.categories || []);
-  const [transactions, setTransactions] = useState(cachedData?.transactions || []);
+  const [transactions, setTransactions] = useState(initialLedger.transactions);
 
   // Quick Pad Entry State
   const [entryType, setEntryType] = useState('expense');
@@ -405,12 +427,15 @@ function TapxMainApp() {
   const [activityWalletFilter, setActivityWalletFilter] = useState('all');
   const [activityTypeFilter, setActivityTypeFilter] = useState('all');
   const [activitySearch, setActivitySearch] = useState('');
+  const [activityLimit, setActivityLimit] = useState(80);
+  useEffect(() => setActivityLimit(80), [activitySearch, activityTypeFilter, activityWalletFilter]);
 
   // Modal States
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [editingWalletId, setEditingWalletId] = useState(null);
   const [newWalletName, setNewWalletName] = useState('');
   const [newWalletType, setNewWalletType] = useState('UPI / Wallet');
+  const originalWalletBalanceRef = useRef(null);
   const [newWalletBalance, setNewWalletBalance] = useState('');
   const [newWalletColor, setNewWalletColor] = useState(WALLET_COLORS[0]);
   const [newWalletIcon, setNewWalletIcon] = useState('💳');
@@ -436,17 +461,36 @@ function TapxMainApp() {
   const walletById = useMemo(() => new Map(wallets.map((w) => [w.id, w])), [wallets]);
 
   useEffect(() => {
-    if (wallets.length > 1 && selectedWalletId === toWalletId) {
+    if (wallets.length > 1 && (selectedWalletId === toWalletId || !walletById.has(toWalletId))) {
       const fallback = wallets.find((w) => w.id !== selectedWalletId);
       if (fallback) setToWalletId(fallback.id);
     }
-  }, [selectedWalletId, toWalletId, wallets]);
+  }, [selectedWalletId, toWalletId, wallets, walletById]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(offlineQueue));
-    } catch {}
-  }, [offlineQueue]);
+    if (entryType === 'transfer') return;
+    setSelectedCategoryId((previous) =>
+      categories.some((c) => c.id === previous && c.type === entryType)
+        ? previous
+        : categories.find((c) => c.type === entryType)?.id || ''
+    );
+  }, [categories, entryType]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    const onStorage = (event) => {
+      if (event.key !== OFFLINE_QUEUE_KEY) return;
+      try {
+        queueRef.current = readQueue().filter((item) => item?.payload?.user_id === userId);
+        setQueueState(queueRef.current);
+      } catch {}
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      mountedRef.current = false;
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [readQueue, userId]);
 
   useEffect(() => {
     const user = session?.user;
@@ -504,119 +548,77 @@ function TapxMainApp() {
     }, onUndo ? 4000 : duration);
   }, []);
 
-  const flushOfflineQueue = useCallback(
-    async (userId) => {
-      if (!userId || flushingQueueRef.current) return;
-      let currentQueue = [];
-      try {
-        const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
-        currentQueue = raw ? JSON.parse(raw) : [];
-      } catch {
-        currentQueue = [];
-      }
+  const runMutation = async (action) => {
+    if (mutationRef.current) return;
+    mutationRef.current = true;
+    dataVersionRef.current++;
+    setIsSaving(true);
+    try {
+      await action();
+    } catch (error) {
+      playError();
+      showToast(error?.message || 'Could not save. Try again.');
+    } finally {
+      mutationRef.current = false;
+      dataVersionRef.current++;
+      setIsSaving(false);
+    }
+  };
 
-      if (!Array.isArray(currentQueue) || currentQueue.length === 0) return;
-      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
-
-      flushingQueueRef.current = true;
-      setIsSyncingBg(true);
-      const remaining = [];
-
-      for (const item of currentQueue) {
+  const flushOfflineQueue = useCallback(() => {
+    if (flushingQueueRef.current) return flushingQueueRef.current;
+    if (!userId || !navigator.onLine || !queueRef.current.length) return Promise.resolve();
+    const drain = async () => {
+      const attempted = new Set();
+      const blockedWallets = new Set();
+      let firstError;
+      while (mountedRef.current && navigator.onLine) {
+        const item = readQueue().find((row) => row?.payload?.user_id === userId &&
+          row.action === 'insert_tx' && !attempted.has(row.tempId) &&
+          !walletChanges(row.payload).some(([id]) => blockedWallets.has(id)));
+        if (!item) break;
+        attempted.add(item.tempId);
+        activeEntryRef.current = item.tempId;
         try {
-          if (item.action === 'insert_tx') {
-            // Read current DB balances before inserting so we can detect if a DB trigger handles them
-            const preFromRes = item.fromWalletId
-              ? await supabase.from('wallets').select('balance').eq('id', item.fromWalletId).maybeSingle()
-              : null;
-            const preToRes = item.toWalletId
-              ? await supabase.from('wallets').select('balance').eq('id', item.toWalletId).maybeSingle()
-              : null;
-
-            const { data: insertedRow, error } = await supabase
-              .from('transactions')
-              .insert([item.payload])
-              .select()
-              .maybeSingle();
-
-            if (error) throw error;
-
-            const amt = Number(item.payload?.amount) || 0;
-            const fromDelta =
-              item.fromDelta !== undefined
-                ? item.fromDelta
-                : item.payload?.type === 'income'
-                ? amt
-                : -amt;
-            const toDelta =
-              item.toDelta !== undefined
-                ? item.toDelta
-                : item.payload?.type === 'transfer'
-                ? amt
-                : 0;
-
-            if (item.fromWalletId && fromDelta) {
-              const postFromRes = await supabase
-                .from('wallets')
-                .select('balance')
-                .eq('id', item.fromWalletId)
-                .maybeSingle();
-              const preBal = Number(preFromRes?.data?.balance ?? 0);
-              const postBal = Number(postFromRes?.data?.balance ?? preBal);
-              // Only apply delta if no DB trigger already moved the balance
-              if (postFromRes?.data && Math.abs(postBal - preBal) < 0.001) {
-                await supabase
-                  .from('wallets')
-                  .update({ balance: roundMoney(postBal + fromDelta) })
-                  .eq('id', item.fromWalletId);
+          const row = await sendQueuedEntry(supabase, item, (saved) =>
+            updateQueue((items) => {
+              const current = items.find((old) => old.tempId === item.tempId);
+              if (!current || (JSON.stringify(current.payload) !== JSON.stringify(item.payload) &&
+                  JSON.stringify(current.payload) !== JSON.stringify(saved.payload))) {
+                throw new Error('The queued entry changed in another tab. Sync again.');
               }
-            }
-
-            if (item.toWalletId && toDelta) {
-              const postToRes = await supabase
-                .from('wallets')
-                .select('balance')
-                .eq('id', item.toWalletId)
-                .maybeSingle();
-              const preBal = Number(preToRes?.data?.balance ?? 0);
-              const postBal = Number(postToRes?.data?.balance ?? preBal);
-              if (postToRes?.data && Math.abs(postBal - preBal) < 0.001) {
-                await supabase
-                  .from('wallets')
-                  .update({ balance: roundMoney(postBal + toDelta) })
-                  .eq('id', item.toWalletId);
-              }
-            }
-
-            if (insertedRow) {
-              setTransactions((prev) =>
-                prev.map((tx) => (tx.id === item.tempId ? insertedRow : tx))
-              );
-            }
+              return items.map((old) => old.tempId === item.tempId ? saved : old);
+            })
+          );
+          updateQueue((items) => items.filter((old) => old.tempId !== item.tempId));
+          dataVersionRef.current++;
+          setTransactions((prev) => prev.map((tx) => tx.id === item.tempId ? row : tx));
+        } catch (error) {
+          firstError ||= error;
+          const pending = queueRef.current.find((old) => old.tempId === item.tempId);
+          if (pending?.balancesBefore) {
+            for (const [id] of walletChanges(pending.payload)) blockedWallets.add(id);
           }
-        } catch {
-          remaining.push(item);
         }
       }
-
-      setOfflineQueue(remaining);
-      flushingQueueRef.current = false;
-      setIsSyncingBg(false);
-
-      if (remaining.length === 0 && currentQueue.length > 0) {
-        playSuccess('save');
-        showToast(`Synced ${currentQueue.length} offline ${currentQueue.length === 1 ? 'entry' : 'entries'}!`);
-      }
-    },
-    [showToast]
-  );
+      if (firstError) throw firstError;
+    };
+    const work = navigator.locks?.request
+      ? navigator.locks.request(`tapx-sync-${userId}`, drain)
+      : drain();
+    flushingQueueRef.current = work.finally(() => {
+      activeEntryRef.current = null;
+      flushingQueueRef.current = null;
+    });
+    return flushingQueueRef.current;
+  }, [userId, readQueue, updateQueue]);
 
   const fetchUserData = useCallback(
     async (userId, { force = false } = {}) => {
-      if (!userId) return;
+      if (!userId || syncRequestRef.current || mutationRef.current) return false;
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setIsOnline(false);
-        return;
+        return false;
       }
 
       const nowMs = Date.now();
@@ -625,10 +627,18 @@ function TapxMainApp() {
       }
       lastFetchAtRef.current = nowMs;
 
+      syncRequestRef.current = true;
       setIsSyncingBg(true);
       setDbError('');
       try {
-        await flushOfflineQueue(userId);
+        let queueError;
+        try {
+          await flushOfflineQueue();
+        } catch (error) {
+          queueError = error;
+        }
+        const version = dataVersionRef.current;
+        if (!mountedRef.current) return false;
 
         let { data: userSettings, error: settingsError } = await supabase
           .from('user_settings')
@@ -649,12 +659,6 @@ function TapxMainApp() {
           userSettings = insertedSettings;
         }
 
-        if (userSettings) {
-          setSettings({
-            currency: userSettings.currency || '₹',
-            shortcut_token: userSettings.shortcut_token || ''
-          });
-        }
 
         const [walletsRes, categoriesRes] = await Promise.all([
           supabase.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
@@ -693,12 +697,13 @@ function TapxMainApp() {
           }
         })();
 
+        if (!mountedRef.current) return false;
         if (!seedingRef.current) {
-          seedingRef.current = true;
 
           if (!alreadySeeded && fetchedWallets.length === 0 && fetchedTx.length === 0) {
             const starterWallets = DEFAULT_WALLETS_TEMPLATE.map((w) => ({ ...w, user_id: userId }));
-            const { data: seededWallets } = await supabase.from('wallets').insert(starterWallets).select();
+            const { data: seededWallets, error } = await supabase.from('wallets').insert(starterWallets).select();
+            if (error) throw error;
             if (Array.isArray(seededWallets) && seededWallets.length > 0) {
               fetchedWallets = seededWallets;
             }
@@ -706,13 +711,15 @@ function TapxMainApp() {
 
           if (!alreadySeeded && fetchedCategories.length === 0 && fetchedTx.length === 0) {
             const starterCats = DEFAULT_CATEGORIES_TEMPLATE.map((item) => ({ ...item, user_id: userId }));
-            const { data: seededCats } = await supabase.from('categories').insert(starterCats).select();
+            const { data: seededCats, error } = await supabase.from('categories').insert(starterCats).select();
+            if (error) throw error;
             if (Array.isArray(seededCats) && seededCats.length > 0) {
               fetchedCategories = seededCats;
             }
           }
 
           if (fetchedWallets.length > 0 || fetchedCategories.length > 0 || fetchedTx.length > 0) {
+            seedingRef.current = true;
             try {
               localStorage.setItem(seededStorageKey, '1');
             } catch {}
@@ -756,9 +763,14 @@ function TapxMainApp() {
           ).catch(() => {});
         }
 
-        setWallets(fetchedWallets);
+        if (!mountedRef.current || version !== dataVersionRef.current || mutationRef.current) return false;
+        if (userSettings) {
+          setSettings({ currency: userSettings.currency || '₹', shortcut_token: userSettings.shortcut_token || '' });
+        }
+        const visible = withPendingEntries(fetchedWallets, fetchedTx, queueRef.current);
+        setWallets(visible.wallets);
         setCategories(fetchedCategories);
-        setTransactions(fetchedTx);
+        setTransactions(visible.transactions);
 
         setSelectedWalletId((prev) => {
           if (prev && fetchedWallets.some((w) => w.id === prev)) return prev;
@@ -770,14 +782,13 @@ function TapxMainApp() {
           return fetchedWallets[1]?.id || fetchedWallets[0]?.id || '';
         });
 
-        setSelectedCategoryId((prev) => {
-          if (prev && fetchedCategories.some((c) => c.id === prev)) return prev;
-          const firstExpenseCat = fetchedCategories.find((c) => c.type === 'expense');
-          return firstExpenseCat?.id || '';
-        });
+        if (queueError) throw queueError;
+        return queueRef.current.length === 0;
       } catch (err) {
         setDbError(String(err?.message || 'Database connection error'));
+        return false;
       } finally {
+        syncRequestRef.current = false;
         setIsSyncingBg(false);
       }
     },
@@ -799,55 +810,6 @@ function TapxMainApp() {
     };
   }, [session?.user?.id, fetchUserData]);
 
-  useEffect(() => {
-    let mounted = true;
-    const oauthRedirectInFlight = hasOAuthParamsInUrl();
-
-    supabase.auth
-      .getSession()
-      .then((res) => {
-        if (!mounted) return;
-        const currentSession = res?.data?.session || null;
-        if (currentSession) {
-          setSession(currentSession);
-          setIsAuthChecking(false);
-          setIsLoggingIn(false);
-        } else if (!oauthRedirectInFlight) {
-          setSession(null);
-          localStorage.removeItem(CACHE_KEY);
-          setIsAuthChecking(false);
-          setIsLoggingIn(false);
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setIsAuthChecking(false);
-          setIsLoggingIn(false);
-        }
-      });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
-      if (!mounted) return;
-      if (newSession) {
-        setSession(newSession);
-        setIsAuthChecking(false);
-        setIsLoggingIn(false);
-      } else if (event === 'SIGNED_OUT') {
-        setSession(null);
-        setWallets([]);
-        setCategories([]);
-        setTransactions([]);
-        localStorage.removeItem(CACHE_KEY);
-        setIsAuthChecking(false);
-        setIsLoggingIn(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      if (authListener?.subscription) authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     if (session?.user?.id) fetchUserData(session.user.id, { force: true });
@@ -877,21 +839,23 @@ function TapxMainApp() {
 
   const handleGoogleLogin = async (loginHintEmail = '') => {
     playQuickChip();
+    setLoginError('');
     setIsLoggingIn(true);
     const queryParams = {
       access_type: 'offline',
       ...(loginHintEmail ? { login_hint: loginHintEmail } : { prompt: 'select_account' })
     };
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin, queryParams }
-    });
-
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin, queryParams }
+      });
+      if (error) throw error;
+    } catch {
       setIsLoggingIn(false);
       playError();
-      showToast(error.message || 'Sign-in failed');
+      setLoginError('Google sign-in could not start. Try again when connected.');
     }
   };
 
@@ -909,9 +873,8 @@ function TapxMainApp() {
 
   const handleLogout = async () => {
     playDelete();
-    localStorage.removeItem(CACHE_KEY);
-    setSession(null);
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) showToast('Could not sign out. Try again when connected.');
   };
 
   const handleDigitPress = (digit) => {
@@ -1030,23 +993,14 @@ function TapxMainApp() {
     const currentType = entryType;
     const fromId = selectedWalletId;
     const destId = currentType === 'transfer' ? toWalletId : null;
-    const catId = currentType === 'transfer' ? null : selectedCategoryId || null;
-
-    const fromWalletObj = walletById.get(fromId);
-    const toWalletObj = destId ? walletById.get(destId) : null;
-
-    const fromDelta = currentType === 'income' ? numericAmount : -numericAmount;
-    const toDelta = currentType === 'transfer' && destId ? numericAmount : 0;
-
-    const optimisticFromBalance = roundMoney(Number(fromWalletObj?.balance || 0) + fromDelta);
-    const optimisticToBalance =
-      currentType === 'transfer' && toWalletObj
-        ? roundMoney(Number(toWalletObj.balance || 0) + toDelta)
-        : null;
+    const catId = currentType === 'transfer' ? null :
+      categories.find((c) => c.id === selectedCategoryId && c.type === currentType)?.id || null;
 
     const createdAtIso = buildIsoForLocalDate(entryDate);
-    const tempId = `temp-${Date.now()}`;
+    const id = newEntryId();
+    const tempId = `temp-${id}`;
     const insertPayload = {
+      id,
       user_id: session.user.id,
       wallet_id: fromId,
       to_wallet_id: destId,
@@ -1058,23 +1012,19 @@ function TapxMainApp() {
       created_at: createdAtIso
     };
 
-    const currentlyOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-    const optimisticTx = { id: tempId, ...insertPayload, pendingSync: currentlyOffline };
-
+    const entry = { tempId, action: 'insert_tx', payload: insertPayload };
+    try {
+      updateQueue((items) => [...items, entry]);
+    } catch {
+      showToast('Device storage is full or unavailable. Your entry is still on the keypad.');
+      return;
+    }
+    dataVersionRef.current++;
+    const optimisticTx = { ...insertPayload, id: tempId, pendingSync: true };
     setTransactions((prev) =>
-      [optimisticTx, ...prev].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )
+      [optimisticTx, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     );
-    setWallets((prev) =>
-      prev.map((w) => {
-        if (w.id === fromId) return { ...w, balance: optimisticFromBalance };
-        if (currentType === 'transfer' && w.id === destId && optimisticToBalance !== null) {
-          return { ...w, balance: optimisticToBalance };
-        }
-        return w;
-      })
-    );
+    setWallets((prev) => applyChanges(prev, new Map(walletChanges(insertPayload))));
 
     const loggedOnDifferentDay = entryDate && entryDate !== getTodayDateString();
     setAmountStr('0');
@@ -1082,23 +1032,8 @@ function TapxMainApp() {
     setEntryDate(getTodayDateString());
     playSuccess(currentType);
 
-    const enqueueOfflineItem = () => {
-      const queueEntry = {
-        tempId,
-        action: 'insert_tx',
-        payload: insertPayload,
-        fromWalletId: fromId,
-        fromDelta,
-        toWalletId: destId,
-        toDelta
-      };
-      setOfflineQueue((prev) => [...prev, queueEntry]);
-      setTransactions((prev) => prev.map((tx) => (tx.id === tempId ? { ...tx, pendingSync: true } : tx)));
+    if (!navigator.onLine) {
       showToast('Saved offline · Will sync when back!');
-    };
-
-    if (currentlyOffline) {
-      enqueueOfflineItem();
       return;
     }
 
@@ -1108,178 +1043,79 @@ function TapxMainApp() {
       `${actionPrefix}${settings?.currency || '₹'}${numericAmount.toLocaleString('en-IN')} logged${daySuffix}!`
     );
 
-    // Snapshot DB balance right before insert to detect whether a DB trigger already updates wallets.balance
-    const [preFromRes, preToRes] = await Promise.all([
-      supabase.from('wallets').select('balance').eq('id', fromId).maybeSingle(),
-      currentType === 'transfer' && destId
-        ? supabase.from('wallets').select('balance').eq('id', destId).maybeSingle()
-        : Promise.resolve(null)
-    ]);
-
-    const { data: insertedRow, error } = await supabase
-      .from('transactions')
-      .insert([insertPayload])
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      enqueueOfflineItem();
-      return;
-    }
-
-    const { data: checkFromWallet } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('id', fromId)
-      .maybeSingle();
-
-    if (checkFromWallet) {
-      const preBal = Number(preFromRes?.data?.balance ?? 0);
-      const postBal = Number(checkFromWallet.balance ?? preBal);
-      if (Math.abs(postBal - preBal) < 0.001) {
-        const nextDbBal = roundMoney(postBal + fromDelta);
-        await supabase.from('wallets').update({ balance: nextDbBal }).eq('id', fromId);
-      }
-    }
-
-    if (currentType === 'transfer' && destId && toDelta) {
-      const { data: checkToWallet } = await supabase
-        .from('wallets')
-        .select('balance')
-        .eq('id', destId)
-        .maybeSingle();
-
-      if (checkToWallet) {
-        const preBal = Number(preToRes?.data?.balance ?? 0);
-        const postBal = Number(checkToWallet.balance ?? preBal);
-        if (Math.abs(postBal - preBal) < 0.001) {
-          const nextDbBal = roundMoney(postBal + toDelta);
-          await supabase.from('wallets').update({ balance: nextDbBal }).eq('id', destId);
-        }
-      }
-    }
-
-    if (insertedRow) {
-      setTransactions((prev) =>
-        prev
-          .map((tx) => (tx.id === tempId ? insertedRow : tx))
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      );
+    try {
+      await flushOfflineQueue();
+    } catch {
+      if (queueRef.current.some((item) => item.tempId === tempId)) showToast('Saved on this device. Tap the pending count to retry sync.');
     }
   };
 
-  const handleDeleteTransaction = async (id) => {
-    const targetTx = transactions.find((t) => t.id === id);
-    if (!targetTx) return;
-
-    playDelete();
-
-    const amt = roundMoney(Number(targetTx.amount) || 0);
-    const fromRestoreDelta = targetTx.type === 'income' ? -amt : amt;
-    const toRestoreDelta = targetTx.type === 'transfer' && targetTx.to_wallet_id ? -amt : 0;
-
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
-    setOfflineQueue((prev) => prev.filter((item) => item.tempId !== id));
-    setWallets((prev) =>
-      prev.map((w) => {
-        if (w.id === targetTx.wallet_id) {
-          return { ...w, balance: roundMoney(Number(w.balance || 0) + fromRestoreDelta) };
-        }
-        if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && toRestoreDelta) {
-          return { ...w, balance: roundMoney(Number(w.balance || 0) + toRestoreDelta) };
-        }
-        return w;
-      })
-    );
-
-    if (editingTx?.id === id) setEditingTx(null);
-
-    if (!String(id).startsWith('temp-')) {
-      const { error: deleteErr } = await supabase.from('transactions').delete().eq('id', id);
-      if (!deleteErr) {
-        if (targetTx.wallet_id) {
-          await applyWalletBalanceDelta(targetTx.wallet_id, fromRestoreDelta);
-        }
-        if (targetTx.type === 'transfer' && targetTx.to_wallet_id && toRestoreDelta) {
-          await applyWalletBalanceDelta(targetTx.to_wallet_id, toRestoreDelta);
-        }
-      }
+  const getEditableDraft = (id) => {
+    const draft = readQueue().find((item) => item?.payload?.user_id === userId && item.tempId === id);
+    if (!draft || activeEntryRef.current === id || draft.balancesBefore) {
+      throw new Error('This entry is syncing. Try again after sync finishes.');
     }
+    return draft;
+  };
 
+  const handleDeleteTransaction = async (id) => {
+    const tx = transactions.find((t) => t.id === id);
+    if (!tx) return;
+    const deltas = new Map(walletChanges(tx).map(([key, value]) => [key, -value]));
+    const draft = String(id).startsWith('temp-') ? getEditableDraft(id) : null;
+    let balancesUpdated = true;
+    if (draft) {
+      updateQueue((items) => items.filter((item) => item.tempId !== id));
+    } else {
+      balancesUpdated = await writeTransactionChange(supabase, deltas,
+        () => supabase.from('transactions').delete().eq('id', id));
+    }
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    setWallets((prev) => applyChanges(prev, deltas));
+    setEditingTx(null);
+    playDelete();
+    if (!balancesUpdated) {
+      setDbError('Entry removed. Some account balances could not be updated.');
+      return;
+    }
     showToast('Entry popped!', async () => {
-      playUndo();
-      setToast(null);
-      const { id: _oldId, pendingSync: _ps, ...reinsertPayload } = targetTx;
-      const undoFromDelta = -fromRestoreDelta;
-      const undoToDelta = -toRestoreDelta;
-
-      setWallets((prev) =>
-        prev.map((w) => {
-          if (w.id === targetTx.wallet_id) {
-            return { ...w, balance: roundMoney(Number(w.balance || 0) + undoFromDelta) };
-          }
-          if (targetTx.type === 'transfer' && w.id === targetTx.to_wallet_id && undoToDelta) {
-            return { ...w, balance: roundMoney(Number(w.balance || 0) + undoToDelta) };
-          }
-          return w;
-        })
-      );
-
-      const isCurrentlyOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-      if (isCurrentlyOffline) {
-        const tempUndoId = `temp-${Date.now()}`;
-        const queuedTx = { id: tempUndoId, ...reinsertPayload, pendingSync: true };
-        setTransactions((prev) =>
-          [queuedTx, ...prev].sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )
-        );
-        setOfflineQueue((prev) => [
-          ...prev,
-          {
-            tempId: tempUndoId,
-            action: 'insert_tx',
-            payload: reinsertPayload,
-            fromWalletId: targetTx.wallet_id,
-            fromDelta: undoFromDelta,
-            toWalletId: targetTx.to_wallet_id || null,
-            toDelta: undoToDelta
-          }
-        ]);
-        showToast('Entry restored offline!');
+      const { pendingSync, id: oldId, ...fields } = tx;
+      const payload = { ...fields, id: draft?.payload?.id || newEntryId() };
+      const tempId = draft?.tempId || `temp-${payload.id}`;
+      try {
+        updateQueue((items) => [...items, { action: 'insert_tx', tempId, payload }]);
+      } catch {
+        showToast('Could not restore the entry. Device storage is unavailable.');
         return;
       }
-
-      const { data: restoredRow, error: restoreErr } = await supabase
-        .from('transactions')
-        .insert([reinsertPayload])
-        .select()
-        .maybeSingle();
-
-      if (restoreErr || !restoredRow) {
-        playError();
-        showToast('Could not restore entry');
-        fetchUserData(session.user.id, { force: true });
-        return;
-      }
-
-      if (targetTx.wallet_id) {
-        await applyWalletBalanceDelta(targetTx.wallet_id, undoFromDelta);
-      }
-      if (targetTx.type === 'transfer' && targetTx.to_wallet_id && undoToDelta) {
-        await applyWalletBalanceDelta(targetTx.to_wallet_id, undoToDelta);
-      }
-
+      dataVersionRef.current++;
       setTransactions((prev) =>
-        [restoredRow, ...prev].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
+        [{ ...payload, id: tempId, pendingSync: true }, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       );
-      showToast('Entry restored!');
+      setWallets((prev) => applyChanges(prev, new Map(walletChanges(payload))));
+      playUndo();
+      showToast(navigator.onLine ? 'Entry restored!' : 'Entry restored offline!');
+      try {
+        await flushOfflineQueue();
+      } catch {
+        showToast('Entry restored on this device. Sync is pending.');
+      }
     });
   };
 
   const openEditTransaction = (tx) => {
+    if (queueRef.current.some((item) => item.payload.id === tx.id)) {
+      showToast('This entry is syncing. Try again after sync finishes.');
+      return;
+    }
+    if (String(tx.id).startsWith('temp-')) {
+      try {
+        getEditableDraft(tx.id);
+      } catch (error) {
+        showToast(error.message);
+        return;
+      }
+    }
     playModalOpen();
     const { cleanNote, tagCategoryName } = parseShortcutCategoryTag(tx.note);
     const resolvedCat =
@@ -1288,7 +1124,7 @@ function TapxMainApp() {
 
     const txDateObj = tx.created_at ? new Date(tx.created_at) : new Date();
     const txDateStr = !isNaN(txDateObj.getTime())
-      ? txDateObj.toLocaleDateString('en-CA')
+      ? localDateString(txDateObj)
       : getTodayDateString();
 
     setEditingTx(tx);
@@ -1300,8 +1136,7 @@ function TapxMainApp() {
     setEditTxCategoryId(resolvedCat?.id || tx.category_id || '');
   };
 
-  const handleSaveEditedTransaction = async (e) => {
-    e.preventDefault();
+  const handleSaveEditedTransaction = async () => {
     if (!editingTx) return;
     const newAmt = roundMoney(parseFloat(editTxAmount));
     if (!newAmt || newAmt <= 0) {
@@ -1311,123 +1146,54 @@ function TapxMainApp() {
     }
 
     const oldTx = editingTx;
-    const oldAmt = roundMoney(Number(oldTx.amount) || 0);
     const cleanNote = editTxNote.trim();
     const nextWalletId = editTxWalletId || oldTx.wallet_id;
     const nextToWalletId = oldTx.type === 'transfer' ? editTxToWalletId : null;
     const nextCategoryId = oldTx.type === 'transfer' ? null : editTxCategoryId || null;
 
     const oldDateObj = oldTx.created_at ? new Date(oldTx.created_at) : new Date();
-    const oldDateStr = !isNaN(oldDateObj.getTime()) ? oldDateObj.toLocaleDateString('en-CA') : '';
+    const oldDateStr = !isNaN(oldDateObj.getTime()) ? localDateString(oldDateObj) : '';
     const nextCreatedAt =
       editTxDate && editTxDate !== oldDateStr
         ? buildIsoForLocalDate(editTxDate, oldTx.created_at)
         : oldTx.created_at;
 
-    if (oldTx.type === 'transfer' && nextWalletId === nextToWalletId) {
+    if (oldTx.type === 'transfer' && (!nextToWalletId || nextWalletId === nextToWalletId)) {
       playError();
       showToast('Pick two different accounts');
       return;
     }
 
-    const balanceDeltas = {};
-    const addDelta = (wId, delta) => {
-      if (!wId) return;
-      balanceDeltas[wId] = roundMoney((balanceDeltas[wId] || 0) + delta);
+    const fields = {
+      amount: newAmt, note: cleanNote, wallet_id: nextWalletId, to_wallet_id: nextToWalletId,
+      category_id: nextCategoryId, created_at: nextCreatedAt
     };
-
-    if (oldTx.type === 'income') addDelta(oldTx.wallet_id, -oldAmt);
-    else if (oldTx.type === 'expense') addDelta(oldTx.wallet_id, oldAmt);
-    else if (oldTx.type === 'transfer') {
-      addDelta(oldTx.wallet_id, oldAmt);
-      addDelta(oldTx.to_wallet_id, -oldAmt);
+    const next = { ...oldTx, ...fields };
+    const deltas = new Map(walletChanges(oldTx).map(([id, n]) => [id, -n]));
+    for (const [id, n] of walletChanges(next)) {
+      deltas.set(id, roundMoney((deltas.get(id) || 0) + n));
     }
 
-    if (oldTx.type === 'income') addDelta(nextWalletId, newAmt);
-    else if (oldTx.type === 'expense') addDelta(nextWalletId, -newAmt);
-    else if (oldTx.type === 'transfer') {
-      addDelta(nextWalletId, -newAmt);
-      addDelta(nextToWalletId, newAmt);
-    }
-
-    setWallets((prev) =>
-      prev.map((w) => {
-        if (balanceDeltas[w.id]) {
-          return { ...w, balance: roundMoney(Number(w.balance || 0) + balanceDeltas[w.id]) };
-        }
-        return w;
-      })
-    );
-
-    setTransactions((prev) =>
-      prev
-        .map((t) =>
-          t.id === oldTx.id
-            ? {
-                ...t,
-                amount: newAmt,
-                note: cleanNote,
-                wallet_id: nextWalletId,
-                to_wallet_id: nextToWalletId,
-                category_id: nextCategoryId,
-                created_at: nextCreatedAt
-              }
-            : t
-        )
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    );
-
-    // Keep queued offline items in sync if the user edits a pending transaction before reconnection
+    let balancesUpdated = true;
     if (String(oldTx.id).startsWith('temp-')) {
-      const nextFromDelta = oldTx.type === 'income' ? newAmt : -newAmt;
-      const nextToDelta = oldTx.type === 'transfer' ? newAmt : 0;
-      setOfflineQueue((prev) =>
-        prev.map((item) =>
-          item.tempId === oldTx.id
-            ? {
-                ...item,
-                payload: {
-                  ...item.payload,
-                  amount: newAmt,
-                  note: cleanNote,
-                  wallet_id: nextWalletId,
-                  to_wallet_id: nextToWalletId,
-                  category_id: nextCategoryId,
-                  created_at: nextCreatedAt
-                },
-                fromWalletId: nextWalletId,
-                fromDelta: nextFromDelta,
-                toWalletId: nextToWalletId,
-                toDelta: nextToDelta
-              }
-            : item
-        )
-      );
+      getEditableDraft(oldTx.id);
+      updateQueue((items) => items.map((item) => item.tempId === oldTx.id
+        ? { ...item, payload: { ...item.payload, ...fields } }
+        : item));
+    } else {
+      balancesUpdated = await writeTransactionChange(supabase, deltas,
+        () => supabase.from('transactions').update(fields).eq('id', oldTx.id));
     }
-
+    setWallets((prev) => applyChanges(prev, deltas));
+    setTransactions((prev) => prev.map((tx) => tx.id === oldTx.id ? next : tx)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
     setEditingTx(null);
+    if (!balancesUpdated) {
+      setDbError('Entry saved. Some account balances could not be updated.');
+      return;
+    }
     playSuccess('save');
     showToast('Transaction updated!');
-
-    if (!String(oldTx.id).startsWith('temp-')) {
-      await supabase
-        .from('transactions')
-        .update({
-          amount: newAmt,
-          note: cleanNote,
-          wallet_id: nextWalletId,
-          to_wallet_id: nextToWalletId,
-          category_id: nextCategoryId,
-          created_at: nextCreatedAt
-        })
-        .eq('id', oldTx.id);
-
-      for (const [wId, delta] of Object.entries(balanceDeltas)) {
-        if (delta) {
-          await applyWalletBalanceDelta(wId, delta);
-        }
-      }
-    }
   };
 
   const openEditWallet = (wallet) => {
@@ -1435,76 +1201,35 @@ function TapxMainApp() {
     setEditingWalletId(wallet.id);
     setNewWalletName(wallet.name || '');
     setNewWalletType(wallet.type || 'UPI / Wallet');
+    originalWalletBalanceRef.current = Number(wallet.balance || 0);
     setNewWalletBalance(String(wallet.balance ?? 0));
     setNewWalletColor(wallet.color || WALLET_COLORS[0]);
     setNewWalletIcon(wallet.icon || '💳');
     setShowWalletModal(true);
   };
 
-  const handleSaveWallet = async (e) => {
-    e.preventDefault();
+  const handleSaveWallet = async () => {
     if (!newWalletName.trim()) return;
 
-    const nameVal = newWalletName.trim();
-    const balVal = roundMoney(parseFloat(newWalletBalance) || 0);
-    const typeVal = newWalletType;
-    const colorVal = newWalletColor;
-    const iconVal = newWalletIcon || '💳';
-    const targetEditId = editingWalletId;
-
+    const fields = {
+      name: newWalletName.trim(), type: newWalletType,
+      color: newWalletColor, icon: newWalletIcon || '💳'
+    };
+    const balance = roundMoney(parseFloat(newWalletBalance) || 0);
+    // A rename or color change must not overwrite activity posted since the form opened.
+    if (!editingWalletId || balance !== originalWalletBalanceRef.current) fields.balance = balance;
+    const query = editingWalletId
+      ? supabase.from('wallets').update(fields).eq('id', editingWalletId)
+      : supabase.from('wallets').insert({ ...fields, user_id: userId });
+    const { data: saved, error } = await query.select().single();
+    if (error) throw error;
+    setWallets((prev) => editingWalletId
+      ? prev.map((wallet) => wallet.id === saved.id ? { ...wallet, ...fields } : wallet)
+      : [...prev, saved]);
+    setSelectedWalletId((prev) => prev || saved.id);
     resetWalletModal();
-
-    if (targetEditId) {
-      setWallets((prev) =>
-        prev.map((w) =>
-          w.id === targetEditId
-            ? { ...w, name: nameVal, type: typeVal, balance: balVal, color: colorVal, icon: iconVal }
-            : w
-        )
-      );
-      playSuccess('save');
-      showToast('Account updated!');
-
-      const { error } = await supabase
-        .from('wallets')
-        .update({ name: nameVal, type: typeVal, balance: balVal, color: colorVal, icon: iconVal })
-        .eq('id', targetEditId);
-
-      if (error) {
-        playError();
-        showToast(error.message);
-        fetchUserData(session.user.id, { force: true });
-      }
-      return;
-    }
-
-    const { data: createdWallet, error } = await supabase
-      .from('wallets')
-      .insert([
-        {
-          user_id: session.user.id,
-          name: nameVal,
-          type: typeVal,
-          balance: balVal,
-          color: colorVal,
-          icon: iconVal
-        }
-      ])
-      .select()
-      .maybeSingle();
-
-    if (!error && createdWallet) {
-      setWallets((prev) => {
-        const updated = [...prev, createdWallet];
-        if (!selectedWalletId) setSelectedWalletId(createdWallet.id);
-        return updated;
-      });
-      playSuccess('save');
-      showToast('Account created!');
-    } else if (error) {
-      playError();
-      showToast(error.message);
-    }
+    playSuccess('save');
+    showToast(editingWalletId ? 'Account updated!' : 'Account created!');
   };
 
   const handleDeleteWallet = async (id) => {
@@ -1514,14 +1239,18 @@ function TapxMainApp() {
       setTimeout(() => setConfirmDeleteId((prev) => (prev === id ? null : prev)), 3000);
       return;
     }
+    if (queueRef.current.some(({ payload }) => payload.wallet_id === id || payload.to_wallet_id === id)) {
+      throw new Error('Sync or remove the pending entries for this account first.');
+    }
+    const { error } = await supabase.from('wallets').delete().eq('id', id).select('id').single();
+    if (error) throw error;
     playDelete();
     setConfirmDeleteId(null);
 
     const remainingWallets = wallets.filter((w) => w.id !== id);
     setWallets(remainingWallets);
-    // Match PostgreSQL ON DELETE CASCADE locally so no orphaned transactions remain
-    setTransactions((prev) => prev.filter((t) => t.wallet_id !== id && t.to_wallet_id !== id));
-    setOfflineQueue((prev) => prev.filter((item) => item.fromWalletId !== id && item.toWalletId !== id));
+    setTransactions((prev) => prev.filter((t) => t.wallet_id !== id)
+      .map((t) => t.to_wallet_id === id ? { ...t, to_wallet_id: null } : t));
 
     if (selectedWalletId === id) {
       setSelectedWalletId(remainingWallets[0]?.id || '');
@@ -1534,7 +1263,6 @@ function TapxMainApp() {
     if (editingWalletId === id) resetWalletModal();
 
     showToast('Account removed');
-    await supabase.from('wallets').delete().eq('id', id);
   };
 
   const openEditCategory = (cat) => {
@@ -1547,70 +1275,24 @@ function TapxMainApp() {
     setShowCategoryModal(true);
   };
 
-  const handleSaveCategory = async (e) => {
-    e.preventDefault();
+  const handleSaveCategory = async () => {
     if (!newCatName.trim()) return;
 
-    const nameVal = newCatName.trim();
-    const typeVal = newCatType;
-    const iconVal = newCatIcon || '🍔';
-    const budgetVal = newCatBudget && parseFloat(newCatBudget) > 0 ? roundMoney(parseFloat(newCatBudget)) : null;
-    const targetEditId = editingCatId;
-
+    const fields = {
+      name: newCatName.trim(), type: newCatType, icon: newCatIcon || '🍔',
+      monthly_budget: Number(newCatBudget) > 0 ? roundMoney(newCatBudget) : null
+    };
+    const query = editingCatId
+      ? supabase.from('categories').update(fields).eq('id', editingCatId)
+      : supabase.from('categories').insert({ ...fields, user_id: userId });
+    const { data: saved, error } = await query.select().single();
+    if (error) throw error;
+    setCategories((prev) => editingCatId
+      ? prev.map((cat) => cat.id === saved.id ? saved : cat)
+      : [...prev, saved]);
     resetCategoryModal();
-
-    if (targetEditId) {
-      setCategories((prev) =>
-        prev.map((c) =>
-          c.id === targetEditId
-            ? { ...c, name: nameVal, type: typeVal, icon: iconVal, monthly_budget: budgetVal }
-            : c
-        )
-      );
-      playSuccess('save');
-      showToast('Category updated!');
-
-      const { error } = await supabase
-        .from('categories')
-        .update({ name: nameVal, type: typeVal, icon: iconVal, monthly_budget: budgetVal })
-        .eq('id', targetEditId);
-
-      if (error) {
-        playError();
-        showToast(error.message);
-        fetchUserData(session.user.id, { force: true });
-      }
-      return;
-    }
-
-    const { data: createdCat, error } = await supabase
-      .from('categories')
-      .insert([
-        {
-          user_id: session.user.id,
-          name: nameVal,
-          type: typeVal,
-          icon: iconVal,
-          monthly_budget: budgetVal
-        }
-      ])
-      .select()
-      .maybeSingle();
-
-    if (!error && createdCat) {
-      setCategories((prev) => {
-        const updated = [...prev, createdCat];
-        if (!selectedCategoryId && createdCat.type === 'expense') {
-          setSelectedCategoryId(createdCat.id);
-        }
-        return updated;
-      });
-      playSuccess('save');
-      showToast('Category created!');
-    } else if (error) {
-      playError();
-      showToast(error.message);
-    }
+    playSuccess('save');
+    showToast(editingCatId ? 'Category updated!' : 'Category created!');
   };
 
   const handleDeleteCategory = async (id) => {
@@ -1620,20 +1302,20 @@ function TapxMainApp() {
       setTimeout(() => setConfirmDeleteId((prev) => (prev === id ? null : prev)), 3000);
       return;
     }
+    if (queueRef.current.some(({ payload }) => payload.category_id === id)) {
+      throw new Error('Sync or edit the pending entries in this category first.');
+    }
+    const { error } = await supabase.from('categories').delete().eq('id', id).select('id').single();
+    if (error) throw error;
     playDelete();
     setConfirmDeleteId(null);
 
     const remainingCats = categories.filter((c) => c.id !== id);
     setCategories(remainingCats);
-    if (selectedCategoryId === id) {
-      const targetType = entryType === 'income' ? 'income' : 'expense';
-      const fallbackCat = remainingCats.find((c) => c.type === targetType) || remainingCats[0];
-      setSelectedCategoryId(fallbackCat?.id || '');
-    }
     if (editingCatId === id) resetCategoryModal();
 
     showToast('Category deleted');
-    await supabase.from('categories').delete().eq('id', id);
+    setTransactions((prev) => prev.map((tx) => tx.category_id === id ? { ...tx, category_id: null } : tx));
   };
 
   const handleRegenerateToken = async () => {
@@ -1641,10 +1323,12 @@ function TapxMainApp() {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
 
+    const { error } = await supabase.from('user_settings').update({ shortcut_token: randomHex })
+      .eq('user_id', userId).select('user_id').single();
+    if (error) throw error;
     setSettings((prev) => ({ ...prev, shortcut_token: randomHex }));
     playSuccess('save');
     showToast('Token refreshed!');
-    await supabase.from('user_settings').update({ shortcut_token: randomHex }).eq('user_id', session.user.id);
   };
 
   const copyToClipboard = async (text, label) => {
@@ -1660,7 +1344,9 @@ function TapxMainApp() {
     }
   };
 
-  const personalApiUrl = `${window.location.origin}/api/shortcut?token=${settings?.shortcut_token || ''}`;
+  const personalApiUrl = settings?.shortcut_token
+    ? `${window.location.origin}/api/shortcut?token=${encodeURIComponent(settings.shortcut_token)}`
+    : '';
 
   const handleOneTapShortcut = async () => {
     try {
@@ -1742,7 +1428,7 @@ function TapxMainApp() {
       .slice(0, 4);
   }, [transactions, entryType, resolveTxCategory]);
 
-  const visibleTransactions = useMemo(() => {
+  const matchingTransactions = useMemo(() => {
     const q = activitySearch.trim().toLowerCase();
     return transactions
       .filter((tx) => {
@@ -1763,15 +1449,14 @@ function TapxMainApp() {
           .join(' ')
           .toLowerCase();
         return haystack.includes(q);
-      })
-      .slice(0, 80);
+      });
   }, [transactions, activityWalletFilter, activityTypeFilter, activitySearch, walletById, resolveTxCategory]);
 
   const groupedTransactions = useMemo(() => {
     const groups = [];
     const groupMap = new Map();
 
-    visibleTransactions.forEach((tx) => {
+    matchingTransactions.slice(0, activityLimit).forEach((tx) => {
       const label = formatDayGroupLabel(tx.created_at);
       if (!groupMap.has(label)) {
         const newGroup = { label, items: [], netSpend: 0 };
@@ -1786,7 +1471,7 @@ function TapxMainApp() {
     });
 
     return groups;
-  }, [visibleTransactions]);
+  }, [matchingTransactions, activityLimit]);
 
   const currentMonthSpendByCat = useMemo(() => {
     const now = new Date();
@@ -1831,10 +1516,10 @@ function TapxMainApp() {
   );
 
   const handleExportCsv = useCallback(() => {
-    const sourceRows = analyticsData.filteredTx.length > 0 ? analyticsData.filteredTx : transactions;
+    const sourceRows = analyticsData.filteredTx;
     if (sourceRows.length === 0) {
       playError();
-      showToast('No transactions to export');
+      showToast('No entries in this date range');
       return;
     }
 
@@ -1854,7 +1539,7 @@ function TapxMainApp() {
 
     sourceRows.forEach((tx) => {
       const d = tx.created_at ? new Date(tx.created_at) : new Date();
-      const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('en-CA') : '';
+      const dateStr = !isNaN(d.getTime()) ? localDateString(d) : '';
       const timeStr = !isNaN(d.getTime())
         ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
         : '';
@@ -1897,7 +1582,7 @@ function TapxMainApp() {
 
     playCopy();
     showToast(`Exported ${sourceRows.length} entries to CSV!`);
-  }, [analyticsData.filteredTx, transactions, walletById, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
+  }, [analyticsData.filteredTx, walletById, resolveTxCategory, settings?.currency, analyticsRange, showToast]);
 
   const currencySymbol = settings?.currency || '₹';
   const formattedDisplayAmount = useMemo(() => formatDisplayAmount(amountStr), [amountStr]);
@@ -1922,6 +1607,7 @@ function TapxMainApp() {
     return (
       <LoginScreen
         ui={ui}
+        loginError={loginError}
         savedAccounts={savedAccounts}
         onGoogleLogin={handleGoogleLogin}
         onRemoveSavedAccount={handleRemoveSavedAccount}
@@ -1941,7 +1627,7 @@ function TapxMainApp() {
         <div
           role="status"
           aria-live="polite"
-          className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-cartoon font-bold flex items-center gap-3 animate-tab ${ui.toastBg}`}
+          className={`fixed top-16 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full text-xs font-cartoon font-bold flex items-center gap-3 animate-tab ${ui.toastBg}`}
         >
           <span>{toast.message}</span>
           {toast.onUndo && (
@@ -1993,11 +1679,11 @@ function TapxMainApp() {
             ) : offlineQueue.length > 0 ? (
               <button
                 type="button"
-                onClick={() => flushOfflineQueue(session.user.id)}
+                onClick={() => fetchUserData(userId, { force: true })}
                 className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#5C9EAD] text-[#1e1e1c] border flex items-center gap-1 ${ui.badgeBorder}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1e1e1c] animate-ping" />
-                Syncing {offlineQueue.length}
+                {isSyncingBg ? 'Syncing' : 'Pending'} {offlineQueue.length}
               </button>
             ) : (
               <span
@@ -2070,7 +1756,7 @@ function TapxMainApp() {
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: '78px'
+          paddingBottom: 'calc(68px + max(10px, env(safe-area-inset-bottom)))'
         }}
       >
         {activeTab === 'pad' && (
@@ -2084,7 +1770,6 @@ function TapxMainApp() {
             entryDate={entryDate}
             setEntryDate={setEntryDate}
             todayDateStr={getTodayDateString()}
-            categories={categories}
             setSelectedCategoryId={setSelectedCategoryId}
             amountStr={amountStr}
             formattedDisplayAmount={formattedDisplayAmount}
@@ -2108,7 +1793,6 @@ function TapxMainApp() {
             handleQuickAddAmount={handleQuickAddAmount}
             handleSwapTransferWallets={handleSwapTransferWallets}
             handleLogTransaction={handleLogTransaction}
-            delHoldTimerRef={delHoldTimerRef}
             onOpenNewWallet={() => {
               playModalOpen();
               resetWalletModal();
@@ -2139,6 +1823,8 @@ function TapxMainApp() {
             activityTypeFilter={activityTypeFilter}
             setActivityTypeFilter={setActivityTypeFilter}
             groupedTransactions={groupedTransactions}
+            hasMore={matchingTransactions.length > activityLimit}
+            onLoadMore={() => setActivityLimit((count) => count + 80)}
             resolveTxCategory={resolveTxCategory}
             openEditWallet={openEditWallet}
             onOpenNewWallet={() => {
@@ -2192,7 +1878,7 @@ function TapxMainApp() {
             copiedField={copiedField}
             handleOneTapShortcut={handleOneTapShortcut}
             settings={settings}
-            handleRegenerateToken={handleRegenerateToken}
+            handleRegenerateToken={() => runMutation(handleRegenerateToken)}
             categories={categories}
             currentMonthSpendByCat={currentMonthSpendByCat}
             currencySymbol={currencySymbol}
@@ -2202,13 +1888,16 @@ function TapxMainApp() {
               setShowCategoryModal(true);
             }}
             openEditCategory={openEditCategory}
-            handleDeleteCategory={handleDeleteCategory}
+            handleDeleteCategory={(id) => runMutation(() => handleDeleteCategory(id))}
             confirmDeleteId={confirmDeleteId}
             session={session}
-            onSync={() => {
-              playSuccess('save');
-              fetchUserData(session.user.id, { force: true });
-              showToast('Synced!');
+            isSyncing={isSyncingBg}
+            onSync={async () => {
+              if (!navigator.onLine) return showToast('Offline · Reconnect to sync');
+              if (await fetchUserData(userId, { force: true })) {
+                playSuccess('save');
+                showToast('Synced!');
+              }
             }}
             handleLogout={handleLogout}
           />
@@ -2230,8 +1919,9 @@ function TapxMainApp() {
           newWalletIcon={newWalletIcon}
           setNewWalletIcon={setNewWalletIcon}
           confirmDeleteId={confirmDeleteId}
-          onSave={handleSaveWallet}
-          onDelete={handleDeleteWallet}
+          busy={isSaving}
+          onSave={(e) => { e.preventDefault(); return runMutation(handleSaveWallet); }}
+          onDelete={(id) => runMutation(() => handleDeleteWallet(id))}
           onClose={resetWalletModal}
         />
       )}
@@ -2248,7 +1938,8 @@ function TapxMainApp() {
           setNewCatIcon={setNewCatIcon}
           newCatBudget={newCatBudget}
           setNewCatBudget={setNewCatBudget}
-          onSave={handleSaveCategory}
+          busy={isSaving}
+          onSave={(e) => { e.preventDefault(); return runMutation(handleSaveCategory); }}
           onClose={resetCategoryModal}
         />
       )}
@@ -2272,8 +1963,9 @@ function TapxMainApp() {
           setEditTxNote={setEditTxNote}
           wallets={wallets}
           categories={categories}
-          onSave={handleSaveEditedTransaction}
-          onDelete={handleDeleteTransaction}
+          busy={isSaving}
+          onSave={(e) => { e.preventDefault(); return runMutation(handleSaveEditedTransaction); }}
+          onDelete={(id) => runMutation(() => handleDeleteTransaction(id))}
           onClose={() => setEditingTx(null)}
         />
       )}
@@ -2282,7 +1974,7 @@ function TapxMainApp() {
       <div
         className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
-          bottom: '10px'
+          bottom: 'max(10px, env(safe-area-inset-bottom))'
         }}
       >
         <nav
@@ -2359,10 +2051,67 @@ function TapxMainApp() {
   );
 }
 
+function TapxSession() {
+  const [session, setSession] = useState(() =>
+    hasOAuthParamsInUrl() ? null : getInitialSyncSession(readCachedData())
+  );
+  const [isAuthChecking, setIsAuthChecking] = useState(!session);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    let authEventReceived = false;
+    const returningFromGoogle = hasOAuthParamsInUrl();
+    const finish = (nextSession) => {
+      setSession(nextSession);
+      setIsAuthChecking(false);
+      setIsLoggingIn(false);
+      setLoginError(!nextSession && returningFromGoogle ? 'Sign-in was interrupted. You can try again.' : '');
+    };
+    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!mounted) return;
+      if (nextSession || event === 'SIGNED_OUT') {
+        authEventReceived = true;
+        if (event === 'SIGNED_OUT') clearCachedData();
+        finish(nextSession);
+      }
+    });
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!mounted || authEventReceived) return;
+      if (!data?.session && !returningFromGoogle && !navigator.onLine) {
+        setIsAuthChecking(false);
+        return;
+      }
+      if (!data?.session && !error) clearCachedData();
+      finish(data?.session || null);
+    }).catch(() => {
+      if (!mounted || authEventReceived) return;
+      setIsAuthChecking(false);
+      setIsLoggingIn(false);
+      if (returningFromGoogle) setLoginError('Sign-in was interrupted. You can try again.');
+    });
+
+    const handlePageShow = () => setIsLoggingIn(false);
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      mounted = false;
+      data.subscription.unsubscribe();
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
+
+  return (
+    <TapxMainApp key={session?.user?.id || 'signed-out'} session={session}
+      isAuthChecking={isAuthChecking} isLoggingIn={isLoggingIn} setIsLoggingIn={setIsLoggingIn}
+      loginError={loginError} setLoginError={setLoginError} />
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
-      <TapxMainApp />
+      <TapxSession />
     </ErrorBoundary>
   );
 }

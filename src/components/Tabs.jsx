@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WALLET_COLORS } from '../constants';
 import { formatTimeOnly, formatDayGroupLabel, getCategoryAccentColor } from '../analytics';
 import { playQuickChip, playTabSwitch } from '../sounds';
@@ -60,7 +60,6 @@ export function KeypadTab({
   entryDate,
   setEntryDate,
   todayDateStr,
-  categories,
   setSelectedCategoryId,
   amountStr,
   formattedDisplayAmount,
@@ -84,10 +83,14 @@ export function KeypadTab({
   handleQuickAddAmount,
   handleSwapTransferWallets,
   handleLogTransaction,
-  delHoldTimerRef,
   onOpenNewWallet,
   onOpenNewCategory
 }) {
+  const delHoldTimerRef = useRef(null);
+  const didClearRef = useRef(false);
+  const cancelDeleteHold = () => clearTimeout(delHoldTimerRef.current);
+  useEffect(() => () => clearTimeout(delHoldTimerRef.current), []);
+
   const entryIndex = entryType === 'expense' ? 0 : entryType === 'income' ? 1 : 2;
   const primaryButtonClass =
     entryType === 'income'
@@ -110,7 +113,7 @@ export function KeypadTab({
   const dateBadgeLabel = formatCompactDateBadge(entryDate, todayDateStr);
 
   return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-2 overflow-hidden ${tabAnimClass}`}>
+    <div className={`flex-1 min-h-0 flex flex-col gap-2 custom-scroll ${tabAnimClass}`}>
       {/* Entry Type Segmented Control */}
       <div
         role="tablist"
@@ -133,12 +136,9 @@ export function KeypadTab({
             role="tab"
             aria-selected={entryType === t.id}
             onClick={() => {
-              if (entryType !== t.id) playTabSwitch();
+              if (entryType === t.id) return;
+              playTabSwitch();
               setEntryType(t.id);
-              const firstMatch = categories.find(
-                (c) => c.type === (t.id === 'income' ? 'income' : 'expense')
-              );
-              if (firstMatch) setSelectedCategoryId(firstMatch.id);
             }}
             className={`relative z-10 py-1.5 text-xs font-cartoon rounded-xl transition-colors duration-200 ${
               entryType === t.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
@@ -196,10 +196,7 @@ export function KeypadTab({
             {amountStr !== '0' && (
               <button
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handleDigitPress('CLEAR');
-                }}
+                onClick={() => handleDigitPress('CLEAR')}
                 aria-label="Reset amount"
                 className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold key-press ${ui.pillIdle}`}
               >
@@ -258,10 +255,7 @@ export function KeypadTab({
               <button
                 key={preset.key}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  onApplySmartPreset(preset);
-                }}
+                onClick={() => onApplySmartPreset(preset)}
                 className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${ui.chipSoft}`}
               >
                 <span>{preset.icon}</span>
@@ -279,10 +273,7 @@ export function KeypadTab({
               <button
                 key={val}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handleQuickAddAmount(val);
-                }}
+                onClick={() => handleQuickAddAmount(val)}
                 className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold tabular-nums key-press ${ui.pillIdle}`}
               >
                 +{currencySymbol}
@@ -478,33 +469,30 @@ export function KeypadTab({
       </div>
 
       {/* Fluid Thumb-Zone Numpad */}
-      <div className="flex-1 min-h-0 flex flex-col justify-end gap-2">
+      <div className="flex-1 min-h-fit flex flex-col justify-end gap-2">
         <div className="flex-1 min-h-[196px] max-h-[296px] grid grid-cols-3 grid-rows-4 gap-2">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
             <button
               key={key}
               type="button"
               aria-label={key === 'DEL' ? 'Delete last digit' : key === '.' ? 'Decimal point' : `Digit ${key}`}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                handleDigitPress(key);
-                if (key === 'DEL') {
-                  if (delHoldTimerRef.current) clearTimeout(delHoldTimerRef.current);
-                  delHoldTimerRef.current = setTimeout(() => {
-                    handleDigitPress('CLEAR');
-                  }, 420);
-                }
+              onClick={(event) => {
+                if (key !== 'DEL' || !didClearRef.current || event.detail === 0) handleDigitPress(key);
+                didClearRef.current = false;
               }}
-              onPointerUp={() => {
-                if (key === 'DEL' && delHoldTimerRef.current) {
-                  clearTimeout(delHoldTimerRef.current);
-                }
+              onPointerDown={(event) => {
+                if (key !== 'DEL' || event.button !== 0 || !event.isPrimary) return;
+                didClearRef.current = false;
+                cancelDeleteHold();
+                delHoldTimerRef.current = setTimeout(() => {
+                  didClearRef.current = true;
+                  handleDigitPress('CLEAR');
+                }, 420);
               }}
-              onPointerLeave={() => {
-                if (key === 'DEL' && delHoldTimerRef.current) {
-                  clearTimeout(delHoldTimerRef.current);
-                }
-              }}
+              onContextMenu={key === 'DEL' ? (event) => event.preventDefault() : undefined}
+              onPointerUp={cancelDeleteHold}
+              onPointerLeave={cancelDeleteHold}
+              onPointerCancel={cancelDeleteHold}
               className={`h-full min-h-[46px] max-h-[68px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
                 key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
               }`}
@@ -560,6 +548,8 @@ export function AccountsTab({
   activityTypeFilter,
   setActivityTypeFilter,
   groupedTransactions,
+  hasMore,
+  onLoadMore,
   resolveTxCategory,
   openEditWallet,
   onOpenNewWallet,
@@ -602,7 +592,7 @@ export function AccountsTab({
                 aria-pressed={isFiltered}
                 onClick={toggleWalletFilter}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
+                  if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
                     e.preventDefault();
                     toggleWalletFilter();
                   }
@@ -858,6 +848,12 @@ export function AccountsTab({
             </div>
           ))
         )}
+        {hasMore && (
+          <button type="button" onClick={onLoadMore}
+            className={`w-full py-2 rounded-xl text-xs font-bold key-press ${ui.pillIdle}`}>
+            Show more entries
+          </button>
+        )}
       </div>
     </div>
   );
@@ -923,7 +919,7 @@ export function InsightsTab({
   const donutCircumference = 2 * Math.PI * donutRadius;
   let donutCumulativeShare = 0;
 
-  const hasAnyActivity = analyticsData.totalExpense > 0 || analyticsData.totalIncome > 0;
+  const hasAnyActivity = analyticsData.filteredTx.length > 0;
 
   return (
     <div className={`flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden ${tabAnimClass}`}>
@@ -1214,7 +1210,7 @@ export function InsightsTab({
                         key={idx}
                         type="button"
                         aria-pressed={isSelected}
-                        aria-label={`${day.fullDateLabel}: ${currencySymbol}${Math.round(day.amount)}`}
+                        aria-label={`${day.fullDateLabel}: ${fmtAmt(day.amount)}`}
                         onClick={() => {
                           playQuickChip();
                           setSelectedBarIdx(idx);
@@ -1259,7 +1255,7 @@ export function InsightsTab({
                             isSelected || day.isToday ? ui.textSand : ui.textMuted
                           }`}
                         >
-                          {day.isToday && analyticsData.trendBars.length <= 7 ? 'Today' : day.label}
+                          {day.isToday && analyticsData.effectiveDays <= 14 ? 'Today' : day.label}
                         </span>
                       </button>
                     );
@@ -1819,6 +1815,7 @@ export function SettingsTab({
   handleDeleteCategory,
   confirmDeleteId,
   session,
+  isSyncing,
   onSync,
   handleLogout
 }) {
@@ -1955,6 +1952,7 @@ export function SettingsTab({
                 />
                 <button
                   type="button"
+                  disabled={!personalApiUrl}
                   onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
                   className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
                 >
@@ -1965,6 +1963,7 @@ export function SettingsTab({
 
             <button
               type="button"
+              disabled={!personalApiUrl}
               onClick={handleOneTapShortcut}
               className={`w-full py-3 px-4 rounded-xl font-cartoon font-bold text-xs key-press ${ui.primaryBtnExpense}`}
             >
@@ -2003,6 +2002,7 @@ export function SettingsTab({
               />
               <button
                 type="button"
+                disabled={!settings?.shortcut_token}
                 onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
                 className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
               >
@@ -2121,10 +2121,11 @@ export function SettingsTab({
         <div className="flex items-center gap-2">
           <button
             type="button"
+            disabled={isSyncing}
             onClick={onSync}
             className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
           >
-            Sync
+            {isSyncing ? 'Syncing…' : 'Sync'}
           </button>
           <button
             type="button"
