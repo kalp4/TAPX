@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { webcrypto } from 'node:crypto';
 import { sendQueuedEntry, withPendingEntries, writeTransactionChange } from '../src/ledger.js';
+
+globalThis.crypto ??= webcrypto;
 
 // Only the PostgREST operations used by the ledger. Keep server rows across simulated lost replies.
 function database({ trigger = false, loseInsertReply = false, failDestination = false } = {}) {
@@ -69,9 +72,11 @@ test('a retry finishes an interrupted transfer without applying the first leg ag
   const checkpoint = (next) => { stored = next; };
   await assert.rejects(sendQueuedEntry(db, stored, checkpoint), /Connection lost/);
   assert.deepEqual([...balances.values()], [87.5, 20]);
+  // Another device can bring the source back to its original balance before reconnection.
+  balances.set('cash', 100);
   await sendQueuedEntry(db, stored, checkpoint);
   assert.equal(transactions.size, 1);
-  assert.deepEqual([...balances.values()], [87.5, 32.5]);
+  assert.deepEqual([...balances.values()], [100, 32.5]);
 });
 
 test('legacy queued entries acquire an id before their first send', async () => {
@@ -79,7 +84,7 @@ test('legacy queued entries acquire an id before their first send', async () => 
   const { id, ...legacyPayload } = payload;
   let persistedId;
   const row = await sendQueuedEntry(db, { ...draft, payload: legacyPayload }, (next) => {
-    assert.equal(transactions.size, 0);
+    if (!persistedId) assert.equal(transactions.size, 0);
     persistedId = next.payload.id;
   });
   assert.ok(persistedId);

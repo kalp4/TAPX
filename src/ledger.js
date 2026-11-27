@@ -1,5 +1,14 @@
 import { roundMoney } from './analytics.js';
 
+export function newEntryId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 15) | 64;
+  bytes[8] = (bytes[8] & 63) | 128;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join('-');
+}
+
 export function walletChanges(tx) {
   const amount = Number(tx.amount);
   const changes = [[tx.wallet_id, tx.type === 'income' ? amount : -amount]];
@@ -41,12 +50,13 @@ async function readBalances(db, changes) {
   return Object.fromEntries(data.map((w) => [w.id, w.balance]));
 }
 
-async function finishBalances(db, before, changes) {
+async function finishBalances(db, before, changes, onApplied) {
   for (const [id, delta] of changes) {
     const balance = before[id];
     const query = db.from('wallets').update({ balance: roundMoney(Number(balance) + delta) }).eq('id', id);
     const result = await (balance == null ? query.is('balance', null) : query.eq('balance', balance));
     if (result.error) throw result.error;
+    onApplied?.(id);
   }
 }
 
@@ -66,7 +76,7 @@ export async function writeTransactionChange(db, changes, write) {
 // The original app supports databases both with and without an insert balance trigger.
 // Keep the pre-insert balances with the queued UUID so a retry can finish either transfer leg.
 export async function sendQueuedEntry(db, item, checkpoint) {
-  const payload = { ...item.payload, id: item.payload.id || crypto.randomUUID() };
+  const payload = { ...item.payload, id: item.payload.id || newEntryId() };
   const changes = walletChanges(payload);
   let before = item.balancesBefore;
   if (!before) {
@@ -87,6 +97,10 @@ export async function sendQueuedEntry(db, item, checkpoint) {
     if (existing.error) throw existing.error;
     row = existing.data;
   }
-  await finishBalances(db, before, changes);
+  let applied = item.appliedWallets || [];
+  await finishBalances(db, before, changes.filter(([id]) => !applied.includes(id)), (id) => {
+    applied = [...applied, id];
+    checkpoint({ ...item, payload, balancesBefore: before, appliedWallets: applied });
+  });
   return row;
 }

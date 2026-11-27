@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { supabase } from './supabaseClient';
-import { applyChanges, sendQueuedEntry, walletChanges, withPendingEntries, writeTransactionChange } from './ledger';
+import { applyChanges, newEntryId, sendQueuedEntry, walletChanges, withPendingEntries, writeTransactionChange } from './ledger';
 import {
   SHARED_ICLOUD_SHORTCUT_URL,
   WALLET_COLORS,
@@ -172,12 +172,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
   });
   const queueRef = useRef(offlineQueue);
   const updateQueue = useCallback((update) => {
-    let all;
-    try {
-      all = readQueue();
-    } catch {
-      all = queueRef.current;
-    }
+    const all = readQueue();
     const next = update(all.filter((item) => item?.payload?.user_id === userId));
     // Persist before reporting success or sending an insert. Preserve other signed-in users' drafts.
     const otherUsers = all.filter((item) => item?.payload?.user_id !== userId);
@@ -574,17 +569,39 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     if (flushingQueueRef.current) return flushingQueueRef.current;
     if (!userId || !navigator.onLine || !queueRef.current.length) return Promise.resolve();
     const drain = async () => {
+      const attempted = new Set();
+      const blockedWallets = new Set();
+      let firstError;
       while (mountedRef.current && navigator.onLine) {
-        const item = readQueue().find((row) => row?.payload?.user_id === userId && row.action === 'insert_tx');
+        const item = readQueue().find((row) => row?.payload?.user_id === userId &&
+          row.action === 'insert_tx' && !attempted.has(row.tempId) &&
+          !walletChanges(row.payload).some(([id]) => blockedWallets.has(id)));
         if (!item) break;
+        attempted.add(item.tempId);
         activeEntryRef.current = item.tempId;
-        const row = await sendQueuedEntry(supabase, item, (saved) =>
-          updateQueue((items) => items.map((old) => old.tempId === item.tempId ? saved : old))
-        );
-        updateQueue((items) => items.filter((old) => old.tempId !== item.tempId));
-        dataVersionRef.current++;
-        setTransactions((prev) => prev.map((tx) => tx.id === item.tempId ? row : tx));
+        try {
+          const row = await sendQueuedEntry(supabase, item, (saved) =>
+            updateQueue((items) => {
+              const current = items.find((old) => old.tempId === item.tempId);
+              if (!current || (JSON.stringify(current.payload) !== JSON.stringify(item.payload) &&
+                  JSON.stringify(current.payload) !== JSON.stringify(saved.payload))) {
+                throw new Error('The queued entry changed in another tab. Sync again.');
+              }
+              return items.map((old) => old.tempId === item.tempId ? saved : old);
+            })
+          );
+          updateQueue((items) => items.filter((old) => old.tempId !== item.tempId));
+          dataVersionRef.current++;
+          setTransactions((prev) => prev.map((tx) => tx.id === item.tempId ? row : tx));
+        } catch (error) {
+          firstError ||= error;
+          const pending = queueRef.current.find((old) => old.tempId === item.tempId);
+          if (pending?.balancesBefore) {
+            for (const [id] of walletChanges(pending.payload)) blockedWallets.add(id);
+          }
+        }
       }
+      if (firstError) throw firstError;
     };
     const work = navigator.locks?.request
       ? navigator.locks.request(`tapx-sync-${userId}`, drain)
@@ -980,7 +997,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
       categories.find((c) => c.id === selectedCategoryId && c.type === currentType)?.id || null;
 
     const createdAtIso = buildIsoForLocalDate(entryDate);
-    const id = crypto.randomUUID();
+    const id = newEntryId();
     const tempId = `temp-${id}`;
     const insertPayload = {
       id,
@@ -1029,12 +1046,12 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     try {
       await flushOfflineQueue();
     } catch {
-      showToast('Saved on this device. Tap the pending count to retry sync.');
+      if (queueRef.current.some((item) => item.tempId === tempId)) showToast('Saved on this device. Tap the pending count to retry sync.');
     }
   };
 
   const getEditableDraft = (id) => {
-    const draft = queueRef.current.find((item) => item.tempId === id);
+    const draft = readQueue().find((item) => item?.payload?.user_id === userId && item.tempId === id);
     if (!draft || activeEntryRef.current === id || draft.balancesBefore) {
       throw new Error('This entry is syncing. Try again after sync finishes.');
     }
@@ -1063,7 +1080,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     }
     showToast('Entry popped!', async () => {
       const { pendingSync, id: oldId, ...fields } = tx;
-      const payload = { ...fields, id: draft?.payload?.id || crypto.randomUUID() };
+      const payload = { ...fields, id: draft?.payload?.id || newEntryId() };
       const tempId = draft?.tempId || `temp-${payload.id}`;
       try {
         updateQueue((items) => [...items, { action: 'insert_tx', tempId, payload }]);
@@ -1087,6 +1104,10 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
   };
 
   const openEditTransaction = (tx) => {
+    if (queueRef.current.some((item) => item.payload.id === tx.id)) {
+      showToast('This entry is syncing. Try again after sync finishes.');
+      return;
+    }
     if (String(tx.id).startsWith('temp-')) {
       try {
         getEditableDraft(tx.id);
