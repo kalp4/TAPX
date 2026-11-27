@@ -13,11 +13,15 @@ const DEFAULT_CATEGORIES_LIST = [
 
 // Read raw request body stream in case Vercel does not auto-parse Apple Shortcuts payload
 async function getRawBody(req) {
-  if (req.body !== undefined && req.body !== null && req.body !== '') {
+  if (req.body !== undefined && req.body !== null) {
     if (Buffer.isBuffer(req.body)) {
       return req.body.toString('utf-8');
     }
     return req.body;
+  }
+  if (req.readableEnded || req.destroyed ||
+      (req.method === 'GET' && !req.headers['content-length'] && !req.headers['transfer-encoding'])) {
+    return '';
   }
   return new Promise((resolve) => {
     let data = '';
@@ -122,10 +126,10 @@ function extractShorthandAmount(rawQuery) {
   const candidates = [];
 
   tokens.forEach((token, idx) => {
-    const m = token.match(/^([+-]?[₹$€£]?)(\d+(?:\.\d+)?)$/);
+    const m = token.match(/^([+-]?[₹$€£]?)(\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})*,\d{3}|\d+)(\.\d+)?$/);
     if (m) {
-      const value = Number(m[2]);
-      if (!isNaN(value) && value > 0) {
+      const value = Number(m[2].replace(/,/g, '') + (m[3] || ''));
+      if (Number.isFinite(value) && value > 0) {
         candidates.push({
           rawToken: token,
           value,
@@ -137,6 +141,7 @@ function extractShorthandAmount(rawQuery) {
   });
 
   if (candidates.length === 0) {
+    if (/\d,\d/.test(rawQuery)) return null;
     const fallbackMatch = String(rawQuery || '').match(/(\d+(?:\.\d+)?)/);
     if (!fallbackMatch) return null;
     const val = Number(fallbackMatch[1]);
