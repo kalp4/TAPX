@@ -245,8 +245,15 @@ function isSingleValueCandidate(val) {
 }
 
 function matchAgainstDbList(candidateStr, dbList) {
+  if (!Array.isArray(dbList) || dbList.length === 0) return '';
+  const rawCand = String(candidateStr || '').trim().toLowerCase();
+  if (!rawCand) return '';
+
+  const rawExact = dbList.find((item) => String(item || '').trim().toLowerCase() === rawCand);
+  if (rawExact) return rawExact;
+
   const cleanCand = cleanForCompare(candidateStr);
-  if (!cleanCand || !Array.isArray(dbList) || dbList.length === 0) return '';
+  if (!cleanCand) return '';
 
   // 1. Exact match
   const exact = dbList.find((item) => cleanForCompare(item) === cleanCand);
@@ -255,6 +262,7 @@ function matchAgainstDbList(candidateStr, dbList) {
   // 2. First-word or substring match (e.g. "Transport" or "Bills")
   const partial = dbList.find((item) => {
     const cleanDb = cleanForCompare(item);
+    if (!cleanDb) return false;
     const firstWord = cleanDb.split(/[\s&/]+/)[0];
     return (
       cleanDb.includes(cleanCand) ||
@@ -558,16 +566,26 @@ export default async function handler(req, res) {
     let matchedWallet = '';
     let matchedCategory = '';
 
-    const lowerRemaining = remainingText.toLowerCase();
+    const cleanRemaining = cleanForCompare(remainingText);
 
     const sortedWallets = [...dbWallets].sort((a, b) => String(b).length - String(a).length);
-    const foundWallet = sortedWallets.find((w) =>
-      lowerRemaining.includes(String(w).trim().toLowerCase())
-    );
+    const foundWallet = sortedWallets.find((w) => {
+      const rawW = String(w || '').trim().toLowerCase();
+      const cleanW = cleanForCompare(w);
+      if (rawW && new RegExp(`(^|\\s)${escapeRegex(rawW)}(?=\\s|$)`, 'i').test(remainingText.toLowerCase())) {
+        return true;
+      }
+      if (cleanW && new RegExp(`(^|\\s)${escapeRegex(cleanW)}(?=\\s|$)`, 'i').test(cleanRemaining)) {
+        return true;
+      }
+      return false;
+    });
     if (foundWallet) {
       matchedWallet = foundWallet;
+      const stripTarget = cleanForCompare(foundWallet) || String(foundWallet).trim();
       remainingText = remainingText
-        .replace(new RegExp(`\\b${escapeRegex(String(foundWallet).trim())}\\b`, 'ig'), '')
+        .replace(new RegExp(`(^|\\s)${escapeRegex(String(foundWallet).trim())}(?=\\s|$)`, 'ig'), '$1')
+        .replace(new RegExp(`(^|\\s)${escapeRegex(stripTarget)}(?=\\s|$)`, 'ig'), '$1')
         .trim();
     } else {
       matchedWallet = dbWallets[0];
@@ -577,6 +595,7 @@ export default async function handler(req, res) {
     let matchedByFullCat = false;
     const foundCategory = sortedCats.find((c) => {
       const fullCat = cleanForCompare(c);
+      if (!fullCat) return false;
       const firstWord = fullCat.split(/[\s&/]+/)[0];
       if (remainingText.toLowerCase().includes(fullCat)) {
         matchedByFullCat = true;

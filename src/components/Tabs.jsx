@@ -109,11 +109,26 @@ export function KeypadTab({
     selectedWalletObj && numericAmount > 0 && entryType !== 'income' && projectedBalance < 0
   );
 
+  const toWalletObj =
+    entryType === 'transfer' ? wallets.find((w) => w.id === toWalletId) || null : null;
+  const currentToBalance = Number(toWalletObj?.balance || 0);
+  const projectedToBalance = currentToBalance + numericAmount;
+
+  const [intDisplay, decDisplay] = String(formattedDisplayAmount).split('.');
+
   const isCustomDate = Boolean(entryDate && entryDate !== todayDateStr);
   const dateBadgeLabel = formatCompactDateBadge(entryDate, todayDateStr);
 
+  const heroCardTone = willGoNegative
+    ? ui.heroCardWarning
+    : entryType === 'income'
+    ? ui.heroCardIncome
+    : entryType === 'transfer'
+    ? ui.heroCardTransfer
+    : ui.heroCard;
+
   return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-2 custom-scroll ${tabAnimClass}`}>
+    <div className={`flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto no-scrollbar ${tabAnimClass}`}>
       {/* Entry Type Segmented Control */}
       <div
         role="tablist"
@@ -151,9 +166,7 @@ export function KeypadTab({
 
       {/* Primary Hero Amount Stage */}
       <div
-        className={`py-2.5 px-3.5 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden transition-colors duration-200 ${
-          willGoNegative ? ui.heroCardWarning : ui.heroCard
-        }`}
+        className={`py-2 px-3.5 rounded-3xl flex flex-col items-center justify-center relative shrink-0 overflow-hidden transition-colors duration-200 ${heroCardTone}`}
       >
         {/* Top Utility Strip: Any-Day Date Picker Pill & Reset */}
         <div className="w-full flex items-center justify-between gap-2 mb-1">
@@ -224,7 +237,10 @@ export function KeypadTab({
             {entryType === 'income' ? '+' : entryType === 'expense' && amountStr !== '0' ? '-' : ''}
             {currencySymbol}
           </span>
-          {formattedDisplayAmount}
+          <span className={amountStr === '0' ? 'opacity-45' : ''}>{intDisplay}</span>
+          {decDisplay !== undefined && (
+            <span className="text-[0.68em] opacity-85">.{decDisplay}</span>
+          )}
         </div>
 
         {/* Framed Note Input Pill */}
@@ -255,11 +271,15 @@ export function KeypadTab({
               <button
                 key={preset.key}
                 type="button"
+                title={`Repeat ${preset.label}`}
                 onClick={() => onApplySmartPreset(preset)}
                 className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${ui.chipSoft}`}
               >
+                <span className={`text-[10px] opacity-70 ${ui.textMuted}`} aria-hidden="true">
+                  ↻
+                </span>
                 <span>{preset.icon}</span>
-                <span className="max-w-[78px] truncate">{preset.label}</span>
+                <span className="max-w-[74px] truncate">{preset.label}</span>
                 <span className={`tabular-nums ${ui.textMuted}`}>
                   {currencySymbol}
                   {preset.amount.toLocaleString('en-IN')}
@@ -322,6 +342,18 @@ export function KeypadTab({
                   <span className="px-2 py-0.5 rounded-full text-[10.5px] font-cartoon font-bold bg-[#F26B5B]/20 text-[#F26B5B]">
                     Negative
                   </span>
+                )}
+                {entryType === 'transfer' && toWalletObj && (
+                  <>
+                    <span className="opacity-45">|</span>
+                    <span className={`font-bold ${ui.textSecondary}`}>
+                      {toWalletObj.icon} {toWalletObj.name}
+                    </span>
+                    <span className="font-cartoon font-bold tabular-nums text-[#52B788]">
+                      → {currencySymbol}
+                      {projectedToBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                    </span>
+                  </>
                 )}
               </>
             )}
@@ -397,24 +429,40 @@ export function KeypadTab({
             <div className="flex gap-2 overflow-x-auto pt-0.5 pb-0.5 no-scrollbar">
               {wallets
                 .filter((w) => w.id !== selectedWalletId)
-                .map((w) => (
-                  <button
-                    key={w.id}
-                    type="button"
-                    aria-pressed={toWalletId === w.id}
-                    onClick={() => {
-                      playQuickChip();
-                      setToWalletId(w.id);
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1 shrink-0 transition-colors duration-150 key-press ${
-                      toWalletId === w.id ? ui.pillActive : ui.pillIdle
-                    }`}
-                  >
-                    <span>
-                      → {w.icon} {w.name}
-                    </span>
-                  </button>
-                ))}
+                .map((w, idx) => {
+                  const active = toWalletId === w.id;
+                  const wColor = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => {
+                        playQuickChip();
+                        setToWalletId(w.id);
+                      }}
+                      style={
+                        active
+                          ? {
+                              backgroundColor: wColor,
+                              color: '#1e1e1c'
+                            }
+                          : undefined
+                      }
+                      className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
+                        active ? ui.pillSelectedBorder : ui.pillIdle
+                      }`}
+                    >
+                      <span>→ {w.icon}</span>
+                      <span>{w.name}</span>
+                      <span className={`text-[11px] tabular-nums ${active ? 'opacity-90 font-extrabold' : 'opacity-75'}`}>
+                        {privacyMode
+                          ? `${currencySymbol}•••`
+                          : `${currencySymbol}${Number(w.balance || 0).toLocaleString('en-IN')}`}
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           )}
         </div>
@@ -434,43 +482,53 @@ export function KeypadTab({
               </button>
             </div>
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
-              {filteredCategories.map((c, idx) => {
-                const active = selectedCategoryId === c.id;
-                const accent = getCategoryAccentColor(c, idx);
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => {
-                      playQuickChip();
-                      setSelectedCategoryId(c.id);
-                    }}
-                    style={
-                      active
-                        ? {
-                            backgroundColor: accent,
-                            color: '#1e1e1c'
-                          }
-                        : undefined
-                    }
-                    className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
-                      active ? ui.pillSelectedBorder : ui.pillIdle
-                    }`}
-                  >
-                    <span>{c.icon}</span>
-                    <span>{c.name}</span>
-                  </button>
-                );
-              })}
+              {filteredCategories.length === 0 ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenNewCategory(entryType === 'income' ? 'income' : 'expense')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
+                >
+                  + Add {entryType} category
+                </button>
+              ) : (
+                filteredCategories.map((c, idx) => {
+                  const active = selectedCategoryId === c.id;
+                  const accent = getCategoryAccentColor(c, idx);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => {
+                        playQuickChip();
+                        setSelectedCategoryId(c.id);
+                      }}
+                      style={
+                        active
+                          ? {
+                              backgroundColor: accent,
+                              color: '#1e1e1c'
+                            }
+                          : undefined
+                      }
+                      className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 transition-all duration-150 key-press ${
+                        active ? ui.pillSelectedBorder : ui.pillIdle
+                      }`}
+                    >
+                      <span>{c.icon}</span>
+                      <span>{c.name}</span>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
       </div>
 
       {/* Fluid Thumb-Zone Numpad */}
-      <div className="flex-1 min-h-fit flex flex-col justify-end gap-2">
-        <div className="flex-1 min-h-[196px] max-h-[296px] grid grid-cols-3 grid-rows-4 gap-2">
+      <div className="flex-1 min-h-0 flex flex-col justify-end gap-2">
+        <div className="flex-1 min-h-[164px] max-h-[296px] grid grid-cols-3 grid-rows-4 gap-2">
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
             <button
               key={key}
@@ -493,7 +551,7 @@ export function KeypadTab({
               onPointerUp={cancelDeleteHold}
               onPointerLeave={cancelDeleteHold}
               onPointerCancel={cancelDeleteHold}
-              className={`h-full min-h-[46px] max-h-[68px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
+              className={`h-full min-h-[38px] max-h-[68px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
                 key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
               }`}
             >
@@ -522,7 +580,7 @@ export function KeypadTab({
         <button
           type="button"
           onClick={handleLogTransaction}
-          className={`w-full py-3.5 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass} ${
+          className={`w-full py-3 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass} ${
             numericAmount <= 0 ? 'opacity-70' : 'opacity-100'
           }`}
         >
@@ -548,6 +606,8 @@ export function AccountsTab({
   activityTypeFilter,
   setActivityTypeFilter,
   groupedTransactions,
+  visibleCount,
+  totalMatchedCount,
   hasMore,
   onLoadMore,
   resolveTxCategory,
@@ -600,10 +660,15 @@ export function AccountsTab({
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
                 }}
-                className={`min-w-[172px] p-3.5 rounded-2xl flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
+                className={`min-w-[172px] p-3.5 pt-4 rounded-2xl flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
                   isFiltered ? ui.walletCardHero : `${ui.card} wallet-sheen`
                 }`}
               >
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-0 top-0 h-1.5"
+                  style={{ backgroundColor: isFiltered ? '#1e1e1c' : cardAccent }}
+                />
                 <div className="flex items-center justify-between gap-2 relative z-10">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
@@ -625,15 +690,22 @@ export function AccountsTab({
                   <button
                     type="button"
                     aria-label={`Edit ${w.name} account`}
+                    title={`Edit ${w.name}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       openEditWallet(w);
                     }}
-                    className={`px-2 py-0.5 rounded-lg border text-[10.5px] font-cartoon font-bold ${ui.badgeBorder} ${
+                    className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${ui.badgeBorder} ${
                       isFiltered ? 'bg-[#1e1e1c] text-[#D8CBB3]' : 'bg-[#D8CBB3] text-[#1e1e1c]'
                     }`}
                   >
-                    Edit
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.3" aria-hidden="true">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+                      />
+                    </svg>
                   </button>
                 </div>
                 <div className="mt-3.5 relative z-10 flex items-baseline justify-between gap-2">
@@ -717,13 +789,15 @@ export function AccountsTab({
 
         <div className={`flex p-0.5 rounded-xl shrink-0 ${ui.segmentedBg}`}>
           {[
-            { id: 'all', label: 'All' },
-            { id: 'expense', label: 'Out' },
-            { id: 'income', label: 'In' }
+            { id: 'all', label: 'All', aria: 'All transactions' },
+            { id: 'expense', label: 'Out', aria: 'Expenses only' },
+            { id: 'income', label: 'In', aria: 'Income only' },
+            { id: 'transfer', label: '⇄', aria: 'Transfers only' }
           ].map((f) => (
             <button
               key={f.id}
               type="button"
+              aria-label={f.aria}
               aria-pressed={activityTypeFilter === f.id}
               onClick={() => {
                 if (activityTypeFilter !== f.id) playQuickChip();
@@ -794,32 +868,32 @@ export function AccountsTab({
                         {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
-                            {tx.type === 'transfer'
-                              ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
-                              : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
-                          </p>
+                        <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>
+                          {tx.type === 'transfer'
+                            ? `${w?.name || 'Account'} → ${toW?.name || 'Account'}`
+                            : cleanNote || c?.name || (tx.type === 'income' ? 'Income' : 'Expense')}
+                        </p>
+                        <div className={`flex items-center gap-1.5 text-[11px] font-medium ${ui.textMuted}`}>
+                          <span className="truncate">
+                            {w?.name || 'Account'}
+                            {cleanNote && c?.name ? ` · ${c.name}` : ''}
+                            {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
+                          </span>
                           {tx.pendingSync && (
                             <span
-                              className={`text-[10.5px] px-1.5 py-0.5 rounded-md bg-[#F4B942] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
+                              className={`text-[10px] px-1.5 py-0.2 rounded-md bg-[#F4B942] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
                             >
                               Queued
                             </span>
                           )}
                           {tx.source === 'shortcut' && (
                             <span
-                              className={`text-[10.5px] px-1.5 py-0.5 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
+                              className={`text-[10px] px-1.5 py-0.2 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
                             >
-                              Back Tap
+                              ⚡ Back Tap
                             </span>
                           )}
                         </div>
-                        <p className={`text-[11px] font-medium truncate ${ui.textMuted}`}>
-                          {w?.name || 'Account'}
-                          {cleanNote && c?.name ? ` · ${c.name}` : ''}
-                          {tx.created_at ? ` · ${formatTimeOnly(tx.created_at)}` : ''}
-                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 pl-2">
@@ -849,9 +923,15 @@ export function AccountsTab({
           ))
         )}
         {hasMore && (
-          <button type="button" onClick={onLoadMore}
-            className={`w-full py-2 rounded-xl text-xs font-bold key-press ${ui.pillIdle}`}>
-            Show more entries
+          <button
+            type="button"
+            onClick={() => {
+              playQuickChip();
+              onLoadMore();
+            }}
+            className={`w-full py-2.5 rounded-2xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
+          >
+            Show more ({visibleCount} of {totalMatchedCount})
           </button>
         )}
       </div>
@@ -890,10 +970,11 @@ export function InsightsTab({
   const fmtAmt = (val, opts = { maximumFractionDigits: 0 }) =>
     privacyMode ? `${currencySymbol}••••` : `${currencySymbol}${Number(val || 0).toLocaleString('en-IN', opts)}`;
 
-  const safeBarIdx = Math.min(
-    selectedBarIdx,
-    Math.max(0, (analyticsData.trendBars?.length || 1) - 1)
-  );
+  const barCount = analyticsData.trendBars?.length || 0;
+  const safeBarIdx =
+    selectedBarIdx === null || selectedBarIdx >= barCount
+      ? Math.max(0, barCount - 1)
+      : Math.max(0, selectedBarIdx);
   const selectedDayObj =
     analyticsData.trendBars?.[safeBarIdx] ||
     analyticsData.trendBars?.[analyticsData.trendBars.length - 1];
@@ -917,7 +998,19 @@ export function InsightsTab({
 
   const donutRadius = 45;
   const donutCircumference = 2 * Math.PI * donutRadius;
-  let donutCumulativeShare = 0;
+  const hasMultipleSlices = analyticsData.categoryBreakdown.length > 1;
+  const donutGap = hasMultipleSlices ? 2.5 : 0;
+  const donutSlices = analyticsData.categoryBreakdown.reduce(
+    (acc, item) => {
+      const rawLen = item.exactShare * donutCircumference;
+      const strokeLen = hasMultipleSlices ? Math.max(2.5, rawLen - donutGap) : donutCircumference;
+      const dashOffset = -acc.cumulative * donutCircumference;
+      acc.items.push({ ...item, strokeLen, dashOffset });
+      acc.cumulative += item.exactShare;
+      return acc;
+    },
+    { cumulative: 0, items: [] }
+  ).items;
 
   const hasAnyActivity = analyticsData.filteredTx.length > 0;
 
@@ -937,7 +1030,7 @@ export function InsightsTab({
                   onClick={() => {
                     if (analyticsRange !== tab.id) playQuickChip();
                     setAnalyticsRange(tab.id);
-                    setSelectedBarIdx(6);
+                    setSelectedBarIdx(null);
                   }}
                   className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold shrink-0 transition-all key-press ${
                     active ? ui.pillActive : ui.pillIdle
@@ -1084,9 +1177,17 @@ export function InsightsTab({
                     <p className="text-base font-cartoon font-bold tabular-nums text-[#52B788] mt-0.5 truncate">
                       +{fmtAmt(analyticsData.totalIncome)}
                     </p>
-                    <p className={`text-[10.5px] font-semibold tabular-nums ${ui.textMuted}`}>
+                    <p
+                      className={`text-[10.5px] font-semibold tabular-nums ${
+                        analyticsData.savingsRate !== null && analyticsData.savingsRate < 0
+                          ? 'text-[#F26B5B]'
+                          : ui.textMuted
+                      }`}
+                    >
                       {analyticsData.savingsRate !== null
-                        ? `${analyticsData.savingsRate}% saved`
+                        ? analyticsData.savingsRate >= 0
+                          ? `${analyticsData.savingsRate}% saved`
+                          : 'Over income'
                         : `${analyticsData.expenseCount} entries`}
                     </p>
                   </div>
@@ -1122,7 +1223,9 @@ export function InsightsTab({
                 <div className={`w-full h-3 rounded-full overflow-hidden flex p-0.5 gap-0.5 ${ui.trackBg}`}>
                   {analyticsData.totalIncome > 0 && (
                     <div
-                      className="h-full rounded-l-full bg-[#52B788] transition-all duration-500"
+                      className={`h-full bg-[#52B788] transition-all duration-500 ${
+                        analyticsData.totalExpense > 0 ? 'rounded-l-full' : 'rounded-full'
+                      }`}
                       style={{
                         width: `${Math.max(
                           8,
@@ -1137,7 +1240,9 @@ export function InsightsTab({
                   )}
                   {analyticsData.totalExpense > 0 && (
                     <div
-                      className="h-full rounded-r-full bg-[#F26B5B] transition-all duration-500"
+                      className={`h-full bg-[#F26B5B] transition-all duration-500 ${
+                        analyticsData.totalIncome > 0 ? 'rounded-r-full' : 'rounded-full'
+                      }`}
                       style={{
                         width: `${Math.max(
                           8,
@@ -1342,14 +1447,7 @@ export function InsightsTab({
                         stroke={isDark ? '#181816' : '#E2D9C6'}
                         strokeWidth="14"
                       />
-                      {analyticsData.categoryBreakdown.map((item) => {
-                        const strokeLen = Math.max(
-                          0,
-                          item.exactShare * donutCircumference -
-                            (analyticsData.categoryBreakdown.length > 1 ? 3 : 0)
-                        );
-                        const dashOffset = -donutCumulativeShare * donutCircumference;
-                        donutCumulativeShare += item.exactShare;
+                      {donutSlices.map((item) => {
                         const isFocused = activeDonutCat?.id === item.id;
 
                         return (
@@ -1361,9 +1459,9 @@ export function InsightsTab({
                             fill="none"
                             stroke={item.color}
                             strokeWidth={isFocused ? '16' : '12.5'}
-                            strokeDasharray={`${strokeLen} ${donutCircumference}`}
-                            strokeDashoffset={dashOffset}
-                            strokeLinecap="round"
+                            strokeDasharray={`${item.strokeLen} ${donutCircumference}`}
+                            strokeDashoffset={item.dashOffset}
+                            strokeLinecap={hasMultipleSlices ? 'butt' : 'round'}
                             className="transition-all duration-300 cursor-pointer"
                             onClick={() => {
                               playQuickChip();
@@ -1487,7 +1585,7 @@ export function InsightsTab({
                                 ? 'bg-[#F4B942]'
                                 : 'bg-[#52B788]'
                             }`}
-                            style={{ width: `${Math.min(100, Math.max(6, b.pct))}%` }}
+                            style={{ width: `${b.pct > 0 ? Math.min(100, Math.max(6, b.pct)) : 0}%` }}
                           />
                         </div>
                       </div>
@@ -1601,21 +1699,35 @@ export function InsightsTab({
                   {analyticsData.dowBreakdown.map((d) => {
                     const isPeak = analyticsData.peakDow?.dayNum === d.dayNum && d.amount > 0;
                     const isSelected = activeDowObj?.dayNum === d.dayNum;
+                    const heatAlpha =
+                      d.amount > 0
+                        ? (0.08 + (d.pctOfMax / 100) * 0.28).toFixed(2)
+                        : 0;
                     return (
                       <button
                         key={d.dayNum}
                         type="button"
                         aria-pressed={isSelected}
-                        aria-label={`${d.label}: ${currencySymbol}${Math.round(d.amount)} across ${d.count} entries`}
+                        aria-label={`${d.label}: ${fmtAmt(d.amount)} across ${d.count} entries`}
                         onClick={() => {
                           playQuickChip();
                           setSelectedDow(d.dayNum);
                         }}
-                        className={`p-2 rounded-2xl flex flex-col items-center gap-1 transition-all duration-150 key-press ${
+                        style={
+                          !isSelected && d.amount > 0
+                            ? {
+                                backgroundColor: `rgba(244, 185, 66, ${heatAlpha})`,
+                                borderColor: isPeak
+                                  ? 'rgba(244, 185, 66, 0.85)'
+                                  : `rgba(244, 185, 66, ${(0.22 + (d.pctOfMax / 100) * 0.45).toFixed(2)})`
+                              }
+                            : undefined
+                        }
+                        className={`p-2 rounded-2xl border flex flex-col items-center gap-1 transition-all duration-150 key-press ${
                           isSelected
                             ? `bg-[#F4B942] text-[#1e1e1c] ${ui.pillSelectedBorder}`
-                            : isPeak
-                            ? `bg-[#D8CBB3]/25 border border-[#F4B942]/70 ${ui.textPrimary}`
+                            : d.amount > 0
+                            ? ui.textPrimary
                             : ui.cardSubtle
                         }`}
                       >
@@ -1643,6 +1755,23 @@ export function InsightsTab({
                           }`}
                         >
                           {d.count}x
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className={`w-full h-1 rounded-full overflow-hidden ${
+                            isSelected ? 'bg-[#1e1e1c]/20' : 'bg-black/15'
+                          }`}
+                        >
+                          <span
+                            className={`block h-full rounded-full ${
+                              isSelected
+                                ? 'bg-[#1e1e1c]'
+                                : isPeak
+                                ? 'bg-[#F26B5B]'
+                                : 'bg-[#F4B942]'
+                            }`}
+                            style={{ width: `${d.amount > 0 ? Math.max(12, d.pctOfMax) : 0}%` }}
+                          />
                         </span>
                       </button>
                     );
@@ -1948,7 +2077,7 @@ export function SettingsTab({
                   readOnly
                   aria-label="Personal Shortcut URL"
                   value={personalApiUrl}
-                  className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-[16px] leading-snug font-mono ${ui.input}`}
+                  className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-xs leading-snug font-mono ${ui.input}`}
                 />
                 <button
                   type="button"
@@ -1998,7 +2127,7 @@ export function SettingsTab({
                 readOnly
                 aria-label="Shortcut Security Token"
                 value={settings?.shortcut_token || ''}
-                className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-[16px] leading-snug font-mono ${ui.input}`}
+                className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-xs leading-snug font-mono ${ui.input}`}
               />
               <button
                 type="button"
@@ -2041,7 +2170,8 @@ export function SettingsTab({
             {categories.map((c, idx) => {
               const spent = currentMonthSpendByCat[c.id] || 0;
               const budget = Number(c.monthly_budget) || 0;
-              const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+              const rawPct = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+              const barPct = rawPct > 0 ? Math.min(100, Math.max(6, rawPct)) : 0;
               const accent = getCategoryAccentColor(c, idx);
 
               return (
@@ -2060,8 +2190,12 @@ export function SettingsTab({
                       </span>
                       <div className="min-w-0">
                         <p className={`text-xs font-cartoon font-bold truncate ${ui.textPrimary}`}>{c.name}</p>
-                        <p className={`text-[11px] font-semibold capitalize ${ui.textMuted}`}>
-                          {c.type} {budget > 0 ? `· ${pct}% of limit` : ''}
+                        <p
+                          className={`text-[11px] font-semibold capitalize ${
+                            rawPct > 100 ? 'text-[#F26B5B]' : ui.textMuted
+                          }`}
+                        >
+                          {c.type} {budget > 0 ? `· ${rawPct}% of limit` : ''}
                         </p>
                       </div>
                     </div>
@@ -2101,9 +2235,9 @@ export function SettingsTab({
                     <div className={`w-full h-2.5 rounded-full overflow-hidden p-0.5 ${ui.trackBg}`}>
                       <div
                         className={`h-full rounded-full transition-all duration-500 ios-spring ${
-                          pct >= 90 ? 'bg-[#F26B5B]' : pct >= 75 ? 'bg-[#F4B942]' : 'bg-[#52B788]'
+                          rawPct >= 100 ? 'bg-[#F26B5B]' : rawPct >= 80 ? 'bg-[#F4B942]' : 'bg-[#52B788]'
                         }`}
-                        style={{ width: `${pct}%` }}
+                        style={{ width: `${barPct}%` }}
                       />
                     </div>
                   )}

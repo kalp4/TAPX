@@ -81,7 +81,7 @@ test('a retry finishes an interrupted transfer without applying the first leg ag
 
 test('legacy queued entries acquire an id before their first send', async () => {
   const { db, transactions } = database();
-  const { id, ...legacyPayload } = payload;
+  const { id: _id, ...legacyPayload } = payload;
   let persistedId;
   const row = await sendQueuedEntry(db, { ...draft, payload: legacyPayload }, (next) => {
     if (!persistedId) assert.equal(transactions.size, 0);

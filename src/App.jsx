@@ -4,6 +4,7 @@ import { applyChanges, newEntryId, sendQueuedEntry, walletChanges, withPendingEn
 import {
   SHARED_ICLOUD_SHORTCUT_URL,
   WALLET_COLORS,
+  CHART_COLORS,
   DEFAULT_WALLETS_TEMPLATE,
   DEFAULT_CATEGORIES_TEMPLATE,
   NAV_TABS,
@@ -23,6 +24,7 @@ import {
   parseShortcutCategoryTag,
   cleanCategoryString,
   findMatchingCategoryObj,
+  getCategoryAccentColor,
   formatDisplayAmount,
   formatDayGroupLabel,
   escapeCsvCell,
@@ -143,6 +145,25 @@ function clearCachedData() {
   } catch {}
 }
 
+function mergeSavedAccountList(prevList, user) {
+  if (!user?.id || !user?.email) return prevList;
+  const meta = user.user_metadata || {};
+  const profileEntry = {
+    id: user.id,
+    email: user.email,
+    name: meta.full_name || meta.name || user.email.split('@')[0],
+    avatar: meta.avatar_url || meta.picture || ''
+  };
+  const filtered = prevList.filter(
+    (a) => a.email.toLowerCase() !== profileEntry.email.toLowerCase()
+  );
+  const next = [profileEntry, ...filtered].slice(0, 5);
+  try {
+    localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
+  } catch {}
+  return next;
+}
+
 function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, loginError, setLoginError }) {
   const userId = session?.user?.id;
   const cachedData = useMemo(() => {
@@ -153,7 +174,8 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
   const [savedAccounts, setSavedAccounts] = useState(() => {
     try {
       const rows = JSON.parse(localStorage.getItem(SAVED_ACCOUNTS_KEY) || '[]');
-      return Array.isArray(rows) ? rows.filter((item) => typeof item?.email === 'string') : [];
+      const cleaned = Array.isArray(rows) ? rows.filter((item) => typeof item?.email === 'string') : [];
+      return session?.user ? mergeSavedAccountList(cleaned, session.user) : cleaned;
     } catch {
       return [];
     }
@@ -299,7 +321,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     return localDateString(d);
   });
   const [customEndDate, setCustomEndDate] = useState(() => getTodayDateString());
-  const [selectedBarIdx, setSelectedBarIdx] = useState(6);
+  const [selectedBarIdx, setSelectedBarIdx] = useState(null);
   const [selectedDonutCatId, setSelectedDonutCatId] = useState(null);
   const [amountPulse, setAmountPulse] = useState(false);
   const pulseTimerRef = useRef(null);
@@ -428,7 +450,6 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
   const [activityTypeFilter, setActivityTypeFilter] = useState('all');
   const [activitySearch, setActivitySearch] = useState('');
   const [activityLimit, setActivityLimit] = useState(80);
-  useEffect(() => setActivityLimit(80), [activitySearch, activityTypeFilter, activityWalletFilter]);
 
   // Modal States
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -445,6 +466,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
   const [newCatName, setNewCatName] = useState('');
   const [newCatType, setNewCatType] = useState('expense');
   const [newCatIcon, setNewCatIcon] = useState('🍔');
+  const [newCatColor, setNewCatColor] = useState(CHART_COLORS[0]);
   const [newCatBudget, setNewCatBudget] = useState('');
 
   const [editingTx, setEditingTx] = useState(null);
@@ -460,21 +482,20 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
 
   const walletById = useMemo(() => new Map(wallets.map((w) => [w.id, w])), [wallets]);
 
-  useEffect(() => {
-    if (wallets.length > 1 && (selectedWalletId === toWalletId || !walletById.has(toWalletId))) {
-      const fallback = wallets.find((w) => w.id !== selectedWalletId);
-      if (fallback) setToWalletId(fallback.id);
+  const effectiveToWalletId = useMemo(() => {
+    if (toWalletId && toWalletId !== selectedWalletId && walletById.has(toWalletId)) {
+      return toWalletId;
     }
-  }, [selectedWalletId, toWalletId, wallets, walletById]);
+    return wallets.find((w) => w.id !== selectedWalletId)?.id || '';
+  }, [toWalletId, selectedWalletId, wallets, walletById]);
 
-  useEffect(() => {
-    if (entryType === 'transfer') return;
-    setSelectedCategoryId((previous) =>
-      categories.some((c) => c.id === previous && c.type === entryType)
-        ? previous
-        : categories.find((c) => c.type === entryType)?.id || ''
-    );
-  }, [categories, entryType]);
+  const effectiveSelectedCategoryId = useMemo(() => {
+    if (entryType === 'transfer') return '';
+    if (categories.some((c) => c.id === selectedCategoryId && c.type === entryType)) {
+      return selectedCategoryId;
+    }
+    return categories.find((c) => c.type === entryType)?.id || '';
+  }, [categories, entryType, selectedCategoryId]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -489,30 +510,11 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     return () => {
       mountedRef.current = false;
       window.removeEventListener('storage', onStorage);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+      if (lensTimerRef.current) clearTimeout(lensTimerRef.current);
     };
   }, [readQueue, userId]);
-
-  useEffect(() => {
-    const user = session?.user;
-    if (!user?.id || !user?.email) return;
-
-    const meta = user.user_metadata || {};
-    const profileEntry = {
-      id: user.id,
-      email: user.email,
-      name: meta.full_name || meta.name || user.email.split('@')[0],
-      avatar: meta.avatar_url || meta.picture || ''
-    };
-
-    setSavedAccounts((prev) => {
-      const filtered = prev.filter((a) => a.email.toLowerCase() !== profileEntry.email.toLowerCase());
-      const next = [profileEntry, ...filtered].slice(0, 5);
-      try {
-        localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, [session?.user]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -812,7 +814,17 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
 
 
   useEffect(() => {
-    if (session?.user?.id) fetchUserData(session.user.id, { force: true });
+    const uid = session?.user?.id;
+    if (!uid) return;
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) {
+        fetchUserData(uid, { force: true });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [session?.user?.id, fetchUserData]);
 
   useEffect(() => {
@@ -939,10 +951,10 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
   );
 
   const handleSwapTransferWallets = () => {
-    if (!selectedWalletId || !toWalletId) return;
+    if (!selectedWalletId || !effectiveToWalletId || selectedWalletId === effectiveToWalletId) return;
     playQuickChip();
     const prevFrom = selectedWalletId;
-    setSelectedWalletId(toWalletId);
+    setSelectedWalletId(effectiveToWalletId);
     setToWalletId(prevFrom);
   };
 
@@ -962,6 +974,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     setNewCatBudget('');
     setNewCatType('expense');
     setNewCatIcon('🍔');
+    setNewCatColor(CHART_COLORS[0]);
     setShowCategoryModal(false);
   };
 
@@ -983,7 +996,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
       setShowWalletModal(true);
       return;
     }
-    if (entryType === 'transfer' && (!toWalletId || toWalletId === selectedWalletId)) {
+    if (entryType === 'transfer' && (!effectiveToWalletId || effectiveToWalletId === selectedWalletId)) {
       playError();
       showToast('Pick two different accounts!');
       return;
@@ -992,9 +1005,8 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     const cleanNote = note.trim();
     const currentType = entryType;
     const fromId = selectedWalletId;
-    const destId = currentType === 'transfer' ? toWalletId : null;
-    const catId = currentType === 'transfer' ? null :
-      categories.find((c) => c.id === selectedCategoryId && c.type === currentType)?.id || null;
+    const destId = currentType === 'transfer' ? effectiveToWalletId : null;
+    const catId = currentType === 'transfer' ? null : effectiveSelectedCategoryId || null;
 
     const createdAtIso = buildIsoForLocalDate(entryDate);
     const id = newEntryId();
@@ -1079,7 +1091,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
       return;
     }
     showToast('Entry popped!', async () => {
-      const { pendingSync, id: oldId, ...fields } = tx;
+      const { pendingSync: _pendingSync, id: _oldId, ...fields } = tx;
       const payload = { ...fields, id: draft?.payload?.id || newEntryId() };
       const tempId = draft?.tempId || `temp-${payload.id}`;
       try {
@@ -1271,6 +1283,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     setNewCatName(cat.name || '');
     setNewCatType(cat.type || 'expense');
     setNewCatIcon(cat.icon || '🍔');
+    setNewCatColor(getCategoryAccentColor(cat));
     setNewCatBudget(cat.monthly_budget ? String(cat.monthly_budget) : '');
     setShowCategoryModal(true);
   };
@@ -1279,7 +1292,10 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     if (!newCatName.trim()) return;
 
     const fields = {
-      name: newCatName.trim(), type: newCatType, icon: newCatIcon || '🍔',
+      name: newCatName.trim(),
+      type: newCatType,
+      icon: newCatIcon || '🍔',
+      color: newCatColor || CHART_COLORS[0],
       monthly_budget: Number(newCatBudget) > 0 ? roundMoney(newCatBudget) : null
     };
     const query = editingCatId
@@ -1473,26 +1489,6 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
     return groups;
   }, [matchingTransactions, activityLimit]);
 
-  const currentMonthSpendByCat = useMemo(() => {
-    const now = new Date();
-    const map = {};
-    transactions.forEach((tx) => {
-      if (!tx?.created_at) return;
-      const d = new Date(tx.created_at);
-      const { category: c } = resolveTxCategory(tx);
-      const catId = c?.id || tx.category_id;
-      if (
-        tx.type === 'expense' &&
-        catId &&
-        d.getMonth() === now.getMonth() &&
-        d.getFullYear() === now.getFullYear()
-      ) {
-        map[catId] = roundMoney((map[catId] || 0) + (Number(tx.amount) || 0));
-      }
-    });
-    return map;
-  }, [transactions, resolveTxCategory]);
-
   const analyticsData = useMemo(
     () =>
       computeAnalytics({
@@ -1596,9 +1592,13 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
 
   if ((isAuthChecking && !session) || (isLoggingIn && !session)) {
     return (
-      <div className={`h-full w-full ${ui.bg} flex flex-col items-center justify-center gap-4 p-6 overflow-hidden`}>
+      <div className={`h-full w-full ${ui.bg} ${ui.appFrame} flex flex-col items-center justify-center gap-4 p-6 max-w-md mx-auto overflow-hidden`}>
         <TapxLogo className="w-20 h-20 animate-bounce" />
-        <div className="w-6 h-6 rounded-full border-[3px] border-[#D8CBB3] border-t-transparent animate-spin" />
+        <div
+          className={`w-6 h-6 rounded-full border-[3px] border-t-transparent animate-spin ${
+            isDark ? 'border-[#D8CBB3]' : 'border-[#1e1e1c]'
+          }`}
+        />
       </div>
     );
   }
@@ -1617,17 +1617,23 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
 
   return (
     <div
-      className={`h-full w-full ${ui.bg} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
+      className={`h-full w-full ${ui.bg} ${ui.appFrame} flex flex-col max-w-md mx-auto overflow-hidden relative select-none`}
       style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 22px)'
       }}
     >
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 top-0 h-60 z-0 ${ui.ambientGlow}`}
+      />
+
       {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
           role="status"
           aria-live="polite"
-          className={`fixed top-16 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full text-xs font-cartoon font-bold flex items-center gap-3 animate-tab ${ui.toastBg}`}
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}
+          className={`fixed left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full text-xs font-cartoon font-bold flex items-center gap-3 animate-tab ${ui.toastBg}`}
         >
           <span>{toast.message}</span>
           {toast.onUndo && (
@@ -1687,7 +1693,9 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
               </button>
             ) : (
               <span
+                role="status"
                 aria-label={isSyncingBg ? 'Syncing with cloud' : 'Connected and synced'}
+                title={isSyncingBg ? 'Syncing with cloud' : 'Connected and synced'}
                 className={`w-2.5 h-2.5 rounded-full border transition-colors duration-300 ${ui.badgeBorder} ${
                   isSyncingBg ? 'bg-[#F4B942] animate-pulse' : 'bg-[#52B788]'
                 }`}
@@ -1752,11 +1760,11 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
         </button>
       </header>
 
-      {/* MAIN VIEWPORT (Flush spacing right down to the 60px dock at bottom: 10px) */}
+      {/* MAIN VIEWPORT (Flush spacing right down to the 60px dock + safe area) */}
       <main
         className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
         style={{
-          paddingBottom: 'calc(68px + max(10px, env(safe-area-inset-bottom)))'
+          paddingBottom: 'calc(78px + max(10px, env(safe-area-inset-bottom)))'
         }}
       >
         {activeTab === 'pad' && (
@@ -1785,10 +1793,10 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
             wallets={wallets}
             selectedWalletId={selectedWalletId}
             setSelectedWalletId={setSelectedWalletId}
-            toWalletId={toWalletId}
+            toWalletId={effectiveToWalletId}
             setToWalletId={setToWalletId}
             filteredCategories={filteredCategories}
-            selectedCategoryId={selectedCategoryId}
+            selectedCategoryId={effectiveSelectedCategoryId}
             handleDigitPress={handleDigitPress}
             handleQuickAddAmount={handleQuickAddAmount}
             handleSwapTransferWallets={handleSwapTransferWallets}
@@ -1817,12 +1825,23 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
             wallets={wallets}
             currencySymbol={currencySymbol}
             activityWalletFilter={activityWalletFilter}
-            setActivityWalletFilter={setActivityWalletFilter}
+            setActivityWalletFilter={(next) => {
+              setActivityLimit(80);
+              setActivityWalletFilter(next);
+            }}
             activitySearch={activitySearch}
-            setActivitySearch={setActivitySearch}
+            setActivitySearch={(next) => {
+              setActivityLimit(80);
+              setActivitySearch(next);
+            }}
             activityTypeFilter={activityTypeFilter}
-            setActivityTypeFilter={setActivityTypeFilter}
+            setActivityTypeFilter={(next) => {
+              setActivityLimit(80);
+              setActivityTypeFilter(next);
+            }}
             groupedTransactions={groupedTransactions}
+            visibleCount={Math.min(activityLimit, matchingTransactions.length)}
+            totalMatchedCount={matchingTransactions.length}
             hasMore={matchingTransactions.length > activityLimit}
             onLoadMore={() => setActivityLimit((count) => count + 80)}
             resolveTxCategory={resolveTxCategory}
@@ -1880,7 +1899,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
             settings={settings}
             handleRegenerateToken={() => runMutation(handleRegenerateToken)}
             categories={categories}
-            currentMonthSpendByCat={currentMonthSpendByCat}
+            currentMonthSpendByCat={analyticsData.currentMonthCatTotals}
             currencySymbol={currencySymbol}
             onOpenNewCategory={() => {
               playModalOpen();
@@ -1936,16 +1955,21 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
           setNewCatType={setNewCatType}
           newCatIcon={newCatIcon}
           setNewCatIcon={setNewCatIcon}
+          newCatColor={newCatColor}
+          setNewCatColor={setNewCatColor}
           newCatBudget={newCatBudget}
           setNewCatBudget={setNewCatBudget}
+          confirmDeleteId={confirmDeleteId}
           busy={isSaving}
           onSave={(e) => { e.preventDefault(); return runMutation(handleSaveCategory); }}
+          onDelete={(id) => runMutation(() => handleDeleteCategory(id))}
           onClose={resetCategoryModal}
         />
       )}
 
       {editingTx && (
         <EditTransactionModal
+          key={editingTx.id}
           ui={ui}
           editingTx={editingTx}
           currencySymbol={currencySymbol}

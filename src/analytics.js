@@ -71,6 +71,10 @@ export function findMatchingCategoryObj(categoryName, categoriesList) {
   if (!categoryName || !Array.isArray(categoriesList) || categoriesList.length === 0) {
     return null;
   }
+  const rawTarget = String(categoryName).trim().toLowerCase();
+  const rawExact = categoriesList.find((c) => String(c?.name || '').trim().toLowerCase() === rawTarget);
+  if (rawExact) return rawExact;
+
   const target = cleanCategoryString(categoryName);
   if (!target) return null;
 
@@ -79,6 +83,7 @@ export function findMatchingCategoryObj(categoryName, categoriesList) {
 
   const partial = categoriesList.find((c) => {
     const cleanDb = cleanCategoryString(c.name);
+    if (!cleanDb) return false;
     return cleanDb.includes(target) || target.includes(cleanDb);
   });
   return partial || null;
@@ -249,10 +254,18 @@ function resolvePreviousPeriodWindow(analyticsRange, windowObj, now) {
     };
   }
 
-  const durationMs = windowObj.end.getTime() - windowObj.start.getTime();
-  const prevEnd = new Date(windowObj.start.getTime() - 1);
-  const prevStart = new Date(prevEnd.getTime() - durationMs);
-  return { start: prevStart, end: prevEnd };
+  const daysSpan = Math.max(1, windowObj.daysCount || 1);
+  const prevEndDay = new Date(
+    windowObj.start.getFullYear(),
+    windowObj.start.getMonth(),
+    windowObj.start.getDate() - 1
+  );
+  const prevStartDay = new Date(
+    prevEndDay.getFullYear(),
+    prevEndDay.getMonth(),
+    prevEndDay.getDate() - (daysSpan - 1)
+  );
+  return { start: startOfDay(prevStartDay), end: endOfDay(prevEndDay) };
 }
 
 export function computeAnalytics({
@@ -289,7 +302,9 @@ export function computeAnalytics({
       const { category: c } = resolveTxCategory(tx);
       const catKey = c?.id || tx.category_id;
       if (catKey) {
-        currentMonthCatTotals[catKey] = (currentMonthCatTotals[catKey] || 0) + (Number(tx.amount) || 0);
+        currentMonthCatTotals[catKey] = roundMoney(
+          (currentMonthCatTotals[catKey] || 0) + (Number(tx.amount) || 0)
+        );
       }
     }
   });
@@ -458,20 +473,18 @@ export function computeAnalytics({
 
   const trendBars = [];
   const endAnchor = periodEndDate;
+  const todayStartTs = startOfDay(now).getTime();
   const startAnchor =
     periodStartDate ||
     new Date(startOfDay(endAnchor).getTime() - (Math.max(7, effectiveDays) - 1) * 86400000);
 
-  if (effectiveDays <= 14) {
+  if (effectiveDays <= 7) {
     const daysToRender = effectiveDays;
     for (let i = daysToRender - 1; i >= 0; i--) {
       const dayDate = new Date(startOfDay(endAnchor));
       dayDate.setDate(dayDate.getDate() - i);
       const dayStr = dayDate.toDateString();
-      const label =
-        daysToRender <= 7
-          ? dayDate.toLocaleDateString('en-US', { weekday: 'short' })
-          : dayDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const label = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
       const fullDateLabel = dayDate.toLocaleDateString('en-IN', {
         weekday: 'short',
         day: 'numeric',
@@ -492,7 +505,7 @@ export function computeAnalytics({
       });
     }
   } else {
-    // Divide into 7 non-overlapping whole-calendar-day buckets
+    // Divide into 7 non-overlapping whole-calendar-day buckets so labels never truncate on mobile
     const startDayDate = startOfDay(startAnchor);
     const totalDays = Math.max(7, effectiveDays);
     for (let i = 0; i < 7; i++) {
@@ -522,7 +535,7 @@ export function computeAnalytics({
       trendBars.push({
         label,
         fullDateLabel,
-        isToday: now >= bStart && now <= bEnd,
+        isToday: todayStartTs >= bStart.getTime() && todayStartTs <= bEnd.getTime(),
         amount: roundMoney(bucketSum)
       });
     }
@@ -682,6 +695,7 @@ export function computeAnalytics({
     peakTimeSlot,
     ticketBuckets,
     categoryBreakdown,
+    currentMonthCatTotals,
     budgetedCategories,
     totalBudgetLimit,
     totalBudgetSpent,

@@ -1,6 +1,8 @@
 export const SHARED_ICLOUD_SHORTCUT_URL =
   'https://www.icloud.com/shortcuts/dbde4b0b294c4fbca2ba72264897c13a';
 
+export const WALLET_TYPES = ['UPI / Wallet', 'Cash', 'Bank', 'Card', 'Savings'];
+
 export const WALLET_COLORS = [
   '#E07A5F',
   '#52B788',
@@ -200,12 +202,17 @@ export function getUiTheme(isDark) {
   if (isDark) {
     return {
       bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
+      appFrame: 'sm:border-x sm:border-[#34342F] sm:shadow-[0_0_48px_rgba(0,0,0,0.45)]',
       ambientGlow: 'tapx-ambient-dark',
       sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6] shadow-[0_8px_0_#111110]',
       sheetHandle: 'bg-[#D8CBB3]/35',
       // Hero surfaces: chunky tactile outline + subtle top sheen
       heroCard:
         'bg-[#282825] hero-sheen-dark border-2 border-[#D8CBB3]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_5px_0_#111110]',
+      heroCardIncome:
+        'bg-[#282825] hero-sheen-dark border-2 border-[#52B788]/60 shadow-[inset_0_1px_0_rgba(82,183,136,0.16),0_5px_0_#111110]',
+      heroCardTransfer:
+        'bg-[#282825] hero-sheen-dark border-2 border-[#F4B942]/60 shadow-[inset_0_1px_0_rgba(244,185,66,0.16),0_5px_0_#111110]',
       heroCardWarning:
         'bg-[#282825] hero-sheen-dark border-2 border-[#F26B5B]/75 shadow-[inset_0_1px_0_rgba(242,107,91,0.18),0_5px_0_#111110]',
       walletCardHero: 'wallet-sheen border-2 border-[#111110] shadow-[0_4px_0_#111110]',
@@ -221,9 +228,11 @@ export function getUiTheme(isDark) {
       pillIdle:
         'bg-[#282825] border border-[#3D3C36] text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_0_#141412] active:shadow-none',
       pillActive:
-        'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_3px_0_#111110] active:shadow-none',
-      pillSelectedBorder: 'border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.3),0_3px_0_#111110]',
-      chipSoft: 'bg-[#2D2C28] border border-[#45433B] text-[#D8CBB3] hover:bg-[#35342F]',
+        'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      pillSelectedBorder:
+        'border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.3),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
+      chipSoft:
+        'bg-[#2D2C28] border border-[#45433B] text-[#D8CBB3] shadow-[0_2px_0_#141412] active:shadow-none hover:bg-[#35342F]',
       numpadKey:
         'bg-[#2A2A27] border-[1.5px] border-[#111110] text-[#F5EFE6] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_3px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#32322E]',
       numpadKeySpecial:
@@ -241,7 +250,7 @@ export function getUiTheme(isDark) {
       dashBorder: 'border-[#D8CBB3]/35',
       toastBg: 'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
       dangerBtn:
-        'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] active:shadow-none',
+        'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
       dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#F26B5B] border border-[#F26B5B]/40',
       warningBanner: 'bg-[#F26B5B]/15 border border-[#F26B5B]/45 text-[#F26B5B]',
       textPrimary: 'text-[#F5EFE6]',
@@ -253,11 +262,11 @@ export function getUiTheme(isDark) {
       islandTextActive: 'text-[#1e1e1c]',
       islandTextIdle: 'text-[#B8AA93]',
       primaryBtnExpense:
-        'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.48),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.48),0_4px_0_#111110] active:shadow-[0_2px_0_#111110]',
       primaryBtnIncome:
-        'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.38),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        'bg-[#52B788] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.38),0_4px_0_#111110] active:shadow-[0_2px_0_#111110]',
       primaryBtnTransfer:
-        'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#111110] active:shadow-[0_1px_0_#111110]',
+        'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#111110] active:shadow-[0_2px_0_#111110]',
       divider: 'border-[#363632]',
       stickyHeader: 'bg-[#1e1e1c]'
     };
@@ -265,11 +274,16 @@ export function getUiTheme(isDark) {
 
   return {
     bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
+    appFrame: 'sm:border-x sm:border-[#1e1e1c]/20 sm:shadow-[0_0_48px_rgba(30,30,28,0.12)]',
     ambientGlow: 'tapx-ambient-light',
     sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_8px_0_rgba(30,30,28,0.22)]',
     sheetHandle: 'bg-[#1e1e1c]/20',
     heroCard:
       'bg-[#FAF6EE] hero-sheen-light border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#1e1e1c]',
+    heroCardIncome:
+      'bg-[#FAF6EE] hero-sheen-light border-2 border-[#52B788] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#2D7A56]',
+    heroCardTransfer:
+      'bg-[#FAF6EE] hero-sheen-light border-2 border-[#D99B1C] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#B57D0E]',
     heroCardWarning:
       'bg-[#FAF6EE] hero-sheen-light border-2 border-[#D94F3D] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#D94F3D]',
     walletCardHero: 'wallet-sheen border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
@@ -284,9 +298,11 @@ export function getUiTheme(isDark) {
     pillIdle:
       'bg-[#FAF6EE] border border-[#1e1e1c]/22 text-[#1e1e1c] shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.12)] active:shadow-none',
     pillActive:
-      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#6B655B] active:shadow-none',
-    pillSelectedBorder: 'border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c]',
-    chipSoft: 'bg-[#FAF6EE] border border-[#1e1e1c]/20 text-[#1e1e1c] hover:bg-[#FFFFFF]',
+      'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#6B655B] active:shadow-[0_1px_0_#6B655B]',
+    pillSelectedBorder:
+      'border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+    chipSoft:
+      'bg-[#FAF6EE] border border-[#1e1e1c]/20 text-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.12)] active:shadow-none hover:bg-[#FFFFFF]',
     numpadKey:
       'bg-[#FAF6EE] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[inset_0_1.5px_0_#ffffff,0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c] hover:bg-[#FFFFFF]',
     numpadKeySpecial:
@@ -304,7 +320,7 @@ export function getUiTheme(isDark) {
     dashBorder: 'border-[#1e1e1c]/30',
     toastBg: 'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#6B655B]',
     dangerBtn:
-      'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-none',
+      'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
     dangerSoftBtn: 'bg-[#F26B5B]/15 text-[#B83224] border border-[#D94F3D]/40',
     warningBanner: 'bg-[#F26B5B]/15 border border-[#D94F3D]/45 text-[#B83224]',
     textPrimary: 'text-[#1e1e1c]',
@@ -316,11 +332,11 @@ export function getUiTheme(isDark) {
     islandTextActive: 'text-[#D8CBB3]',
     islandTextIdle: 'text-[#524E46]',
     primaryBtnExpense:
-      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.16),0_4px_0_#6B655B] active:shadow-[0_1px_0_#6B655B]',
+      'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.16),0_4px_0_#6B655B] active:shadow-[0_2px_0_#6B655B]',
     primaryBtnIncome:
-      'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#1e1e1c] active:shadow-[0_2px_0_#1e1e1c]',
     primaryBtnTransfer:
-      'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.5),0_4px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
+      'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.5),0_4px_0_#1e1e1c] active:shadow-[0_2px_0_#1e1e1c]',
     divider: 'border-[#1e1e1c]/18',
     stickyHeader: 'bg-[#EFE7DA]'
   };

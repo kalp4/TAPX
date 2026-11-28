@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { WALLET_COLORS, ICON_CATALOG, ICON_GROUPS } from '../constants';
+import { WALLET_TYPES, WALLET_COLORS, CHART_COLORS, ICON_CATALOG, ICON_GROUPS } from '../constants';
+import { getCategoryAccentColor } from '../analytics';
 import { playQuickChip } from '../sounds';
 
 export function TapxLogo({ className = 'w-16 h-16' }) {
@@ -99,11 +100,22 @@ export function NavIcon({ id, active }) {
   );
 }
 
-function BottomSheet({ ui, title, onClose, onSubmit, busy, children }) {
+function BottomSheet({
+  ui,
+  title,
+  headerIcon,
+  headerIconBg,
+  capitalizeTitle = false,
+  onClose,
+  onSubmit,
+  busy,
+  children
+}) {
   const [entered, setEntered] = useState(false);
   const [closing, setClosing] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
   const touchStartYRef = useRef(0);
   const touchStartTimeRef = useRef(0);
   const closeTimerRef = useRef(null);
@@ -136,17 +148,19 @@ function BottomSheet({ ui, title, onClose, onSubmit, busy, children }) {
   const handleDragStart = (clientY) => {
     touchStartYRef.current = clientY;
     touchStartTimeRef.current = Date.now();
+    isDraggingRef.current = true;
     setIsDragging(true);
   };
 
   const handleDragMove = (clientY) => {
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
     const delta = Math.max(0, clientY - touchStartYRef.current);
     setDragY(delta);
   };
 
   const handleDragEnd = () => {
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
     const elapsed = Math.max(1, Date.now() - touchStartTimeRef.current);
     const velocity = dragY / elapsed;
     setIsDragging(false);
@@ -200,21 +214,110 @@ function BottomSheet({ ui, title, onClose, onSubmit, busy, children }) {
             }
           }}
           onPointerMove={(e) => {
-            if (e.pointerType !== 'touch' && isDragging) handleDragMove(e.clientY);
+            if (e.pointerType !== 'touch' && isDraggingRef.current) handleDragMove(e.clientY);
           }}
           onPointerUp={(e) => {
             if (e.pointerType !== 'touch') handleDragEnd();
           }}
-          className="pt-1 pb-2.5 -mx-5 px-5 flex justify-center cursor-grab active:cursor-grabbing touch-none"
+          className="pt-1 pb-2 -mx-5 px-5 flex justify-center cursor-grab active:cursor-grabbing touch-none"
           aria-label="Swipe down to close"
         >
           <div className={`w-12 h-1.5 rounded-full ${ui.sheetHandle}`} />
         </div>
 
         <fieldset disabled={busy || closing} className="min-w-0 space-y-3.5">
-          {typeof children === 'function' ? children(triggerClose) : children}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {headerIcon && (
+                <span
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${ui.iconBadge}`}
+                  style={{ backgroundColor: headerIconBg || '#D8CBB3' }}
+                >
+                  {headerIcon}
+                </span>
+              )}
+              <h3
+                className={`text-base font-cartoon font-bold truncate ${
+                  capitalizeTitle ? 'capitalize' : ''
+                } ${ui.textPrimary}`}
+              >
+                {title}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={triggerClose}
+              aria-label="Close modal"
+              className={`text-xs font-cartoon font-bold px-3 py-1.5 rounded-full shrink-0 key-press ${ui.pillIdle}`}
+            >
+              Close
+            </button>
+          </div>
+
+          {children}
         </fieldset>
       </form>
+    </div>
+  );
+}
+
+function ColorSwatchPicker({ ui, label = 'Sticker Color', colors, value, onChange }) {
+  const isCustomHex = !colors.some((hex) => hex.toLowerCase() === String(value || '').toLowerCase());
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+          {label}
+        </label>
+        <span className={`text-[11px] font-mono font-bold uppercase ${ui.textMuted}`}>{value}</span>
+      </div>
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5">
+        {colors.map((hex) => {
+          const selected = String(value || '').toLowerCase() === hex.toLowerCase();
+          return (
+            <button
+              type="button"
+              key={hex}
+              aria-label={`Select color ${hex}`}
+              aria-pressed={selected}
+              onClick={() => {
+                playQuickChip();
+                onChange(hex);
+              }}
+              style={{ backgroundColor: hex }}
+              className={`w-8 h-8 rounded-full border-2 shrink-0 transition-transform key-press ${ui.badgeBorder} ${
+                selected ? 'scale-110 ring-2 ring-[#D8CBB3]' : 'opacity-80'
+              }`}
+            />
+          );
+        })}
+        <label
+          title="Pick custom hex color"
+          className={`relative w-8 h-8 rounded-full border-2 shrink-0 flex items-center justify-center cursor-pointer key-press ${
+            ui.badgeBorder
+          } ${isCustomHex ? 'scale-110 ring-2 ring-[#D8CBB3]' : ''}`}
+          style={{
+            background: isCustomHex
+              ? value
+              : 'conic-gradient(from 0deg, #F26B5B, #F4B942, #52B788, #5C9EAD, #9B7EDE, #F26B5B)'
+          }}
+        >
+          <span
+            className={`w-3.5 h-3.5 rounded-full border text-[10px] font-bold flex items-center justify-center bg-[#FAF6EE] text-[#1e1e1c] ${ui.badgeBorder}`}
+            aria-hidden="true"
+          >
+            +
+          </span>
+          <input
+            type="color"
+            aria-label="Custom sticker hex color"
+            value={value || colors[0]}
+            onChange={(e) => onChange(e.target.value)}
+            className="sr-only"
+          />
+        </label>
+      </div>
     </div>
   );
 }
@@ -354,7 +457,7 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
 export function LoginScreen({ ui, savedAccounts, loginError, onGoogleLogin, onRemoveSavedAccount }) {
   return (
     <div
-      className={`h-full w-full ${ui.bg} flex flex-col justify-between gap-3 px-7 max-w-md mx-auto custom-scroll select-none relative`}
+      className={`h-full w-full ${ui.bg} ${ui.appFrame} flex flex-col justify-between gap-3 px-7 max-w-md mx-auto custom-scroll select-none relative`}
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0px), 20px)',
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)'
@@ -490,144 +593,109 @@ export function WalletModal({
   onDelete,
   onClose
 }) {
+  const walletTypeOptions = WALLET_TYPES.includes(newWalletType)
+    ? WALLET_TYPES
+    : [newWalletType, ...WALLET_TYPES].filter(Boolean);
+
   return (
     <BottomSheet
       ui={ui}
       title={editingWalletId ? 'Edit Account' : 'New Account'}
+      headerIcon={newWalletIcon || '💳'}
+      headerIconBg={newWalletColor}
       onClose={onClose}
       busy={busy}
       onSubmit={onSave}
     >
-      {(triggerClose) => (
-        <>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center text-base ${ui.iconBadge}`}
-                style={{ backgroundColor: newWalletColor }}
-              >
-                {newWalletIcon}
-              </span>
-              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                {editingWalletId ? 'Edit Account' : 'New Account'}
-              </h3>
-            </div>
-            <button
-              type="button"
-              onClick={triggerClose}
-              aria-label="Close modal"
-              className={`text-xs font-cartoon font-bold px-3 py-1.5 rounded-full key-press ${ui.pillIdle}`}
-            >
-              Close
-            </button>
-          </div>
-
-          <div className="space-y-1">
-            <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-              Account Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. UPI, Cash, Bank"
-              value={newWalletName}
-              onChange={(e) => setNewWalletName(e.target.value)}
-              className={`w-full rounded-xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Type
-              </label>
-              <select
-                value={newWalletType}
-                onChange={(e) => setNewWalletType(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-              >
-                <option>UPI / Wallet</option>
-                <option>Cash</option>
-                <option>Bank</option>
-                <option>Card</option>
-                <option>Savings</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Current Balance
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={newWalletBalance}
-                onChange={(e) => setNewWalletBalance(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Sticker Color
-              </label>
-              <label className="flex items-center gap-1.5 text-[11px] font-cartoon font-bold cursor-pointer">
-                <span className={ui.textSecondary}>Custom Hex</span>
-                <input
-                  type="color"
-                  value={newWalletColor}
-                  onChange={(e) => setNewWalletColor(e.target.value)}
-                  className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
-                />
-              </label>
-            </div>
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-              {WALLET_COLORS.map((hex) => (
-                <button
-                  type="button"
-                  key={hex}
-                  aria-label={`Select color ${hex}`}
-                  aria-pressed={newWalletColor === hex}
-                  onClick={() => setNewWalletColor(hex)}
-                  style={{ backgroundColor: hex }}
-                  className={`w-8 h-8 rounded-full border-2 shrink-0 transition-transform key-press ${ui.badgeBorder} ${
-                    newWalletColor === hex ? 'scale-110 ring-2 ring-[#D8CBB3]' : 'opacity-75'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          <IconLibraryPicker
-            selectedIcon={newWalletIcon}
-            onSelectIcon={setNewWalletIcon}
-            ui={ui}
-            defaultGroup="Money"
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="space-y-1">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            Account Name
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. UPI, Cash"
+            value={newWalletName}
+            onChange={(e) => setNewWalletName(e.target.value)}
+            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+            required
           />
+        </div>
+        <div className="space-y-1">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            Balance
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+            value={newWalletBalance}
+            onChange={(e) => setNewWalletBalance(e.target.value)}
+            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
+          />
+        </div>
+      </div>
 
-          <div className="flex items-center gap-2 pt-1">
-            {editingWalletId && (
+      <div className="space-y-1.5">
+        <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+          Account Type
+        </label>
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {walletTypeOptions.map((wt) => {
+            const active = newWalletType === wt;
+            return (
               <button
+                key={wt}
                 type="button"
-                onClick={() => onDelete(editingWalletId)}
-                className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
-                  confirmDeleteId === editingWalletId ? ui.dangerBtn : ui.dangerSoftBtn
+                aria-pressed={active}
+                onClick={() => {
+                  playQuickChip();
+                  setNewWalletType(wt);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold shrink-0 key-press ${
+                  active ? ui.pillActive : ui.pillIdle
                 }`}
               >
-                {confirmDeleteId === editingWalletId ? 'Tap to Confirm' : 'Delete'}
+                {wt}
               </button>
-            )}
-            <button
-              type="submit"
-              className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
-            >
-              {busy ? 'Working…' : editingWalletId ? 'Save Changes' : 'Create Account'}
-            </button>
-          </div>
-        </>
-      )}
+            );
+          })}
+        </div>
+      </div>
+
+      <ColorSwatchPicker
+        ui={ui}
+        colors={WALLET_COLORS}
+        value={newWalletColor}
+        onChange={setNewWalletColor}
+      />
+
+      <IconLibraryPicker
+        selectedIcon={newWalletIcon}
+        onSelectIcon={setNewWalletIcon}
+        ui={ui}
+        defaultGroup="Money"
+      />
+
+      <div className="flex items-center gap-2 pt-1">
+        {editingWalletId && (
+          <button
+            type="button"
+            onClick={() => onDelete(editingWalletId)}
+            className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
+              confirmDeleteId === editingWalletId ? ui.dangerBtn : ui.dangerSoftBtn
+            }`}
+          >
+            {confirmDeleteId === editingWalletId ? 'Tap to Confirm' : 'Delete'}
+          </button>
+        )}
+        <button
+          type="submit"
+          className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
+        >
+          {busy ? 'Working…' : editingWalletId ? 'Save Changes' : 'Create Account'}
+        </button>
+      </div>
     </BottomSheet>
   );
 }
@@ -641,100 +709,119 @@ export function CategoryModal({
   setNewCatType,
   newCatIcon,
   setNewCatIcon,
+  newCatColor,
+  setNewCatColor,
   newCatBudget,
   setNewCatBudget,
+  confirmDeleteId,
   busy,
   onSave,
+  onDelete,
   onClose
 }) {
   return (
     <BottomSheet
       ui={ui}
       title={editingCatId ? 'Edit Category' : 'New Category'}
+      headerIcon={newCatIcon || '🍔'}
+      headerIconBg={newCatColor || '#D8CBB3'}
       onClose={onClose}
       busy={busy}
       onSubmit={onSave}
     >
-      {(triggerClose) => (
-        <>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span
-                className={`w-9 h-9 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] flex items-center justify-center text-base ${ui.iconBadge}`}
-              >
-                {newCatIcon}
-              </span>
-              <h3 className={`text-base font-cartoon font-bold ${ui.textPrimary}`}>
-                {editingCatId ? 'Edit Category' : 'New Category'}
-              </h3>
-            </div>
-            <button
-              type="button"
-              onClick={triggerClose}
-              aria-label="Close modal"
-              className={`text-xs font-cartoon font-bold px-3 py-1.5 rounded-full key-press ${ui.pillIdle}`}
-            >
-              Close
-            </button>
-          </div>
-
-          <div className="space-y-1">
-            <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-              Category Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Dining Out, Subscriptions"
-              value={newCatName}
-              onChange={(e) => setNewCatName(e.target.value)}
-              className={`w-full rounded-xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Type
-              </label>
-              <select
-                value={newCatType}
-                onChange={(e) => setNewCatType(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-              >
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Monthly Limit
-              </label>
-              <input
-                type="number"
-                placeholder="No limit"
-                value={newCatBudget}
-                onChange={(e) => setNewCatBudget(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
-              />
-            </div>
-          </div>
-
-          <IconLibraryPicker
-            selectedIcon={newCatIcon}
-            onSelectIcon={setNewCatIcon}
-            ui={ui}
-            defaultGroup="All"
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="space-y-1">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            Category Name
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Dining Out"
+            value={newCatName}
+            onChange={(e) => setNewCatName(e.target.value)}
+            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+            required
           />
+        </div>
+        <div className="space-y-1">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            Monthly Limit
+          </label>
+          <input
+            type="number"
+            placeholder="No limit"
+            value={newCatBudget}
+            onChange={(e) => setNewCatBudget(e.target.value)}
+            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
+          />
+        </div>
+      </div>
 
+      <div className="space-y-1.5">
+        <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+          Category Type
+        </label>
+        <div className={`relative grid grid-cols-2 p-1 rounded-2xl ${ui.segmentedBg}`}>
+          <div
+            aria-hidden="true"
+            className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
+            style={{ transform: `translate3d(${newCatType === 'income' ? 100 : 0}%, 0, 0)` }}
+          />
+          {[
+            { id: 'expense', label: '💸 Expense' },
+            { id: 'income', label: '💰 Income' }
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              aria-pressed={newCatType === opt.id}
+              onClick={() => {
+                if (newCatType !== opt.id) playQuickChip();
+                setNewCatType(opt.id);
+              }}
+              className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
+                newCatType === opt.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <ColorSwatchPicker
+        ui={ui}
+        colors={CHART_COLORS}
+        value={newCatColor || CHART_COLORS[0]}
+        onChange={setNewCatColor}
+      />
+
+      <IconLibraryPicker
+        selectedIcon={newCatIcon}
+        onSelectIcon={setNewCatIcon}
+        ui={ui}
+        defaultGroup="All"
+      />
+
+      <div className="flex items-center gap-2 pt-1">
+        {editingCatId && onDelete && (
           <button
-            type="submit"
-            className={`w-full py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
+            type="button"
+            onClick={() => onDelete(editingCatId)}
+            className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
+              confirmDeleteId === editingCatId ? ui.dangerBtn : ui.dangerSoftBtn
+            }`}
           >
-            {busy ? 'Saving…' : editingCatId ? 'Update Category' : 'Save Category'}
+            {confirmDeleteId === editingCatId ? 'Tap to Confirm' : 'Delete'}
           </button>
-        </>
-      )}
+        )}
+        <button
+          type="submit"
+          className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
+        >
+          {busy ? 'Saving…' : editingCatId ? 'Update Category' : 'Save Category'}
+        </button>
+      </div>
     </BottomSheet>
   );
 }
@@ -766,11 +853,10 @@ export function EditTransactionModal({
   const confirmTimerRef = useRef(null);
 
   useEffect(() => {
-    setConfirmDelete(false);
     return () => {
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
     };
-  }, [editingTx?.id]);
+  }, []);
 
   const handleDeleteTap = () => {
     if (!confirmDelete) {
@@ -783,156 +869,218 @@ export function EditTransactionModal({
     onDelete(editingTx.id);
   };
 
+  const matchingCategories = categories.filter((c) => c.type === editingTx.type);
+  const selectedCatIdx = matchingCategories.findIndex((c) => c.id === editTxCategoryId);
+  const selectedCatObj = selectedCatIdx >= 0 ? matchingCategories[selectedCatIdx] : null;
+  const headerIcon =
+    editingTx.type === 'transfer'
+      ? '⇄'
+      : selectedCatObj?.icon || (editingTx.type === 'income' ? '💰' : '💸');
+  const headerIconBg =
+    editingTx.type === 'transfer'
+      ? '#F4B942'
+      : editingTx.type === 'income'
+      ? '#52B788'
+      : getCategoryAccentColor(selectedCatObj, Math.max(0, selectedCatIdx));
+
+  const handleSelectFromWallet = (walletId) => {
+    playQuickChip();
+    if (editingTx.type === 'transfer' && walletId === editTxToWalletId) {
+      setEditTxToWalletId(editTxWalletId);
+    }
+    setEditTxWalletId(walletId);
+  };
+
+  const handleSwapEditTransferWallets = () => {
+    if (!editTxWalletId || !editTxToWalletId || editTxWalletId === editTxToWalletId) return;
+    playQuickChip();
+    const prevFrom = editTxWalletId;
+    setEditTxWalletId(editTxToWalletId);
+    setEditTxToWalletId(prevFrom);
+  };
+
   return (
     <BottomSheet
       ui={ui}
       title={`Edit ${editingTx.type}`}
+      headerIcon={headerIcon}
+      headerIconBg={headerIconBg}
+      capitalizeTitle
       onClose={onClose}
       busy={busy}
       onSubmit={onSave}
     >
-      {(triggerClose) => (
-        <>
-          <div className="flex items-center justify-between">
-            <h3 className={`text-base font-cartoon font-bold capitalize ${ui.textPrimary}`}>
-              Edit {editingTx.type}
-            </h3>
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="space-y-1">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            Amount ({currencySymbol})
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            value={editTxAmount}
+            onChange={(e) => setEditTxAmount(e.target.value)}
+            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-cartoon font-bold tabular-nums focus:outline-none ${ui.input}`}
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            Date
+          </label>
+          <input
+            type="date"
+            value={editTxDate}
+            onChange={(e) => setEditTxDate(e.target.value)}
+            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            {editingTx.type === 'transfer' ? 'From Account' : 'Account'}
+          </label>
+          {editingTx.type === 'transfer' && wallets.length > 1 && (
             <button
               type="button"
-              onClick={triggerClose}
-              aria-label="Close modal"
-              className={`text-xs font-cartoon font-bold px-3 py-1.5 rounded-full key-press ${ui.pillIdle}`}
+              onClick={handleSwapEditTransferWallets}
+              className="text-[11px] font-cartoon font-bold text-[#F4B942] key-press"
             >
-              Close
+              ⇄ Swap
             </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Amount ({currencySymbol})
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={editTxAmount}
-                onChange={(e) => setEditTxAmount(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-cartoon font-bold tabular-nums focus:outline-none ${ui.input}`}
-                required
-              />
-            </div>
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                Date
-              </label>
-              <input
-                type="date"
-                value={editTxDate}
-                onChange={(e) => setEditTxDate(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="space-y-1">
-              <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                {editingTx.type === 'transfer' ? 'From Account' : 'Account'}
-              </label>
-              <select
-                value={editTxWalletId}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (editingTx.type === 'transfer' && next === editTxToWalletId) {
-                    setEditTxToWalletId(editTxWalletId);
-                  }
-                  setEditTxWalletId(next);
-                }}
-                className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+          )}
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {wallets.map((w, idx) => {
+            const active = editTxWalletId === w.id;
+            const wColor = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
+            return (
+              <button
+                key={w.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => handleSelectFromWallet(w.id)}
+                style={active ? { backgroundColor: wColor, color: '#1e1e1c' } : undefined}
+                className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 key-press ${
+                  active ? ui.pillSelectedBorder : ui.pillIdle
+                }`}
               >
-                {wallets.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.icon} {w.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <span>{w.icon}</span>
+                <span>{w.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-            {editingTx.type === 'transfer' ? (
-              <div className="space-y-1">
-                <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                  To Account
-                </label>
-                <select
-                  value={editTxToWalletId}
-                  onChange={(e) => setEditTxToWalletId(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-                >
-                  {wallets
-                    .filter((w) => w.id !== editTxWalletId)
-                    .map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.icon} {w.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-                  Category
-                </label>
-                <select
-                  value={editTxCategoryId}
-                  onChange={(e) => setEditTxCategoryId(e.target.value)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-                >
-                  <option value="">Uncategorized</option>
-                  {categories
-                    .filter((c) => c.type === editingTx.type)
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.icon} {c.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
+      {editingTx.type === 'transfer' ? (
+        <div className="space-y-1.5">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            To Account
+          </label>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            {wallets
+              .filter((w) => w.id !== editTxWalletId)
+              .map((w) => {
+                const active = editTxToWalletId === w.id;
+                return (
+                  <button
+                    key={w.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => {
+                      playQuickChip();
+                      setEditTxToWalletId(w.id);
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${
+                      active ? ui.pillActive : ui.pillIdle
+                    }`}
+                  >
+                    <span>→ {w.icon}</span>
+                    <span>{w.name}</span>
+                  </button>
+                );
+              })}
           </div>
-
-          <div className="space-y-1">
-            <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
-              Note
-            </label>
-            <input
-              type="text"
-              placeholder="Optional note"
-              value={editTxNote}
-              onChange={(e) => setEditTxNote(e.target.value)}
-              className={`w-full rounded-xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
-            />
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+            Category
+          </label>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             <button
               type="button"
-              onClick={handleDeleteTap}
-              className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
-                confirmDelete ? ui.dangerBtn : ui.dangerSoftBtn
+              aria-pressed={!selectedCatObj}
+              onClick={() => {
+                playQuickChip();
+                setEditTxCategoryId('');
+              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${
+                !selectedCatObj ? ui.pillActive : ui.pillIdle
               }`}
             >
-              {confirmDelete ? 'Tap to Confirm' : 'Delete'}
+              Uncategorized
             </button>
-            <button
-              type="submit"
-              className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
-            >
-              {busy ? 'Working…' : 'Save Changes'}
-            </button>
+            {matchingCategories.map((c, idx) => {
+              const active = editTxCategoryId === c.id;
+              const accent = getCategoryAccentColor(c, idx);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => {
+                    playQuickChip();
+                    setEditTxCategoryId(c.id);
+                  }}
+                  style={active ? { backgroundColor: accent, color: '#1e1e1c' } : undefined}
+                  className={`px-3 py-1.5 rounded-full text-xs font-cartoon font-bold flex items-center gap-1.5 shrink-0 key-press ${
+                    active ? ui.pillSelectedBorder : ui.pillIdle
+                  }`}
+                >
+                  <span>{c.icon}</span>
+                  <span>{c.name}</span>
+                </button>
+              );
+            })}
           </div>
-        </>
+        </div>
       )}
+
+      <div className="space-y-1">
+        <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
+          Note
+        </label>
+        <input
+          type="text"
+          placeholder="Optional note"
+          value={editTxNote}
+          onChange={(e) => setEditTxNote(e.target.value)}
+          className={`w-full rounded-xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          onClick={handleDeleteTap}
+          className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
+            confirmDelete ? ui.dangerBtn : ui.dangerSoftBtn
+          }`}
+        >
+          {confirmDelete ? 'Tap to Confirm' : 'Delete'}
+        </button>
+        <button
+          type="submit"
+          className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
+        >
+          {busy ? 'Working…' : 'Save Changes'}
+        </button>
+      </div>
     </BottomSheet>
   );
 }

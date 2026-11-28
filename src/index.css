@@ -155,7 +155,7 @@
 }
 
 .key-press:active {
-  transform: translate3d(0, 2.5px, 0) scale(0.975);
+  transform: translate3d(0, 2px, 0) scale(0.985);
 }
 
 /* Directional Bouncy Tab Transitions */
