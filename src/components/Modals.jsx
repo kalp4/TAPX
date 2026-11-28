@@ -287,7 +287,7 @@ function ColorSwatchPicker({ ui, label = 'Sticker Color', colors, value, onChang
               }}
               style={{ backgroundColor: hex }}
               className={`w-8 h-8 rounded-full border-2 shrink-0 transition-transform key-press ${ui.badgeBorder} ${
-                selected ? 'scale-110 ring-2 ring-[#D8CBB3]' : 'opacity-80'
+                selected ? 'scale-110 ring-2 ring-current' : 'opacity-80'
               }`}
             />
           );
@@ -296,7 +296,7 @@ function ColorSwatchPicker({ ui, label = 'Sticker Color', colors, value, onChang
           title="Pick custom hex color"
           className={`relative w-8 h-8 rounded-full border-2 shrink-0 flex items-center justify-center cursor-pointer key-press ${
             ui.badgeBorder
-          } ${isCustomHex ? 'scale-110 ring-2 ring-[#D8CBB3]' : ''}`}
+          } ${isCustomHex ? 'scale-110 ring-2 ring-current' : ''}`}
           style={{
             background: isCustomHex
               ? value
@@ -465,7 +465,7 @@ export function LoginScreen({ ui, savedAccounts, loginError, onGoogleLogin, onRe
     >
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute inset-x-0 top-0 h-72 z-0 ${ui.ambientGlow}`}
+        className={`pointer-events-none absolute inset-x-0 top-24 h-64 z-0 ${ui.ambientGlow}`}
       />
       {loginError && <p role="alert" className={`relative z-10 p-3 rounded-2xl text-sm ${ui.warningBanner}`}>{loginError}</p>}
 

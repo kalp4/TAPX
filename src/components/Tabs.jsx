@@ -381,7 +381,7 @@ export function KeypadTab({
               </button>
             )}
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1.5">
             {wallets.length === 0 ? (
               <button
                 type="button"
@@ -429,7 +429,7 @@ export function KeypadTab({
           </div>
 
           {entryType === 'transfer' && wallets.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pt-0.5 pb-0.5 no-scrollbar">
+            <div className="flex gap-2 overflow-x-auto pt-0.5 pb-1.5 no-scrollbar">
               {wallets
                 .filter((w) => w.id !== selectedWalletId)
                 .map((w, idx) => {
@@ -484,7 +484,7 @@ export function KeypadTab({
                 + Custom
               </button>
             </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1.5">
               {filteredCategories.length === 0 ? (
                 <button
                   type="button"
@@ -639,7 +639,7 @@ export function AccountsTab({
           )}
         </div>
 
-        <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-2">
           {wallets.map((w, idx) => {
             const isFiltered = activityWalletFilter === w.id;
             const cardAccent = w.color || WALLET_COLORS[idx % WALLET_COLORS.length];
@@ -835,17 +835,19 @@ export function AccountsTab({
         ) : (
           groupedTransactions.map((group) => (
             <div key={group.label} className="space-y-1.5">
-              <div
-                className={`sticky top-0 z-10 py-1.5 px-3 rounded-full flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.stickyHeader}`}
-              >
-                <span className={ui.textSecondary}>{group.label}</span>
-                <span className={`tabular-nums ${group.netSpend > 0 ? 'text-[#52B788]' : ui.textMuted}`}>
-                  {privacyMode
-                    ? `${currencySymbol}•••`
-                    : `${group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}${currencySymbol}${Math.abs(
-                        group.netSpend
-                      ).toLocaleString('en-IN')}`}
-                </span>
+              <div className={`sticky top-0 z-10 py-1 ${ui.stickyHeader}`}>
+                <div
+                  className={`py-1.5 px-3 rounded-full flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.cardSubtle}`}
+                >
+                  <span className={ui.textSecondary}>{group.label}</span>
+                  <span className={`tabular-nums ${group.netSpend > 0 ? 'text-[#52B788]' : ui.textMuted}`}>
+                    {privacyMode
+                      ? `${currencySymbol}•••`
+                      : `${group.netSpend > 0 ? '+' : group.netSpend < 0 ? '-' : ''}${currencySymbol}${Math.abs(
+                          group.netSpend
+                        ).toLocaleString('en-IN')}`}
+                  </span>
+                </div>
               </div>
 
               {group.items.map((tx, idx) => {
@@ -1349,8 +1351,12 @@ export function InsightsTab({
                         </span>
                         <div
                           className={`w-full rounded-full h-16 flex items-end p-0.5 transition-all ${
-                            isDark ? 'bg-[#161614]/85' : 'bg-[#E2D9C6]/85'
-                          } ${isSelected ? 'ring-2 ring-[#F4B942]/80 bg-[#F4B942]/15' : ''}`}
+                            isSelected
+                              ? 'ring-[1.5px] ring-[#F4B942]/85 bg-[#F4B942]/18'
+                              : isDark
+                              ? 'bg-[#161614]/85'
+                              : 'bg-[#E2D9C6]/85'
+                          }`}
                         >
                           <div
                             className={`w-full rounded-full transition-all duration-500 ios-spring ${
@@ -1719,7 +1725,11 @@ export function InsightsTab({
                     const isSelected = activeDowObj?.dayNum === d.dayNum;
                     const heatAlpha =
                       d.amount > 0
-                        ? (0.09 + (d.pctOfMax / 100) * 0.27).toFixed(2)
+                        ? (
+                            isDark
+                              ? 0.07 + (d.pctOfMax / 100) * 0.17
+                              : 0.09 + (d.pctOfMax / 100) * 0.25
+                          ).toFixed(2)
                         : 0;
                     return (
                       <button
@@ -1736,8 +1746,8 @@ export function InsightsTab({
                             ? {
                                 backgroundColor: `rgba(244, 185, 66, ${heatAlpha})`,
                                 borderColor: isPeak
-                                  ? 'rgba(244, 185, 66, 0.72)'
-                                  : `rgba(244, 185, 66, ${(0.16 + (d.pctOfMax / 100) * 0.34).toFixed(2)})`
+                                  ? 'rgba(244, 185, 66, 0.7)'
+                                  : `rgba(244, 185, 66, ${(0.16 + (d.pctOfMax / 100) * 0.32).toFixed(2)})`
                               }
                             : undefined
                         }
@@ -1771,7 +1781,7 @@ export function InsightsTab({
                         </span>
                         <span
                           className={`text-[10.5px] font-semibold ${
-                            isSelected ? 'text-[#1e1e1c]/80' : ui.textMuted
+                            isSelected ? 'text-[#1e1e1c]/80' : d.amount > 0 ? ui.textSecondary : ui.textMuted
                           }`}
                         >
                           {d.count}x
@@ -1779,7 +1789,7 @@ export function InsightsTab({
                         <span
                           aria-hidden="true"
                           className={`w-full h-1 rounded-full overflow-hidden ${
-                            isSelected ? 'bg-[#1e1e1c]/20' : 'bg-black/15'
+                            isSelected ? 'bg-[#1e1e1c]/20' : isDark ? 'bg-white/10' : 'bg-black/10'
                           }`}
                         >
                           <span

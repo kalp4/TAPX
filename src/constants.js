@@ -269,7 +269,7 @@ export function getUiTheme(isDark) {
       primaryBtnTransfer:
         'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#111110] active:shadow-[0_2px_0_#111110]',
       divider: 'border-[#363632]',
-      stickyHeader: 'bg-[#1e1e1c]/90 backdrop-blur-md'
+      stickyHeader: 'bg-[#1e1e1c]'
     };
   }
 
@@ -340,6 +340,6 @@ export function getUiTheme(isDark) {
     primaryBtnTransfer:
       'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.5),0_4px_0_#1e1e1c] active:shadow-[0_2px_0_#1e1e1c]',
     divider: 'border-[#1e1e1c]/15',
-    stickyHeader: 'bg-[#EFE7DA]/90 backdrop-blur-md'
+    stickyHeader: 'bg-[#EFE7DA]'
   };
 }

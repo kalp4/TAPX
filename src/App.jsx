@@ -1622,11 +1622,6 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 22px)'
       }}
     >
-      <div
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-x-0 top-0 h-60 z-0 ${ui.ambientGlow}`}
-      />
-
       {/* Chunky Cartoon Toast Pill */}
       {toast && (
         <div
@@ -1668,13 +1663,9 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
       <header className="relative z-10 px-5 pt-0.5 pb-1.5 flex items-center justify-between gap-2 shrink-0">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleSelectTab('wallets')}
-              className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}
-            >
+            <span className={`text-[11px] font-cartoon font-bold uppercase tracking-wider ${ui.textSecondary}`}>
               Total Balance
-            </button>
+            </span>
             {!isOnline ? (
               <span
                 className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#F4B942] text-[#1e1e1c] border flex items-center gap-1 ${ui.badgeBorder}`}
@@ -1704,18 +1695,13 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleSelectTab('wallets')}
-              aria-label="Open accounts tab"
-              className={`text-[28px] leading-tight font-cartoon font-bold tracking-tight tabular-nums text-left ${ui.textPrimary}`}
-            >
+            <span className={`text-[28px] leading-tight font-cartoon font-bold tracking-tight tabular-nums ${ui.textPrimary}`}>
               {privacyMode
                 ? `${currencySymbol}•••••`
                 : `${currencySymbol}${Number(totalNetWorth || 0).toLocaleString('en-IN', {
                     minimumFractionDigits: 2
                   })}`}
-            </button>
+            </span>
             <button
               type="button"
               onClick={handleTogglePrivacy}
@@ -1995,6 +1981,16 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
         className={`pointer-events-none absolute inset-x-0 bottom-0 z-30 ${ui.dockScrim}`}
         style={{
           height: 'calc(80px + max(10px, env(safe-area-inset-bottom)))'
+        }}
+      />
+
+      {/* INTERACTION SHIELD BELOW & BEHIND ISLAND PILL (Blocks clicks while staying transparent) */}
+      <div
+        aria-hidden="true"
+        onClick={(e) => e.stopPropagation()}
+        className="pointer-events-auto absolute inset-x-0 bottom-0 z-[35]"
+        style={{
+          height: 'calc(66px + max(10px, env(safe-area-inset-bottom)))'
         }}
       />
 
