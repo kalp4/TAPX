@@ -192,7 +192,7 @@ function BottomSheet({
         onClick={(e) => e.stopPropagation()}
         onSubmit={onSubmit}
         aria-busy={busy}
-        className={`w-full max-w-md max-h-[88dvh] overflow-y-auto custom-scroll rounded-3xl p-5 pt-2.5 space-y-3.5 ${ui.sheetBg}`}
+        className={`w-full max-w-md max-h-[88dvh] overflow-y-auto custom-scroll rounded-[32px] p-5 pt-2.5 space-y-3.5 ${ui.sheetBg}`}
         style={{
           paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
           transform: sheetTransform,
@@ -230,7 +230,7 @@ function BottomSheet({
             <div className="flex items-center gap-2.5 min-w-0">
               {headerIcon && (
                 <span
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${ui.iconBadge}`}
+                  className={`w-9 h-9 rounded-2xl flex items-center justify-center text-base shrink-0 ${ui.iconBadge}`}
                   style={{ backgroundColor: headerIconBg || '#D8CBB3' }}
                 >
                   {headerIcon}
@@ -373,13 +373,13 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
             placeholder="😀"
             aria-label="Custom emoji"
             title="Tap to type any emoji from your keyboard"
-            className={`w-12 h-10 text-center rounded-xl text-[16px] font-bold focus:outline-none ${ui.input}`}
+            className={`w-12 h-10 text-center rounded-2xl text-[16px] font-bold focus:outline-none ${ui.input}`}
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${ui.input}`}>
+        <div className={`flex items-center gap-2 px-3.5 py-2 rounded-full ${ui.input}`}>
           <span className="text-sm opacity-65" aria-hidden="true">🔍</span>
           <input
             type="text"
@@ -394,7 +394,7 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
               type="button"
               onClick={() => setSearchQuery('')}
               aria-label="Clear icon search"
-              className={`p-1 text-xs font-bold ${ui.textMuted}`}
+              className={`p-1 text-xs font-bold rounded-full ${ui.textMuted}`}
             >
               ✕
             </button>
@@ -412,7 +412,7 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
                   setSearchQuery('');
                   setActiveGroup(grp);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold shrink-0 key-press ${
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-cartoon font-bold shrink-0 key-press ${
                   active ? ui.pillActive : ui.pillIdle
                 }`}
               >
@@ -424,7 +424,7 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
       </div>
 
       <div
-        className={`grid grid-cols-7 gap-1.5 max-h-36 overflow-y-auto custom-scroll p-2 rounded-2xl ${ui.cardSubtle}`}
+        className={`grid grid-cols-7 gap-1.5 max-h-36 overflow-y-auto custom-scroll p-2 rounded-3xl ${ui.cardSubtle}`}
       >
         {filteredIcons.length === 0 ? (
           <div className={`col-span-7 py-4 text-center text-xs font-cartoon ${ui.textMuted}`}>
@@ -440,8 +440,8 @@ export function IconLibraryPicker({ selectedIcon, onSelectIcon, ui, defaultGroup
                 aria-label={`Select ${item.icon} icon`}
                 aria-pressed={isSelected}
                 onClick={() => onSelectIcon(item.icon)}
-                className={`h-10 rounded-xl flex items-center justify-center text-lg key-press ${
-                  isSelected ? ui.pillActive : ui.pillIdle
+                className={`h-10 rounded-2xl flex items-center justify-center text-lg transition-colors key-press ${
+                  isSelected ? ui.pillActive : 'hover:bg-current/10'
                 }`}
               >
                 {item.icon}
@@ -470,7 +470,7 @@ export function LoginScreen({ ui, savedAccounts, loginError, onGoogleLogin, onRe
       {loginError && <p role="alert" className={`relative z-10 p-3 rounded-2xl text-sm ${ui.warningBanner}`}>{loginError}</p>}
 
       <div className="relative z-10 flex flex-col items-center text-center space-y-3">
-        <div className="p-3 rounded-[32px] bg-[#282825] border-2 border-[#111110] shadow-[0_6px_0_#111110] mb-1">
+        <div className="p-3 rounded-[34px] bg-[#282825] border-2 border-[#111110] shadow-[0_6px_0_#111110] mb-1">
           <TapxLogo className="w-24 h-24" />
         </div>
         <span
@@ -496,7 +496,7 @@ export function LoginScreen({ ui, savedAccounts, loginError, onGoogleLogin, onRe
               {savedAccounts.map((acc) => (
                 <div
                   key={acc.email}
-                  className={`w-full p-3 rounded-2xl flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
+                  className={`w-full p-3 rounded-3xl flex items-center justify-between cursor-pointer key-press ${ui.cardElevated}`}
                 >
                   <button type="button" onClick={() => onGoogleLogin(acc.email)} className="flex flex-1 items-center gap-3 min-w-0 text-left">
                     {acc.avatar ? (
@@ -522,7 +522,7 @@ export function LoginScreen({ ui, savedAccounts, loginError, onGoogleLogin, onRe
                     type="button"
                     aria-label={`Remove ${acc.email} from saved accounts`}
                     onClick={(e) => onRemoveSavedAccount(acc.email, e)}
-                    className={`p-2 text-xs rounded-xl font-bold ${ui.textMuted} hover:text-[#F26B5B]`}
+                    className={`w-8 h-8 flex items-center justify-center text-xs rounded-full font-bold ${ui.textMuted} hover:text-[#F26B5B]`}
                     title="Remove saved account"
                   >
                     ✕
@@ -536,7 +536,7 @@ export function LoginScreen({ ui, savedAccounts, loginError, onGoogleLogin, onRe
         <button
           type="button"
           onClick={() => onGoogleLogin('')}
-          className={`w-full py-4 px-5 font-cartoon font-bold text-base rounded-2xl flex items-center justify-center gap-3 key-press ${ui.primaryBtnExpense}`}
+          className={`w-full py-4 px-5 font-cartoon font-bold text-base rounded-full flex items-center justify-center gap-3 key-press ${ui.primaryBtnExpense}`}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -617,7 +617,7 @@ export function WalletModal({
             placeholder="e.g. UPI, Cash"
             value={newWalletName}
             onChange={(e) => setNewWalletName(e.target.value)}
-            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+            className={`w-full rounded-2xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
             required
           />
         </div>
@@ -631,7 +631,7 @@ export function WalletModal({
             placeholder="0.00"
             value={newWalletBalance}
             onChange={(e) => setNewWalletBalance(e.target.value)}
-            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
+            className={`w-full rounded-2xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
           />
         </div>
       </div>
@@ -652,7 +652,7 @@ export function WalletModal({
                   playQuickChip();
                   setNewWalletType(wt);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold shrink-0 key-press ${
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-cartoon font-bold shrink-0 key-press ${
                   active ? ui.pillActive : ui.pillIdle
                 }`}
               >
@@ -682,7 +682,7 @@ export function WalletModal({
           <button
             type="button"
             onClick={() => onDelete(editingWalletId)}
-            className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
+            className={`px-4 py-3 rounded-full text-xs font-cartoon font-bold key-press ${
               confirmDeleteId === editingWalletId ? ui.dangerBtn : ui.dangerSoftBtn
             }`}
           >
@@ -691,7 +691,7 @@ export function WalletModal({
         )}
         <button
           type="submit"
-          className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
+          className={`flex-1 py-3 rounded-full text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
         >
           {busy ? 'Working…' : editingWalletId ? 'Save Changes' : 'Create Account'}
         </button>
@@ -739,7 +739,7 @@ export function CategoryModal({
             placeholder="e.g. Dining Out"
             value={newCatName}
             onChange={(e) => setNewCatName(e.target.value)}
-            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+            className={`w-full rounded-2xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
             required
           />
         </div>
@@ -752,7 +752,7 @@ export function CategoryModal({
             placeholder="No limit"
             value={newCatBudget}
             onChange={(e) => setNewCatBudget(e.target.value)}
-            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
+            className={`w-full rounded-2xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold tabular-nums focus:outline-none ${ui.input}`}
           />
         </div>
       </div>
@@ -761,10 +761,10 @@ export function CategoryModal({
         <label className={`text-[11px] font-cartoon font-bold uppercase tracking-wide ${ui.textMuted}`}>
           Category Type
         </label>
-        <div className={`relative grid grid-cols-2 p-1 rounded-2xl ${ui.segmentedBg}`}>
+        <div className={`relative grid grid-cols-2 p-1 rounded-full ${ui.segmentedBg}`}>
           <div
             aria-hidden="true"
-            className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
+            className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
             style={{ transform: `translate3d(${newCatType === 'income' ? 100 : 0}%, 0, 0)` }}
           />
           {[
@@ -779,7 +779,7 @@ export function CategoryModal({
                 if (newCatType !== opt.id) playQuickChip();
                 setNewCatType(opt.id);
               }}
-              className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
+              className={`relative z-10 py-1.5 rounded-full text-xs font-cartoon transition-colors duration-200 ${
                 newCatType === opt.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
               }`}
             >
@@ -808,7 +808,7 @@ export function CategoryModal({
           <button
             type="button"
             onClick={() => onDelete(editingCatId)}
-            className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
+            className={`px-4 py-3 rounded-full text-xs font-cartoon font-bold key-press ${
               confirmDeleteId === editingCatId ? ui.dangerBtn : ui.dangerSoftBtn
             }`}
           >
@@ -817,7 +817,7 @@ export function CategoryModal({
         )}
         <button
           type="submit"
-          className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
+          className={`flex-1 py-3 rounded-full text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
         >
           {busy ? 'Saving…' : editingCatId ? 'Update Category' : 'Save Category'}
         </button>
@@ -920,7 +920,7 @@ export function EditTransactionModal({
             step="0.01"
             value={editTxAmount}
             onChange={(e) => setEditTxAmount(e.target.value)}
-            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-cartoon font-bold tabular-nums focus:outline-none ${ui.input}`}
+            className={`w-full rounded-2xl px-3.5 py-2.5 text-[16px] leading-snug font-cartoon font-bold tabular-nums focus:outline-none ${ui.input}`}
             required
           />
         </div>
@@ -932,7 +932,7 @@ export function EditTransactionModal({
             type="date"
             value={editTxDate}
             onChange={(e) => setEditTxDate(e.target.value)}
-            className={`w-full rounded-xl px-3 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+            className={`w-full rounded-2xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
             required
           />
         </div>
@@ -1060,7 +1060,7 @@ export function EditTransactionModal({
           placeholder="Optional note"
           value={editTxNote}
           onChange={(e) => setEditTxNote(e.target.value)}
-          className={`w-full rounded-xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
+          className={`w-full rounded-2xl px-3.5 py-2.5 text-[16px] leading-snug font-semibold focus:outline-none ${ui.input}`}
         />
       </div>
 
@@ -1068,7 +1068,7 @@ export function EditTransactionModal({
         <button
           type="button"
           onClick={handleDeleteTap}
-          className={`px-4 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${
+          className={`px-4 py-3 rounded-full text-xs font-cartoon font-bold key-press ${
             confirmDelete ? ui.dangerBtn : ui.dangerSoftBtn
           }`}
         >
@@ -1076,7 +1076,7 @@ export function EditTransactionModal({
         </button>
         <button
           type="submit"
-          className={`flex-1 py-3 rounded-xl text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
+          className={`flex-1 py-3 rounded-full text-xs font-cartoon font-bold key-press ${ui.primaryBtnExpense}`}
         >
           {busy ? 'Working…' : 'Save Changes'}
         </button>

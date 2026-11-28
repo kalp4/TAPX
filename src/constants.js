@@ -202,8 +202,9 @@ export function getUiTheme(isDark) {
   if (isDark) {
     return {
       bg: 'bg-[#1e1e1c] text-[#F5EFE6]',
-      appFrame: 'sm:border-x sm:border-[#34342F] sm:shadow-[0_0_48px_rgba(0,0,0,0.45)]',
+      appFrame: 'sm:border-x sm:border-[#34342F]/55 sm:shadow-[0_12px_48px_rgba(0,0,0,0.45)]',
       ambientGlow: 'tapx-ambient-dark',
+      dockScrim: 'tapx-dock-scrim-dark',
       sheetBg: 'bg-[#262623] border-2 border-[#D8CBB3]/30 text-[#F5EFE6] shadow-[0_8px_0_#111110]',
       sheetHandle: 'bg-[#D8CBB3]/35',
       // Hero surfaces: chunky tactile outline + subtle top sheen
@@ -217,35 +218,35 @@ export function getUiTheme(isDark) {
         'bg-[#282825] hero-sheen-dark border-2 border-[#F26B5B]/75 shadow-[inset_0_1px_0_rgba(242,107,91,0.18),0_5px_0_#111110]',
       walletCardHero: 'wallet-sheen border-2 border-[#111110] shadow-[0_4px_0_#111110]',
       // Secondary containers: softer borders & lighter elevation
-      card: 'bg-[#262623] border border-[#3A3934] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_2px_0_#141412]',
+      card: 'bg-[#262623] border border-[#3A3934]/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_0_#141412]',
       cardElevated:
         'bg-[#30302c] border-[1.5px] border-[#4A473E] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
-      cardSubtle: 'bg-[#20201D] border border-[#32322D]',
-      listRow: 'bg-[#262623] border border-[#34342F] hover:bg-[#2C2C28]',
-      notePill: 'bg-[#1B1B19]/85 border border-[#363530] focus-within:border-[#D8CBB3]/55',
+      cardSubtle: 'bg-[#20201E] border border-[#32322D]/60',
+      listRow: 'bg-[#262623] border border-[#34342F]/75 hover:bg-[#2C2C28]',
+      notePill: 'bg-[#1B1B19]/85 border border-[#363530]/80 focus-within:border-[#D8CBB3]/55',
       input:
-        'bg-[#181816] border-[1.5px] border-[#383732] focus-within:border-[#D8CBB3]/65 focus:border-[#D8CBB3]/65 text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.35)]',
+        'bg-[#181816] border-[1.5px] border-[#383732]/90 focus-within:border-[#D8CBB3]/65 focus:border-[#D8CBB3]/65 text-[#F5EFE6] placeholder-[#877D6E] shadow-[inset_0_2px_0_rgba(0,0,0,0.35)]',
       pillIdle:
-        'bg-[#282825] border border-[#3D3C36] text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_0_#141412] active:shadow-none',
+        'bg-[#282825] border border-[#3D3C36]/85 text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_2px_0_#141412] active:shadow-none',
       pillActive:
         'bg-[#D8CBB3] border-2 border-[#111110] text-[#1e1e1c] font-bold shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
       pillSelectedBorder:
         'border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.3),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
       chipSoft:
-        'bg-[#2D2C28] border border-[#45433B] text-[#D8CBB3] shadow-[0_2px_0_#141412] active:shadow-none hover:bg-[#35342F]',
+        'bg-[#2D2C28] border border-[#45433B]/85 text-[#D8CBB3] shadow-[0_2px_0_#141412] active:shadow-none hover:bg-[#35342F]',
       numpadKey:
         'bg-[#2A2A27] border-[1.5px] border-[#111110] text-[#F5EFE6] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_3px_0_#111110] active:shadow-[0_1px_0_#111110] hover:bg-[#32322E]',
       numpadKeySpecial:
         'bg-[#33312C] border-[1.5px] border-[#111110] text-[#D8CBB3] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_3px_0_#111110] active:shadow-[0_1px_0_#111110]',
       segmentedBg:
-        'bg-[#161614] border border-[#32322D] shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
+        'bg-[#161614] border border-[#32322D]/85 shadow-[inset_0_2px_0_rgba(0,0,0,0.45)]',
       segmentedThumb: 'bg-[#D8CBB3] border-[1.5px] border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.4),0_2px_0_#111110]',
       segmentedTextActive: 'text-[#1e1e1c] font-extrabold',
       outline: 'border-[#111110]',
       outlineSubtle: 'border-[#3A3934]',
       badgeBorder: 'border-[#111110]',
       iconBadge: 'border border-[#111110] shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_2px_0_#111110]',
-      trackBg: 'bg-[#161614] border border-[#34342F]',
+      trackBg: 'bg-[#161614] border border-[#34342F]/70',
       trackActiveBg: 'bg-[#181816] border-[1.5px] border-[#D8CBB3]/70',
       dashBorder: 'border-[#D8CBB3]/35',
       toastBg: 'bg-[#D8CBB3] text-[#1e1e1c] border-2 border-[#111110] shadow-[0_4px_0_#111110]',
@@ -268,14 +269,15 @@ export function getUiTheme(isDark) {
       primaryBtnTransfer:
         'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#111110] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#111110] active:shadow-[0_2px_0_#111110]',
       divider: 'border-[#363632]',
-      stickyHeader: 'bg-[#1e1e1c]'
+      stickyHeader: 'bg-[#1e1e1c]/90 backdrop-blur-md'
     };
   }
 
   return {
     bg: 'bg-[#EFE7DA] text-[#1e1e1c]',
-    appFrame: 'sm:border-x sm:border-[#1e1e1c]/20 sm:shadow-[0_0_48px_rgba(30,30,28,0.12)]',
+    appFrame: 'sm:border-x sm:border-[#1e1e1c]/12 sm:shadow-[0_12px_48px_rgba(30,30,28,0.1)]',
     ambientGlow: 'tapx-ambient-light',
+    dockScrim: 'tapx-dock-scrim-light',
     sheetBg: 'bg-[#FAF6EE] border-2 border-[#1e1e1c] text-[#1e1e1c] shadow-[0_8px_0_rgba(30,30,28,0.22)]',
     sheetHandle: 'bg-[#1e1e1c]/20',
     heroCard:
@@ -287,37 +289,37 @@ export function getUiTheme(isDark) {
     heroCardWarning:
       'bg-[#FAF6EE] hero-sheen-light border-2 border-[#D94F3D] shadow-[inset_0_1.5px_0_#ffffff,0_5px_0_#D94F3D]',
     walletCardHero: 'wallet-sheen border-2 border-[#1e1e1c] shadow-[0_4px_0_#1e1e1c]',
-    card: 'bg-[#FAF6EE] border border-[#1e1e1c]/18 shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.1)]',
+    card: 'bg-[#FAF6EE] border border-[#1e1e1c]/14 shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.08)]',
     cardElevated:
       'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/35 shadow-[0_3px_0_rgba(30,30,28,0.16)] active:shadow-[0_1px_0_rgba(30,30,28,0.16)]',
-    cardSubtle: 'bg-[#E8E0D0]/75 border border-[#1e1e1c]/12',
-    listRow: 'bg-[#FAF6EE] border border-[#1e1e1c]/14 hover:bg-[#FFFFFF]',
-    notePill: 'bg-[#EFE7DA]/85 border border-[#1e1e1c]/15 focus-within:border-[#1e1e1c]/50',
+    cardSubtle: 'bg-[#E6DEC9]/75 border border-[#1e1e1c]/8',
+    listRow: 'bg-[#FAF6EE] border border-[#1e1e1c]/12 hover:bg-[#FFFFFF]',
+    notePill: 'bg-[#EFE7DA]/85 border border-[#1e1e1c]/14 focus-within:border-[#1e1e1c]/50',
     input:
-      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/25 focus-within:border-[#1e1e1c] focus:border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
+      'bg-[#FFFFFF] border-[1.5px] border-[#1e1e1c]/22 focus-within:border-[#1e1e1c] focus:border-[#1e1e1c] text-[#1e1e1c] placeholder-[#877D6E]',
     pillIdle:
-      'bg-[#FAF6EE] border border-[#1e1e1c]/22 text-[#1e1e1c] shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.12)] active:shadow-none',
+      'bg-[#FAF6EE] border border-[#1e1e1c]/18 text-[#1e1e1c] shadow-[inset_0_1px_0_#ffffff,0_2px_0_rgba(30,30,28,0.1)] active:shadow-none',
     pillActive:
       'bg-[#1e1e1c] border-2 border-[#1e1e1c] text-[#D8CBB3] font-bold shadow-[0_3px_0_#6B655B] active:shadow-[0_1px_0_#6B655B]',
     pillSelectedBorder:
       'border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
     chipSoft:
-      'bg-[#FAF6EE] border border-[#1e1e1c]/20 text-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.12)] active:shadow-none hover:bg-[#FFFFFF]',
+      'bg-[#FAF6EE] border border-[#1e1e1c]/18 text-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.1)] active:shadow-none hover:bg-[#FFFFFF]',
     numpadKey:
       'bg-[#FAF6EE] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[inset_0_1.5px_0_#ffffff,0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c] hover:bg-[#FFFFFF]',
     numpadKeySpecial:
       'bg-[#E4DBCA] border-[1.5px] border-[#1e1e1c]/80 text-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.6),0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
     segmentedBg:
-      'bg-[#E2D9C6] border border-[#1e1e1c]/18 shadow-[inset_0_1px_2px_rgba(30,30,28,0.1)]',
+      'bg-[#E2D9C6] border border-[#1e1e1c]/14 shadow-[inset_0_1px_2px_rgba(30,30,28,0.08)]',
     segmentedThumb: 'bg-[#1e1e1c] border-[1.5px] border-[#1e1e1c] shadow-[0_2px_0_rgba(30,30,28,0.22)]',
     segmentedTextActive: 'text-[#D8CBB3] font-extrabold',
     outline: 'border-[#1e1e1c]',
     outlineSubtle: 'border-[#1e1e1c]/20',
     badgeBorder: 'border-[#1e1e1c]/70',
-    iconBadge: 'border border-[#1e1e1c]/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_0_rgba(30,30,28,0.2)]',
-    trackBg: 'bg-[#E2D9C6] border border-[#1e1e1c]/20',
+    iconBadge: 'border border-[#1e1e1c]/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_0_rgba(30,30,28,0.18)]',
+    trackBg: 'bg-[#E2D9C6] border border-[#1e1e1c]/12',
     trackActiveBg: 'bg-[#EFE7DA] border-[1.5px] border-[#1e1e1c]',
-    dashBorder: 'border-[#1e1e1c]/30',
+    dashBorder: 'border-[#1e1e1c]/28',
     toastBg: 'bg-[#1e1e1c] text-[#D8CBB3] border-2 border-[#1e1e1c] shadow-[0_4px_0_#6B655B]',
     dangerBtn:
       'bg-[#F26B5B] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[0_3px_0_#1e1e1c] active:shadow-[0_1px_0_#1e1e1c]',
@@ -337,7 +339,7 @@ export function getUiTheme(isDark) {
       'bg-[#52B788] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.45),0_4px_0_#1e1e1c] active:shadow-[0_2px_0_#1e1e1c]',
     primaryBtnTransfer:
       'bg-[#F4B942] text-[#1e1e1c] border-2 border-[#1e1e1c] shadow-[inset_0_1.5px_0_rgba(255,255,255,0.5),0_4px_0_#1e1e1c] active:shadow-[0_2px_0_#1e1e1c]',
-    divider: 'border-[#1e1e1c]/18',
-    stickyHeader: 'bg-[#EFE7DA]'
+    divider: 'border-[#1e1e1c]/15',
+    stickyHeader: 'bg-[#EFE7DA]/90 backdrop-blur-md'
   };
 }

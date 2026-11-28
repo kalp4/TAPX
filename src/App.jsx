@@ -1722,7 +1722,7 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
               aria-label={privacyMode ? 'Show balances' : 'Hide balances'}
               aria-pressed={privacyMode}
               title={privacyMode ? 'Show balances' : 'Hide balances'}
-              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 key-press ${ui.pillIdle}`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 key-press ${ui.pillIdle}`}
             >
               {privacyMode ? (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
@@ -1754,19 +1754,14 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
             setShowWalletModal(true);
           }}
           aria-label="Add new account"
-          className={`px-3.5 py-2 rounded-2xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillActive}`}
+          className={`px-3.5 py-2 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillActive}`}
         >
           + Account
         </button>
       </header>
 
-      {/* MAIN VIEWPORT (Flush spacing right down to the 60px dock + safe area) */}
-      <main
-        className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5"
-        style={{
-          paddingBottom: 'calc(78px + max(10px, env(safe-area-inset-bottom)))'
-        }}
-      >
+      {/* MAIN VIEWPORT (Edge-to-edge vertically so scrollable lists glide smoothly behind the dock) */}
+      <main className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-5">
         {activeTab === 'pad' && (
           <KeypadTab
             key="tab-pad"
@@ -1994,9 +1989,18 @@ function TapxMainApp({ session, isAuthChecking, isLoggingIn, setIsLoggingIn, log
         />
       )}
 
+      {/* SEAMLESS BOTTOM GRADIENT SCRIM UNDER DOCK FOR SCROLLABLE TABS */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-30 ${ui.dockScrim}`}
+        style={{
+          height: 'calc(80px + max(10px, env(safe-area-inset-bottom)))'
+        }}
+      />
+
       {/* CHUNKY CARTOON DOCK BAR (Flush at bottom: 10px) */}
       <div
-        className="fixed left-0 right-0 z-40 flex justify-center pointer-events-none px-4"
+        className="absolute inset-x-0 z-40 flex justify-center pointer-events-none px-4"
         style={{
           bottom: 'max(10px, env(safe-area-inset-bottom))'
         }}

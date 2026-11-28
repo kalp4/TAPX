@@ -128,16 +128,19 @@ export function KeypadTab({
     : ui.heroCard;
 
   return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto no-scrollbar ${tabAnimClass}`}>
+    <div
+      className={`flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto no-scrollbar ${tabAnimClass}`}
+      style={{ paddingBottom: 'calc(84px + max(10px, env(safe-area-inset-bottom)))' }}
+    >
       {/* Entry Type Segmented Control */}
       <div
         role="tablist"
         aria-label="Transaction type"
-        className={`relative grid grid-cols-3 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}
+        className={`relative grid grid-cols-3 p-1 rounded-full shrink-0 ${ui.segmentedBg}`}
       >
         <div
           aria-hidden="true"
-          className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
+          className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-full transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
           style={{ transform: `translate3d(${entryIndex * 100}%, 0, 0)` }}
         />
         {[
@@ -155,7 +158,7 @@ export function KeypadTab({
               playTabSwitch();
               setEntryType(t.id);
             }}
-            className={`relative z-10 py-1.5 text-xs font-cartoon rounded-xl transition-colors duration-200 ${
+            className={`relative z-10 py-1.5 text-xs font-cartoon rounded-full transition-colors duration-200 ${
               entryType === t.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
             }`}
           >
@@ -244,7 +247,7 @@ export function KeypadTab({
         </div>
 
         {/* Framed Note Input Pill */}
-        <div className={`mt-1.5 w-full max-w-[280px] rounded-xl px-3 py-1 transition-colors ${ui.notePill}`}>
+        <div className={`mt-1.5 w-full max-w-[280px] rounded-full px-4 py-1.5 transition-colors ${ui.notePill}`}>
           <input
             ref={noteInputRef}
             type="text"
@@ -551,7 +554,7 @@ export function KeypadTab({
               onPointerUp={cancelDeleteHold}
               onPointerLeave={cancelDeleteHold}
               onPointerCancel={cancelDeleteHold}
-              className={`h-full min-h-[38px] max-h-[68px] rounded-2xl text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
+              className={`h-full min-h-[38px] max-h-[68px] rounded-[20px] text-xl font-cartoon font-bold tabular-nums flex items-center justify-center key-press ${
                 key === 'DEL' || key === '.' ? ui.numpadKeySpecial : ui.numpadKey
               }`}
             >
@@ -580,7 +583,7 @@ export function KeypadTab({
         <button
           type="button"
           onClick={handleLogTransaction}
-          className={`w-full py-3 rounded-2xl font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass} ${
+          className={`w-full py-3 rounded-full font-cartoon font-bold text-sm tracking-wide key-press shrink-0 ${primaryButtonClass} ${
             numericAmount <= 0 ? 'opacity-70' : 'opacity-100'
           }`}
         >
@@ -660,7 +663,7 @@ export function AccountsTab({
                 style={{
                   backgroundColor: isFiltered ? cardAccent : isDark ? '#282825' : '#FAF6EE'
                 }}
-                className={`min-w-[172px] p-3.5 pt-4 rounded-2xl flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
+                className={`min-w-[172px] p-3.5 pt-4 rounded-[22px] flex flex-col justify-between cursor-pointer transition-all shrink-0 relative overflow-hidden key-press ${
                   isFiltered ? ui.walletCardHero : `${ui.card} wallet-sheen`
                 }`}
               >
@@ -672,7 +675,7 @@ export function AccountsTab({
                 <div className="flex items-center justify-between gap-2 relative z-10">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
+                      className={`w-8 h-8 rounded-2xl flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
                       style={{
                         backgroundColor: isFiltered ? '#FAF6EE' : cardAccent
                       }}
@@ -695,7 +698,7 @@ export function AccountsTab({
                       e.stopPropagation();
                       openEditWallet(w);
                     }}
-                    className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${ui.badgeBorder} ${
+                    className={`w-7 h-7 rounded-full border flex items-center justify-center shrink-0 ${ui.badgeBorder} ${
                       isFiltered ? 'bg-[#1e1e1c] text-[#D8CBB3]' : 'bg-[#D8CBB3] text-[#1e1e1c]'
                     }`}
                   >
@@ -742,7 +745,7 @@ export function AccountsTab({
           <button
             type="button"
             onClick={onOpenNewWallet}
-            className={`min-w-[118px] p-3 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.dashBorder} ${ui.textSecondary}`}
+            className={`min-w-[118px] p-3 rounded-[22px] border-2 border-dashed flex flex-col items-center justify-center gap-1 shrink-0 key-press ${ui.dashBorder} ${ui.textSecondary}`}
           >
             <span className="text-xl font-cartoon font-bold">+</span>
             <span className="text-[11px] font-cartoon font-bold">New Account</span>
@@ -752,7 +755,7 @@ export function AccountsTab({
 
       {/* Search & Filter Row */}
       <div className="flex items-center gap-2 shrink-0">
-        <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-xl ${ui.input}`}>
+        <div className={`flex-1 flex items-center gap-2 px-3.5 py-2 rounded-full ${ui.input}`}>
           <svg
             className={`w-4 h-4 shrink-0 ${ui.textMuted}`}
             fill="none"
@@ -780,14 +783,14 @@ export function AccountsTab({
               type="button"
               aria-label="Clear search"
               onClick={() => setActivitySearch('')}
-              className={`p-0.5 text-xs font-bold ${ui.textMuted}`}
+              className={`p-0.5 text-xs font-bold rounded-full ${ui.textMuted}`}
             >
               ✕
             </button>
           )}
         </div>
 
-        <div className={`flex p-0.5 rounded-xl shrink-0 ${ui.segmentedBg}`}>
+        <div className={`flex p-1 rounded-full shrink-0 ${ui.segmentedBg}`}>
           {[
             { id: 'all', label: 'All', aria: 'All transactions' },
             { id: 'expense', label: 'Out', aria: 'Expenses only' },
@@ -803,7 +806,7 @@ export function AccountsTab({
                 if (activityTypeFilter !== f.id) playQuickChip();
                 setActivityTypeFilter(f.id);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-cartoon font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-cartoon font-bold transition-all ${
                 activityTypeFilter === f.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
               }`}
             >
@@ -814,7 +817,10 @@ export function AccountsTab({
       </div>
 
       {/* Date-Grouped Activity Feed */}
-      <div className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1">
+      <div
+        className="flex-1 min-h-0 custom-scroll space-y-3"
+        style={{ paddingBottom: 'calc(94px + max(10px, env(safe-area-inset-bottom)))' }}
+      >
         {groupedTransactions.length === 0 ? (
           <EmptyStateCard
             ui={ui}
@@ -830,7 +836,7 @@ export function AccountsTab({
           groupedTransactions.map((group) => (
             <div key={group.label} className="space-y-1.5">
               <div
-                className={`sticky top-0 z-10 py-1 px-1 flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.stickyHeader}`}
+                className={`sticky top-0 z-10 py-1.5 px-3 rounded-full flex items-center justify-between text-[11px] font-cartoon font-bold ${ui.stickyHeader}`}
               >
                 <span className={ui.textSecondary}>{group.label}</span>
                 <span className={`tabular-nums ${group.netSpend > 0 ? 'text-[#52B788]' : ui.textMuted}`}>
@@ -862,7 +868,7 @@ export function AccountsTab({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0 ${ui.iconBadge}`}
+                        className={`w-10 h-10 rounded-2xl flex items-center justify-center text-base shrink-0 ${ui.iconBadge}`}
                         style={{ backgroundColor: catAccent }}
                       >
                         {tx.type === 'transfer' ? '⇄' : c?.icon || (tx.type === 'income' ? '💰' : '💸')}
@@ -881,14 +887,14 @@ export function AccountsTab({
                           </span>
                           {tx.pendingSync && (
                             <span
-                              className={`text-[10px] px-1.5 py-0.2 rounded-md bg-[#F4B942] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
+                              className={`text-[10px] px-2 py-0.5 rounded-full bg-[#F4B942] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
                             >
                               Queued
                             </span>
                           )}
                           {tx.source === 'shortcut' && (
                             <span
-                              className={`text-[10px] px-1.5 py-0.2 rounded-md bg-[#D8CBB3] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
+                              className={`text-[10px] px-2 py-0.5 rounded-full bg-[#D8CBB3] text-[#1e1e1c] border font-cartoon font-bold shrink-0 ${ui.badgeBorder}`}
                             >
                               ⚡ Back Tap
                             </span>
@@ -929,7 +935,7 @@ export function AccountsTab({
               playQuickChip();
               onLoadMore();
             }}
-            className={`w-full py-2.5 rounded-2xl text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
+            className={`w-full py-2.5 rounded-full text-xs font-cartoon font-bold key-press ${ui.pillIdle}`}
           >
             Show more ({visibleCount} of {totalMatchedCount})
           </button>
@@ -1032,7 +1038,7 @@ export function InsightsTab({
                     setAnalyticsRange(tab.id);
                     setSelectedBarIdx(null);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold shrink-0 transition-all key-press ${
+                  className={`px-3.5 py-1.5 rounded-full text-[11px] font-cartoon font-bold shrink-0 transition-all key-press ${
                     active ? ui.pillActive : ui.pillIdle
                   }`}
                 >
@@ -1047,7 +1053,7 @@ export function InsightsTab({
             onClick={handleExportCsv}
             aria-label="Export filtered period to CSV"
             title="Export filtered period to CSV"
-            className={`px-3 py-1.5 rounded-xl text-[11px] font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${ui.pillActive}`}
+            className={`px-3.5 py-1.5 rounded-full text-[11px] font-cartoon font-bold flex items-center gap-1 shrink-0 key-press ${ui.pillActive}`}
           >
             <svg
               className="w-3.5 h-3.5"
@@ -1068,7 +1074,7 @@ export function InsightsTab({
         </div>
 
         {analyticsRange === 'custom' && (
-          <div className={`p-2.5 rounded-2xl grid grid-cols-2 gap-2 animate-tab ${ui.card}`}>
+          <div className={`p-3 rounded-3xl grid grid-cols-2 gap-2.5 animate-tab ${ui.card}`}>
             <div className="space-y-1">
               <label className={`text-[10.5px] font-cartoon font-bold uppercase px-1 ${ui.textMuted}`}>
                 From Date
@@ -1077,7 +1083,7 @@ export function InsightsTab({
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className={`w-full rounded-xl px-2.5 py-2 text-[16px] leading-snug font-cartoon font-bold focus:outline-none ${ui.input}`}
+                className={`w-full rounded-2xl px-3 py-2 text-[16px] leading-snug font-cartoon font-bold focus:outline-none ${ui.input}`}
               />
             </div>
             <div className="space-y-1">
@@ -1088,7 +1094,7 @@ export function InsightsTab({
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className={`w-full rounded-xl px-2.5 py-2 text-[16px] leading-snug font-cartoon font-bold focus:outline-none ${ui.input}`}
+                className={`w-full rounded-2xl px-3 py-2 text-[16px] leading-snug font-cartoon font-bold focus:outline-none ${ui.input}`}
               />
             </div>
           </div>
@@ -1097,11 +1103,11 @@ export function InsightsTab({
         <div
           role="tablist"
           aria-label="Insights sections"
-          className={`relative grid grid-cols-3 p-1 rounded-2xl ${ui.segmentedBg}`}
+          className={`relative grid grid-cols-3 p-1 rounded-full ${ui.segmentedBg}`}
         >
           <div
             aria-hidden="true"
-            className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
+            className={`absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] rounded-full transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
             style={{ transform: `translate3d(${Math.max(0, insightsSubIndex) * 100}%, 0, 0)` }}
           />
           {INSIGHTS_SECTIONS.map((sec) => (
@@ -1114,7 +1120,7 @@ export function InsightsTab({
                 if (insightsView !== sec.id) playTabSwitch();
                 setInsightsView(sec.id);
               }}
-              className={`relative z-10 py-1.5 text-xs font-cartoon rounded-xl transition-colors duration-200 ${
+              className={`relative z-10 py-1.5 text-xs font-cartoon rounded-full transition-colors duration-200 ${
                 insightsView === sec.id ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
               }`}
             >
@@ -1126,7 +1132,11 @@ export function InsightsTab({
 
       {/* SECTION 1: OVERVIEW */}
       {insightsView === 'overview' && (
-        <div key="insights-overview" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
+        <div
+          key="insights-overview"
+          className="flex-1 min-h-0 custom-scroll pt-0.5 space-y-3 animate-tab"
+          style={{ paddingBottom: 'calc(94px + max(10px, env(safe-area-inset-bottom)))' }}
+        >
           {!hasAnyActivity ? (
             <EmptyStateCard
               ui={ui}
@@ -1338,12 +1348,12 @@ export function InsightsTab({
                             : ''}
                         </span>
                         <div
-                          className={`w-full rounded-xl h-16 flex items-end p-0.5 transition-colors ${
-                            isSelected ? ui.trackActiveBg : ui.trackBg
-                          }`}
+                          className={`w-full rounded-full h-16 flex items-end p-0.5 transition-all ${
+                            isDark ? 'bg-[#161614]/85' : 'bg-[#E2D9C6]/85'
+                          } ${isSelected ? 'ring-2 ring-[#F4B942]/80 bg-[#F4B942]/15' : ''}`}
                         >
                           <div
-                            className={`w-full rounded-lg transition-all duration-500 ios-spring ${
+                            className={`w-full rounded-full transition-all duration-500 ios-spring ${
                               isSelected
                                 ? 'bg-[#F4B942]'
                                 : day.isToday
@@ -1389,7 +1399,7 @@ export function InsightsTab({
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span
-                              className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
+                              className={`w-8 h-8 rounded-2xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
                               style={{ backgroundColor: accent }}
                             >
                               {c?.icon || '💸'}
@@ -1419,7 +1429,11 @@ export function InsightsTab({
 
       {/* SECTION 2: BREAKDOWN */}
       {insightsView === 'breakdown' && (
-        <div key="insights-breakdown" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
+        <div
+          key="insights-breakdown"
+          className="flex-1 min-h-0 custom-scroll space-y-3 animate-tab"
+          style={{ paddingBottom: 'calc(94px + max(10px, env(safe-area-inset-bottom)))' }}
+        >
           {analyticsData.categoryBreakdown.length === 0 ? (
             <EmptyStateCard
               ui={ui}
@@ -1528,7 +1542,7 @@ export function InsightsTab({
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span
-                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
+                            className={`w-7 h-7 rounded-2xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
                             style={{ backgroundColor: item.color }}
                           >
                             {item.icon}
@@ -1541,7 +1555,7 @@ export function InsightsTab({
                             {fmtAmt(item.amount)}
                           </span>
                           <span
-                            className={`text-[10.5px] px-2 py-0.5 rounded-lg border font-cartoon font-bold text-[#1e1e1c] ${ui.badgeBorder}`}
+                            className={`text-[10.5px] px-2.5 py-0.5 rounded-full border font-cartoon font-bold text-[#1e1e1c] ${ui.badgeBorder}`}
                             style={{ backgroundColor: item.color }}
                           >
                             {item.pct}%
@@ -1628,7 +1642,11 @@ export function InsightsTab({
 
       {/* SECTION 3: HABITS */}
       {insightsView === 'habits' && (
-        <div key="insights-habits" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab">
+        <div
+          key="insights-habits"
+          className="flex-1 min-h-0 custom-scroll space-y-3 animate-tab"
+          style={{ paddingBottom: 'calc(94px + max(10px, env(safe-area-inset-bottom)))' }}
+        >
           {analyticsData.expenseCount === 0 ? (
             <EmptyStateCard
               ui={ui}
@@ -1640,7 +1658,7 @@ export function InsightsTab({
             <>
               {/* Pace & Ticket Metrics Strip */}
               <div className="grid grid-cols-3 gap-2">
-                <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
+                <div className={`p-3 rounded-3xl flex flex-col justify-between ${ui.card}`}>
                   <span className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                     🛡️ No-Spend
                   </span>
@@ -1652,7 +1670,7 @@ export function InsightsTab({
                   </span>
                 </div>
 
-                <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
+                <div className={`p-3 rounded-3xl flex flex-col justify-between ${ui.card}`}>
                   <span className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                     🎯 Avg Spend
                   </span>
@@ -1664,7 +1682,7 @@ export function InsightsTab({
                   </span>
                 </div>
 
-                <div className={`p-3 rounded-2xl flex flex-col justify-between ${ui.card}`}>
+                <div className={`p-3 rounded-3xl flex flex-col justify-between ${ui.card}`}>
                   <span className={`text-[10.5px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
                     ⚡ Frequency
                   </span>
@@ -1695,13 +1713,13 @@ export function InsightsTab({
                   )}
                 </div>
 
-                <div className="grid grid-cols-7 gap-1.5 pt-0.5">
+                <div className="grid grid-cols-7 gap-1 pt-0.5">
                   {analyticsData.dowBreakdown.map((d) => {
                     const isPeak = analyticsData.peakDow?.dayNum === d.dayNum && d.amount > 0;
                     const isSelected = activeDowObj?.dayNum === d.dayNum;
                     const heatAlpha =
                       d.amount > 0
-                        ? (0.08 + (d.pctOfMax / 100) * 0.28).toFixed(2)
+                        ? (0.09 + (d.pctOfMax / 100) * 0.27).toFixed(2)
                         : 0;
                     return (
                       <button
@@ -1718,17 +1736,19 @@ export function InsightsTab({
                             ? {
                                 backgroundColor: `rgba(244, 185, 66, ${heatAlpha})`,
                                 borderColor: isPeak
-                                  ? 'rgba(244, 185, 66, 0.85)'
-                                  : `rgba(244, 185, 66, ${(0.22 + (d.pctOfMax / 100) * 0.45).toFixed(2)})`
+                                  ? 'rgba(244, 185, 66, 0.72)'
+                                  : `rgba(244, 185, 66, ${(0.16 + (d.pctOfMax / 100) * 0.34).toFixed(2)})`
                               }
                             : undefined
                         }
-                        className={`p-2 rounded-2xl border flex flex-col items-center gap-1 transition-all duration-150 key-press ${
+                        className={`py-2 px-1 rounded-[18px] border flex flex-col items-center gap-1 transition-all duration-150 key-press ${
                           isSelected
-                            ? `bg-[#F4B942] text-[#1e1e1c] ${ui.pillSelectedBorder}`
+                            ? 'bg-[#F4B942] text-[#1e1e1c] border-[#111110]/80 shadow-[0_2px_0_#111110]'
                             : d.amount > 0
                             ? ui.textPrimary
-                            : ui.cardSubtle
+                            : isDark
+                            ? 'bg-white/[0.035] border-transparent text-[#968C7C]'
+                            : 'bg-[#1e1e1c]/[0.045] border-transparent text-[#6E675C]'
                         }`}
                       >
                         <span
@@ -1826,7 +1846,7 @@ export function InsightsTab({
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
+                            className={`w-7 h-7 rounded-2xl flex items-center justify-center text-xs shrink-0 ${ui.iconBadge}`}
                             style={{ backgroundColor: slot.color }}
                           >
                             {slot.icon}
@@ -1896,7 +1916,7 @@ export function InsightsTab({
                         className={`p-2.5 rounded-2xl flex items-center gap-2.5 ${ui.cardSubtle}`}
                       >
                         <span
-                          className={`w-8 h-8 rounded-xl bg-[#D8CBB3] text-[#1e1e1c] flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
+                          className={`w-8 h-8 rounded-2xl bg-[#D8CBB3] text-[#1e1e1c] flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
                         >
                           {ins.icon}
                         </span>
@@ -1951,14 +1971,17 @@ export function SettingsTab({
   const settingsSubIndex = settingsSection === 'shortcut' ? 0 : 1;
 
   return (
-    <div className={`flex-1 min-h-0 flex flex-col gap-3 overflow-hidden ${tabAnimClass}`}>
-      <div className={`p-3.5 rounded-2xl space-y-2.5 shrink-0 ${ui.card}`}>
+    <div
+      className={`flex-1 min-h-0 custom-scroll space-y-3 ${tabAnimClass}`}
+      style={{ paddingBottom: 'calc(94px + max(10px, env(safe-area-inset-bottom)))' }}
+    >
+      <div className={`p-4 rounded-3xl space-y-2.5 ${ui.card}`}>
         <div className="flex items-center justify-between">
           <div>
             <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Theme Vibe</p>
             <p className={`text-[11px] font-medium ${ui.textMuted}`}>Select your preferred theme</p>
           </div>
-          <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
+          <div className={`flex p-1 rounded-full ${ui.segmentedBg}`}>
             {[
               { id: 'system', label: 'Auto' },
               { id: 'light', label: 'Light' },
@@ -1972,7 +1995,7 @@ export function SettingsTab({
                   if (themePref !== m.id) playQuickChip();
                   setThemePref(m.id);
                 }}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                className={`px-3 py-1 rounded-full text-[11px] font-cartoon font-bold transition-all duration-200 ${
                   themePref === m.id ? `${ui.segmentedThumb} ${ui.segmentedTextActive}` : ui.textSecondary
                 }`}
               >
@@ -1987,7 +2010,7 @@ export function SettingsTab({
             <p className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>Sound Effects</p>
             <p className={`text-[11px] font-medium ${ui.textMuted}`}>Tactile keypad pops &amp; chimes</p>
           </div>
-          <div className={`flex p-0.5 rounded-xl ${ui.segmentedBg}`}>
+          <div className={`flex p-1 rounded-full ${ui.segmentedBg}`}>
             {[
               { id: true, label: '🔊 On' },
               { id: false, label: '🔇 Muted' }
@@ -1997,7 +2020,7 @@ export function SettingsTab({
                 type="button"
                 aria-pressed={soundEnabled === opt.id}
                 onClick={() => onToggleSound(opt.id)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-cartoon font-bold transition-all duration-200 ${
+                className={`px-3 py-1 rounded-full text-[11px] font-cartoon font-bold transition-all duration-200 ${
                   soundEnabled === opt.id
                     ? `${ui.segmentedThumb} ${ui.segmentedTextActive}`
                     : ui.textSecondary
@@ -2013,11 +2036,11 @@ export function SettingsTab({
       <div
         role="tablist"
         aria-label="Settings sections"
-        className={`relative grid grid-cols-2 p-1 rounded-2xl shrink-0 ${ui.segmentedBg}`}
+        className={`relative grid grid-cols-2 p-1 rounded-full ${ui.segmentedBg}`}
       >
         <div
           aria-hidden="true"
-          className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
+          className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full transition-transform duration-300 ios-spring ${ui.segmentedThumb}`}
           style={{ transform: `translate3d(${settingsSubIndex * 100}%, 0, 0)` }}
         />
         <button
@@ -2028,7 +2051,7 @@ export function SettingsTab({
             if (settingsSection !== 'shortcut') playTabSwitch();
             setSettingsSection('shortcut');
           }}
-          className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
+          className={`relative z-10 py-1.5 rounded-full text-xs font-cartoon transition-colors duration-200 ${
             settingsSection === 'shortcut' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
         >
@@ -2042,7 +2065,7 @@ export function SettingsTab({
             if (settingsSection !== 'budgets') playTabSwitch();
             setSettingsSection('budgets');
           }}
-          className={`relative z-10 py-1.5 rounded-xl text-xs font-cartoon transition-colors duration-200 ${
+          className={`relative z-10 py-1.5 rounded-full text-xs font-cartoon transition-colors duration-200 ${
             settingsSection === 'budgets' ? ui.segmentedTextActive : `${ui.textSecondary} font-semibold`
           }`}
         >
@@ -2051,8 +2074,8 @@ export function SettingsTab({
       </div>
 
       {settingsSection === 'shortcut' && (
-        <div key="sub-shortcut" className="flex-1 min-h-0 custom-scroll space-y-3 pr-0.5 pb-1 animate-tab-left">
-          <div className={`p-4 rounded-2xl space-y-3 ${ui.card}`}>
+        <div key="sub-shortcut" className="space-y-3 animate-tab-left">
+          <div className={`p-4 rounded-3xl space-y-3 ${ui.card}`}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className={`text-xs font-cartoon font-bold ${ui.textPrimary}`}>iOS Shortcut Installer</h3>
@@ -2077,13 +2100,13 @@ export function SettingsTab({
                   readOnly
                   aria-label="Personal Shortcut URL"
                   value={personalApiUrl}
-                  className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-xs leading-snug font-mono ${ui.input}`}
+                  className={`flex-1 min-w-0 rounded-2xl px-3.5 py-2 text-xs leading-snug font-mono ${ui.input}`}
                 />
                 <button
                   type="button"
                   disabled={!personalApiUrl}
                   onClick={() => copyToClipboard(personalApiUrl, 'apiUrl')}
-                  className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
+                  className={`px-3.5 py-2 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
                 >
                   {copiedField === 'apiUrl' ? 'Copied!' : 'Copy'}
                 </button>
@@ -2094,7 +2117,7 @@ export function SettingsTab({
               type="button"
               disabled={!personalApiUrl}
               onClick={handleOneTapShortcut}
-              className={`w-full py-3 px-4 rounded-xl font-cartoon font-bold text-xs key-press ${ui.primaryBtnExpense}`}
+              className={`w-full py-3 px-4 rounded-full font-cartoon font-bold text-xs key-press ${ui.primaryBtnExpense}`}
             >
               Copy Personal URL &amp; Install Shortcut
             </button>
@@ -2117,7 +2140,7 @@ export function SettingsTab({
             </div>
           </div>
 
-          <div className={`p-3.5 rounded-2xl space-y-1.5 ${ui.card}`}>
+          <div className={`p-4 rounded-3xl space-y-1.5 ${ui.card}`}>
             <label className={`text-[11px] font-cartoon font-bold uppercase ${ui.textMuted}`}>
               Shortcut Security Token
             </label>
@@ -2127,13 +2150,13 @@ export function SettingsTab({
                 readOnly
                 aria-label="Shortcut Security Token"
                 value={settings?.shortcut_token || ''}
-                className={`flex-1 min-w-0 rounded-xl px-3 py-2 text-xs leading-snug font-mono ${ui.input}`}
+                className={`flex-1 min-w-0 rounded-2xl px-3.5 py-2 text-xs leading-snug font-mono ${ui.input}`}
               />
               <button
                 type="button"
                 disabled={!settings?.shortcut_token}
                 onClick={() => copyToClipboard(settings?.shortcut_token, 'token')}
-                className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
+                className={`px-3.5 py-2 rounded-full text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
               >
                 {copiedField === 'token' ? 'Copied!' : 'Copy'}
               </button>
@@ -2141,7 +2164,7 @@ export function SettingsTab({
                 type="button"
                 onClick={handleRegenerateToken}
                 aria-label="Regenerate Shortcut Security Token"
-                className={`px-3 py-2.5 rounded-xl text-xs font-cartoon font-bold shrink-0 key-press ${ui.pillIdle}`}
+                className={`w-9 h-9 rounded-full text-xs font-cartoon font-bold flex items-center justify-center shrink-0 key-press ${ui.pillIdle}`}
                 title="Regenerate Token"
               >
                 ↻
@@ -2152,21 +2175,21 @@ export function SettingsTab({
       )}
 
       {settingsSection === 'budgets' && (
-        <div key="sub-budgets" className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden animate-tab-right">
-          <div className="flex items-center justify-between shrink-0">
+        <div key="sub-budgets" className="space-y-2.5 animate-tab-right">
+          <div className="flex items-center justify-between px-1">
             <span className={`text-[11px] font-cartoon font-bold ${ui.textMuted}`}>
               {categories.length} Categories
             </span>
             <button
               type="button"
               onClick={onOpenNewCategory}
-              className={`text-xs px-3 py-1 rounded-full font-cartoon font-bold key-press ${ui.pillActive}`}
+              className={`text-xs px-3.5 py-1.5 rounded-full font-cartoon font-bold key-press ${ui.pillActive}`}
             >
               + Add Category
             </button>
           </div>
 
-          <div className="flex-1 min-h-0 custom-scroll space-y-2 pr-0.5 pb-1">
+          <div className="space-y-2">
             {categories.map((c, idx) => {
               const spent = currentMonthSpendByCat[c.id] || 0;
               const budget = Number(c.monthly_budget) || 0;
@@ -2183,7 +2206,7 @@ export function SettingsTab({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
+                        className={`w-8 h-8 rounded-2xl flex items-center justify-center text-sm shrink-0 ${ui.iconBadge}`}
                         style={{ backgroundColor: accent }}
                       >
                         {c.icon}
@@ -2213,7 +2236,7 @@ export function SettingsTab({
                       <button
                         type="button"
                         onClick={() => openEditCategory(c)}
-                        className={`px-2 py-1 rounded-lg text-[10.5px] font-cartoon font-bold key-press ${ui.pillIdle}`}
+                        className={`px-3 py-1 rounded-full text-[10.5px] font-cartoon font-bold key-press ${ui.pillIdle}`}
                       >
                         Edit
                       </button>
@@ -2221,7 +2244,7 @@ export function SettingsTab({
                         type="button"
                         aria-label={`Delete ${c.name} category`}
                         onClick={() => handleDeleteCategory(c.id)}
-                        className={`px-2 py-1 rounded-lg text-[10.5px] font-cartoon font-bold key-press ${
+                        className={`min-w-[28px] h-7 px-2 rounded-full text-[10.5px] font-cartoon font-bold flex items-center justify-center key-press ${
                           confirmDeleteId === c.id
                             ? ui.dangerBtn
                             : `${ui.textMuted} hover:text-[#F26B5B]`
@@ -2248,11 +2271,16 @@ export function SettingsTab({
         </div>
       )}
 
-      <div className={`pt-2 border-t border-dashed flex items-center justify-between shrink-0 ${ui.divider}`}>
-        <span className={`text-[11px] font-semibold truncate max-w-[180px] ${ui.textMuted}`}>
-          {session?.user?.email}
-        </span>
-        <div className="flex items-center gap-2">
+      <div className={`p-3.5 rounded-3xl flex items-center justify-between gap-2 ${ui.card}`}>
+        <div className="min-w-0">
+          <p className={`text-[10.5px] font-cartoon font-bold uppercase tracking-wider ${ui.textMuted}`}>
+            Signed In As
+          </p>
+          <p className={`text-xs font-semibold truncate max-w-[180px] ${ui.textPrimary}`}>
+            {session?.user?.email}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             disabled={isSyncing}
